@@ -5,8 +5,18 @@ const {
   ChannelType,
   ActionRowBuilder,
   ButtonBuilder,
-  ButtonStyle
+  ButtonStyle,
+  escapeMarkdown
 } = require("discord.js");
+
+
+
+
+function safeCategoryLabel(category) {
+  if (!category) return "Unbekannt";
+  return category.toString();
+}
+
 
 const {
   getOrCreatePanelChannel,
@@ -41,6 +51,17 @@ function getPanelAutoRefreshSeconds() {
 
   if (Number.isNaN(value) || value < 10000) {
     return 30;
+  }
+
+  return Math.round(value / 1000);
+}
+
+
+function getPanelRefreshButtonCooldownSeconds() {
+  const value = Number(process.env.PANEL_REFRESH_BUTTON_COOLDOWN_MS || 10000);
+
+  if (Number.isNaN(value) || value < 3000) {
+    return 10;
   }
 
   return Math.round(value / 1000);
@@ -151,7 +172,7 @@ module.exports = {
 
     return interaction.editReply(
       "✅ Alle Panels wurden erstellt oder aktualisiert in " + channel.toString() +
-      "\n📁 Kategorie: **" + category.name + "**" +
+      "\n📁 Kategorie wurde gesetzt" +
       "\n🧹 Aufgeräumte Nachrichten: **" + deletedMessages + "**"
     );
   }

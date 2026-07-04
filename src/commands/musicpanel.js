@@ -1,8 +1,18 @@
 const {
   SlashCommandBuilder,
   PermissionFlagsBits,
-  ChannelType
+  ChannelType,
+  escapeMarkdown
 } = require("discord.js");
+
+
+
+
+function safeCategoryLabel(category) {
+  if (!category) return "Unbekannt";
+  return category.toString();
+}
+
 
 const {
   getOrCreatePanelChannel,
@@ -62,7 +72,7 @@ module.exports = {
 
       return interaction.editReply(
         "✅ Music Player Panel wurde aktualisiert in " + panelChannel.toString() +
-        "\n📁 Kategorie: **" + category.name + "**" +
+        "\n📁 Kategorie wurde gesetzt" +
         "\n🧹 Aufgeräumte Nachrichten: **" + deletedMessages + "**"
       );
     }
@@ -83,7 +93,7 @@ module.exports = {
 
     return interaction.editReply(
       "✅ Music Player Panel wurde erstellt in " + panelChannel.toString() +
-      "\n📁 Kategorie: **" + category.name + "**" +
+      "\n📁 Kategorie wurde gesetzt" +
       "\n🧹 Aufgeräumte Nachrichten: **" + deletedMessages + "**"
     );
   }
