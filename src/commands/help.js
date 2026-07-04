@@ -82,6 +82,10 @@ function panelsHelp() {
         "Im Übersichts-Panel gibt es den Button `🔄 Panels aktualisieren`.",
         "Damit können Bot Status, TempVoice Status und Music Player sofort aktualisiert werden."
       ]),
+      field("Refresh-Cooldown", [
+        "Der Refresh-Button hat standardmäßig 10 Sekunden Cooldown pro Server.",
+        "Einstellung in `.env`: `PANEL_REFRESH_BUTTON_COOLDOWN_MS=10000`"
+      ]),
       field("/panelcleanup", [
         "Findet alte einzelne Panel-Channels wie `#music-player` oder `#gluecksrad`.",
         "Mit `/panelcleanup loeschen:Ja` können diese alten Channels entfernt werden."

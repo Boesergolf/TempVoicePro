@@ -882,3 +882,16 @@ Beispiel:
 
 Der Command ist hilfreich, wenn Auto-Löschen, Anpinnen oder Panel-Updates nicht funktionieren.
 
+
+## Panel Refresh Button Cooldown
+
+Der Button `🔄 Panels aktualisieren` besitzt einen Cooldown.
+
+Standard:
+
+`PANEL_REFRESH_BUTTON_COOLDOWN_MS=10000`
+
+Das entspricht 10 Sekunden pro Server.
+
+Dadurch kann der Refresh-Button nicht dauerhaft gespammt werden.
+
