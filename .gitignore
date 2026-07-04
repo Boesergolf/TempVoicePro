@@ -3,3 +3,12 @@
 .env
 .env
 node_modules/
+# TempVoicePro local files
+.env.*
+!.env.example
+*.log
+*.backup
+*.backup-*
+*.bak
+/master
+.DS_Store
