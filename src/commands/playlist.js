@@ -6,6 +6,7 @@ const {
 
 const db = require("../database/mysql");
 const { getMetadataForUrl } = require("../utils/musicMetadata");
+const { importPlaylistFromUrl } = require("../utils/musicImport");
 
 function normalizeName(name) {
   return name.trim().replace(/\s+/g, " ");
@@ -175,6 +176,43 @@ module.exports = {
               { name: "User", value: "user" },
               { name: "Global", value: "global" }
             )
+        )
+    )
+
+    .addSubcommand(sub =>
+      sub
+        .setName("import")
+        .setDescription("Spotify- oder YouTube-Playlist importieren")
+        .addStringOption(option =>
+          option
+            .setName("playlist")
+            .setDescription("Name der Bot-Playlist")
+            .setRequired(true)
+            .setMaxLength(100)
+        )
+        .addStringOption(option =>
+          option
+            .setName("url")
+            .setDescription("Spotify-Playlist oder YouTube-Playlist Link")
+            .setRequired(true)
+        )
+        .addStringOption(option =>
+          option
+            .setName("scope")
+            .setDescription("User oder globale Playlist")
+            .setRequired(false)
+            .addChoices(
+              { name: "User", value: "user" },
+              { name: "Global", value: "global" }
+            )
+        )
+        .addIntegerOption(option =>
+          option
+            .setName("limit")
+            .setDescription("Maximale Anzahl Einträge")
+            .setRequired(false)
+            .setMinValue(1)
+            .setMaxValue(100)
         )
     )
 
@@ -421,6 +459,86 @@ module.exports = {
           });
 
         return interaction.editReply({ embeds: [embed] });
+      }
+
+      if (subcommand === "import") {
+        const name = normalizeName(interaction.options.getString("playlist"));
+        const url = interaction.options.getString("url").trim();
+        const scope = getScope(interaction);
+        const limit = interaction.options.getInteger("limit") || 50;
+
+        if (scope === "global" && !canManageGlobal(interaction)) {
+          return interaction.editReply(
+            "❌ Globale Playlists dürfen nur Mitglieder mit **Server verwalten** importieren."
+          );
+        }
+
+        if (!validateUrl(url) && !url.startsWith("spotify:playlist:")) {
+          return interaction.editReply("❌ Bitte gib eine gültige Playlist-URL ein.");
+        }
+
+        const ownerKey = getOwnerKey(scope, userId);
+
+        let playlist = await findPlaylist(guildId, userId, scope, name);
+
+        if (!playlist) {
+          await db.execute(
+            `INSERT INTO music_playlists
+             (guildId, ownerKey, scope, name, createdAt)
+             VALUES (?, ?, ?, ?, ?)`,
+            [guildId, ownerKey, scope, name, Date.now()]
+          );
+
+          playlist = await findPlaylist(guildId, userId, scope, name);
+        }
+
+        await interaction.editReply(
+          "⏳ Import läuft... Bitte kurz warten."
+        );
+
+        const importedItems = await importPlaylistFromUrl(url, limit);
+
+        if (!importedItems.length) {
+          return interaction.editReply(
+            "❌ Es wurden keine importierbaren Einträge gefunden."
+          );
+        }
+
+        const [positionRows] = await db.execute(
+          `SELECT COALESCE(MAX(position), 0) + 1 AS nextPosition
+           FROM music_playlist_items
+           WHERE playlistId = ?`,
+          [playlist.id]
+        );
+
+        let position = positionRows[0].nextPosition || 1;
+        let inserted = 0;
+
+        for (const item of importedItems) {
+          await db.execute(
+            `INSERT INTO music_playlist_items
+             (playlistId, source, title, url, addedBy, position, createdAt)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [
+              playlist.id,
+              item.source,
+              item.title,
+              item.url,
+              userId,
+              position,
+              Date.now()
+            ]
+          );
+
+          position++;
+          inserted++;
+        }
+
+        return interaction.editReply(
+          "✅ Import abgeschlossen.\n" +
+          "Playlist: **" + playlist.name + "**\n" +
+          "Importierte Einträge: **" + inserted + "**"
+        );
       }
 
       if (subcommand === "remove") {
