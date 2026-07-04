@@ -633,3 +633,27 @@ Beispiel:
 
 Der Bot erstellt oder verschiebt den zentralen Panel-Channel `#bot-panels` in die ausgewählte Kategorie.
 
+
+## Help Kategorien
+
+Der `/help` Command enthält mehrere Kategorien:
+
+- Übersicht
+- Panels
+- TempVoice
+- Musik
+- Playlists
+- Glücksrad
+- ChatGPT
+- Technik
+
+Beispiele:
+
+`/help`
+
+`/help kategorie:Panels`
+
+`/help kategorie:Glücksrad`
+
+`/help kategorie:Musik`
+
