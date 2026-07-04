@@ -19,7 +19,8 @@ const {
 } = require("./botStatusPanelView");
 
 const {
-  createModulePanelEmbed
+  createModulePanelEmbed,
+  createModulePanelRows
 } = require("./modulePanelView");
 
 let started = false;
@@ -69,7 +70,7 @@ async function updateGuildPanels(guild) {
   if (modulePanel) {
     await modulePanel.edit({
       embeds: [await createModulePanelEmbed(guild.id)],
-      components: []
+      components: createModulePanelRows()
     }).catch(() => {});
   }
 

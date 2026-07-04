@@ -46,7 +46,8 @@ const {
 } = require("../utils/botStatusPanelView");
 
 const {
-  createModulePanelEmbed
+  createModulePanelEmbed,
+  createModulePanelRows
 } = require("../utils/modulePanelView");
 
 
@@ -161,7 +162,7 @@ module.exports = {
 
     await upsertPanel(channel, botId, "Server Module", {
       embeds: [await createModulePanelEmbed(interaction.guild.id)],
-      components: []
+      components: createModulePanelRows()
     });
 
     await upsertPanel(channel, botId, "TempVoice Status", {

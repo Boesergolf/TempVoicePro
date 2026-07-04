@@ -1,4 +1,8 @@
 const {
+  handleModuleSelect
+} = require("../utils/modulePanelActions");
+
+const {
   isModuleEnabled
 } = require("../utils/guildModules");
 
