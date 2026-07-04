@@ -1,7 +1,7 @@
 const { hasAccess } = require("../utils/permissions");
 
 module.exports = {
-  customId: "tv_unlock",
+  customId: "tv_bitrate",
 
   async execute(interaction) {
     const channel = interaction.member?.voice?.channel;
@@ -22,12 +22,15 @@ module.exports = {
       });
     }
 
-    await channel.permissionOverwrites.edit(interaction.guild.roles.everyone, {
-      Connect: null
-    });
+    const current = channel.bitrate;
+    const max = interaction.guild.maximumBitrate;
+
+    const nextBitrate = current < max ? Math.min(current + 16000, max) : 64000;
+
+    await channel.setBitrate(nextBitrate);
 
     return interaction.reply({
-      content: "🔓 Channel entsperrt.",
+      content: `🎚 Bitrate gesetzt auf **${Math.round(nextBitrate / 1000)} kbps**.`,
       ephemeral: true
     });
   }
