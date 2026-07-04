@@ -346,11 +346,18 @@ async function createResource(track) {
   });
 
   child.on("close", code => {
-    if (code !== 0 && code !== null) {
+    const stderrText = stderr.trim();
+
+    if (
+      code !== 0 &&
+      code !== null &&
+      !stderrText.includes("Broken pipe") &&
+      !stderrText.includes("unable to write data")
+    ) {
       console.error("❌ yt-dlp beendet mit Code " + code);
 
-      if (stderr.trim()) {
-        console.error(stderr.trim());
+      if (stderrText) {
+        console.error(stderrText);
       }
     }
   });
@@ -468,6 +475,66 @@ function getQueueText(guildId) {
   return lines.join("\n");
 }
 
+
+function getNowPlayingText(guildId) {
+  const queue = getQueue(guildId);
+
+  if (!queue || !queue.current) {
+    return "❌ Es läuft aktuell kein Track.";
+  }
+
+  return (
+    "▶️ **Jetzt läuft:** " + queue.current.title + "\n" +
+    "🔗 Quelle: " + (queue.current.url || "Unbekannt")
+  );
+}
+
+function clearQueue(guildId) {
+  const queue = getQueue(guildId);
+
+  if (!queue) return 0;
+
+  const count = queue.tracks.length;
+  queue.tracks = [];
+
+  return count;
+}
+
+function removeTrack(guildId, position) {
+  const queue = getQueue(guildId);
+
+  if (!queue || !queue.tracks.length) {
+    return null;
+  }
+
+  const index = position - 1;
+
+  if (index < 0 || index >= queue.tracks.length) {
+    return null;
+  }
+
+  const removed = queue.tracks.splice(index, 1)[0];
+
+  return removed;
+}
+
+function shuffleQueue(guildId) {
+  const queue = getQueue(guildId);
+
+  if (!queue || queue.tracks.length < 2) {
+    return false;
+  }
+
+  for (let i = queue.tracks.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const temp = queue.tracks[i];
+    queue.tracks[i] = queue.tracks[j];
+    queue.tracks[j] = temp;
+  }
+
+  return true;
+}
+
 function skipTrack(guildId) {
   const queue = getQueue(guildId);
 
@@ -523,6 +590,10 @@ module.exports = {
   addTracks,
   getQueue,
   getQueueText,
+  getNowPlayingText,
+  clearQueue,
+  removeTrack,
+  shuffleQueue,
   skipTrack,
   stopMusic,
   pauseMusic,
