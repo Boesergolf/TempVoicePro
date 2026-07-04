@@ -186,7 +186,12 @@ function createMusicPanelRows() {
     new ButtonBuilder()
       .setCustomId("mp_history")
       .setLabel("📜 History")
-      .setStyle(ButtonStyle.Secondary)
+      .setStyle(ButtonStyle.Secondary),
+
+    new ButtonBuilder()
+      .setCustomId("mp_favorite")
+      .setLabel("⭐ Favorite")
+      .setStyle(ButtonStyle.Success)
   );
 
   return [row1, row2, row3, row4];

@@ -446,3 +446,27 @@ Hinweis:
 
 Die History ist nicht dauerhaft in der Datenbank gespeichert. Nach einem Bot-Neustart ist sie wieder leer.
 
+
+## Music Panel Favorite Button
+
+Das Music Panel enthält einen `⭐ Favorite` Button.
+
+Damit kann der aktuell laufende Track direkt gespeichert werden.
+
+Der Button macht:
+
+- aktuellen Track aus dem Music Player lesen
+- persönliche Playlist `Favorites` suchen
+- Playlist automatisch erstellen, falls sie noch nicht existiert
+- Track in `Favorites` speichern
+
+Die Playlist ist eine User-Playlist.
+
+Prüfen:
+
+`/playlist show playlist:Favorites`
+
+Abspielen:
+
+`/music playlist name:Favorites`
+
