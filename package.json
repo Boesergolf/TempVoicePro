@@ -6,7 +6,8 @@
   "type": "commonjs",
   "scripts": {
     "start": "node src/index.js",
-    "deploy": "node deploy-commands.js"
+    "deploy": "node deploy-commands.js",
+    "db:init": "node init-db.js"
   },
   "dependencies": {
     "discord.js": "14.26.4",
