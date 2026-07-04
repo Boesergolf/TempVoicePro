@@ -15,8 +15,8 @@ module.exports = {
 
     const percent = new TextInputBuilder()
       .setCustomId("percent")
-      .setLabel("Lautstärke 0 bis 200")
-      .setPlaceholder("50")
+      .setLabel("Lautstärke 1 bis 100")
+      .setPlaceholder("20")
       .setStyle(TextInputStyle.Short)
       .setRequired(true);
 

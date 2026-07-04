@@ -126,10 +126,10 @@ module.exports = {
         .addIntegerOption(option =>
           option
             .setName("percent")
-            .setDescription("Lautstärke von 0 bis 200 Prozent")
+            .setDescription("Lautstärke von 1 bis 100 Prozent")
             .setRequired(true)
-            .setMinValue(0)
-            .setMaxValue(200)
+            .setMinValue(1)
+            .setMaxValue(100)
         )
     )
 

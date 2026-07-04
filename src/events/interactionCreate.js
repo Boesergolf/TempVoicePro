@@ -294,8 +294,8 @@ module.exports = {
         const raw = interaction.fields.getTextInputValue("percent");
         const percent = Number.parseInt(raw, 10);
 
-        if (Number.isNaN(percent) || percent < 0 || percent > 200) {
-          return interaction.editReply("❌ Bitte gib eine Zahl zwischen 0 und 200 ein.");
+        if (Number.isNaN(percent) || percent < 1 || percent > 100) {
+          return interaction.editReply("❌ Bitte gib eine Zahl zwischen 1 und 100 ein.");
         }
 
         const volume = setVolume(interaction.guild.id, percent);

@@ -938,3 +938,21 @@ Wenn die Lautstärke über `/music volume` oder das Music Panel geändert wird, 
 
 Beim nächsten Abspielen wird die gespeicherte Lautstärke automatisch wieder geladen.
 
+
+
+## Music Volume Bereich
+
+Die Lautstärke des Music Players kann zwischen 1 und 100 Prozent eingestellt werden.
+
+Standard:
+
+`MUSIC_DEFAULT_VOLUME_PERCENT=20`
+
+Beispiele:
+
+`/music volume percent:20`
+
+`/music volume percent:35`
+
+Änderungen werden pro Server gespeichert und beim nächsten Abspielen automatisch wieder geladen.
+
