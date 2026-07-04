@@ -2,7 +2,10 @@ const {
   SlashCommandBuilder,
   PermissionFlagsBits,
   EmbedBuilder,
-  ChannelType
+  ChannelType,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle
 } = require("discord.js");
 
 const {
@@ -70,6 +73,19 @@ function createOverviewEmbed() {
     .setTimestamp();
 }
 
+
+function createOverviewRows() {
+  return [
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId("panel_refresh")
+        .setLabel("Panels aktualisieren")
+        .setEmoji("🔄")
+        .setStyle(ButtonStyle.Primary)
+    )
+  ];
+}
+
 async function upsertPanel(channel, botId, titlePart, payload) {
   const existing = await findPanelMessage(channel, botId, titlePart);
 
@@ -110,7 +126,7 @@ module.exports = {
 
     await upsertPanel(channel, botId, "TempVoicePro Panels", {
       embeds: [createOverviewEmbed()],
-      components: []
+      components: createOverviewRows()
     });
 
     await upsertPanel(channel, botId, "Bot Status", {

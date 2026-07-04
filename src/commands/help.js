@@ -73,9 +73,13 @@ function panelsHelp() {
         "Aktualisiert das Glücksrad Panel im zentralen Panel-Channel."
       ]),
       field("Panel Auto-Refresh", [
-        "TempVoice Status und Music Player Panel aktualisieren sich automatisch.",
+        "TempVoice Status, Bot Status und Music Player Panel aktualisieren sich automatisch.",
         "Standard: alle 30 Sekunden.",
         "Einstellung in `.env`: `PANEL_AUTO_REFRESH_MS=30000`"
+      ]),
+      field("Refresh-Button", [
+        "Im Übersichts-Panel gibt es den Button `🔄 Panels aktualisieren`.",
+        "Damit können Bot Status, TempVoice Status und Music Player sofort aktualisiert werden."
       ]),
       field("/panelcleanup", [
         "Findet alte einzelne Panel-Channels wie `#music-player` oder `#gluecksrad`.",

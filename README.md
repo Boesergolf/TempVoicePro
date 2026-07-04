@@ -836,3 +836,20 @@ Dieses Panel zeigt:
 
 Das Bot Status Panel wird über `/panels` erstellt und danach automatisch aktualisiert.
 
+
+## Panel Refresh Button
+
+Die zentrale Panel-Übersicht enthält einen Button:
+
+`🔄 Panels aktualisieren`
+
+Damit können die zentralen Status-Panels sofort aktualisiert werden, ohne `/panels` erneut auszuführen.
+
+Aktualisiert werden:
+
+- Bot Status Panel
+- TempVoice Status Panel
+- Music Player Panel
+
+Der Button befindet sich im Übersichts-Panel im zentralen Panel-Channel.
+
