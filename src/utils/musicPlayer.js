@@ -31,6 +31,17 @@ function getYtDlpPath() {
   return "yt-dlp";
 }
 
+
+function getYtDlpPlayerClients() {
+  const value = String(process.env.YTDLP_PLAYER_CLIENTS || "ios,android,web").trim();
+
+  if (!value) {
+    return "ios,android,web";
+  }
+
+  return value;
+}
+
 function execFilePromise(file, args, options = {}) {
   const timeoutMs = Number(process.env.YTDLP_TIMEOUT_MS || 60000);
 
@@ -74,7 +85,7 @@ async function getYtDlpInfo(url) {
     "--no-warnings",
     "--force-ipv4",
     "--extractor-args",
-    "youtube:player_client=android,web",
+    "youtube:player_client=" + getYtDlpPlayerClients(),
     url
   ]);
 
@@ -494,7 +505,7 @@ async function createResource(track) {
     "--no-warnings",
     "--force-ipv4",
     "--extractor-args",
-    "youtube:player_client=android,web",
+    "youtube:player_client=" + getYtDlpPlayerClients(),
     playableUrl
   ], {
     stdio: ["ignore", "pipe", "pipe"]
