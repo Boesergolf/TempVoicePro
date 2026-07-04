@@ -129,7 +129,12 @@ async function sendControlPanel(guild, categoryId, voiceChannel, member) {
       new ButtonBuilder()
         .setCustomId("tv_claim")
         .setLabel("🙋 Claim")
-        .setStyle(ButtonStyle.Success)
+        .setStyle(ButtonStyle.Success),
+
+      new ButtonBuilder()
+        .setCustomId("tv_close")
+        .setLabel("🗑 Close")
+        .setStyle(ButtonStyle.Danger)
     );
 
     const panelMessage = await panelChannel.send({

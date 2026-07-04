@@ -28,6 +28,32 @@ async function deletePanelChannel(channel) {
   }
 }
 
+async function deleteTempChannel(channel) {
+  if (!channel) return;
+
+  try {
+    cancelDelete(channel.id);
+
+    await deletePanelChannel(channel);
+
+    await channel.delete().catch(() => {});
+
+    await db.execute(
+      "DELETE FROM temp_channels WHERE channelId = ?",
+      [channel.id]
+    );
+
+    await db.execute(
+      "DELETE FROM temp_permissions WHERE channelId = ?",
+      [channel.id]
+    );
+
+    console.log("🗑️ TempVoice Channel gelöscht:", channel.name);
+  } catch (err) {
+    console.error("❌ Fehler beim Löschen des TempVoice Channels:", err);
+  }
+}
+
 function handleEmptyChannel(channel) {
   if (!channel) return;
   if (deleteTimers.has(channel.id)) return;
@@ -35,21 +61,7 @@ function handleEmptyChannel(channel) {
   const timer = setTimeout(async () => {
     try {
       if (channel.members.size === 0) {
-        await deletePanelChannel(channel);
-
-        await channel.delete().catch(() => {});
-
-        await db.execute(
-          "DELETE FROM temp_channels WHERE channelId = ?",
-          [channel.id]
-        );
-
-        await db.execute(
-          "DELETE FROM temp_permissions WHERE channelId = ?",
-          [channel.id]
-        );
-
-        console.log("🗑️ TempVoice Channel gelöscht:", channel.name);
+        await deleteTempChannel(channel);
       }
     } catch (err) {
       console.error("❌ Delete error:", err);
@@ -70,5 +82,6 @@ function cancelDelete(channelId) {
 
 module.exports = {
   handleEmptyChannel,
-  cancelDelete
+  cancelDelete,
+  deleteTempChannel
 };
