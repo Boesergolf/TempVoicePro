@@ -676,3 +676,25 @@ Der Bot benötigt dafür die Berechtigung:
 
 Falls das Anpinnen fehlschlägt, läuft der Bot trotzdem weiter und schreibt den Fehler nur in die Logs.
 
+
+## Panel Cleanup
+
+Mit `/panelcleanup` können alte einzelne Panel-Channels gefunden werden.
+
+Beispiele für alte Channels:
+
+- `#music-player`
+- `#gluecksrad`
+
+Standardmäßig löscht der Command nichts.
+
+Zum Prüfen:
+
+`/panelcleanup`
+
+Zum Löschen:
+
+`/panelcleanup loeschen:Ja`
+
+Der neue zentrale Panel-Channel `#bot-panels` bleibt erhalten.
+

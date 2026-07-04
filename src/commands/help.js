@@ -31,7 +31,8 @@ function overviewHelp() {
       field("📌 Panels", [
         "`/panels` - alle zentralen Bot-Panels erstellen",
         "`/musicpanel` - Music Panel aktualisieren",
-        "`/gluecksradpanel` - Glücksrad Panel aktualisieren"
+        "`/gluecksradpanel` - Glücksrad Panel aktualisieren",
+        "`/panelcleanup` - alte Einzel-Panel-Channels finden"
       ]),
       field("🎧 TempVoice", [
         "`/setup`, `/stats`, `/lock`, `/unlock`, `/rename`",
@@ -70,6 +71,10 @@ function panelsHelp() {
       ]),
       field("/gluecksradpanel kategorie:...", [
         "Aktualisiert das Glücksrad Panel im zentralen Panel-Channel."
+      ]),
+      field("/panelcleanup", [
+        "Findet alte einzelne Panel-Channels wie `#music-player` oder `#gluecksrad`.",
+        "Mit `/panelcleanup loeschen:Ja` können diese alten Channels entfernt werden."
       ])
     ],
     0x2f80ed
