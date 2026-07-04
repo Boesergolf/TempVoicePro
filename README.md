@@ -367,3 +367,18 @@ Aktueller Stand:
 - Help Command aktiv
 - MySQL Speicherung aktiv
 - PM2 Betrieb aktiv
+
+## Music Panel Statusanzeige
+
+Das Music Panel zeigt zusätzlich eine Statusbox an.
+
+Angezeigt werden:
+
+- aktuelle Lautstärke
+- aktueller Track
+- aktuelle Queue
+- Spotify Hinweis
+- Refresh-Hinweis
+
+Mit dem Button `🔄 Refresh` kann die Anzeige im Music Panel manuell aktualisiert werden.
+
