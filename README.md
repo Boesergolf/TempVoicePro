@@ -751,4 +751,3 @@ Nicht gelöscht werden:
 - Glücksrad Panel
 
 Neue normale Nachrichten im Panel-Channel werden weiterhin automatisch nach dem eingestellten Timer gelöscht.
-
