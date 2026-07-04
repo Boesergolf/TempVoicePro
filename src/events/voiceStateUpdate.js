@@ -1,4 +1,5 @@
 const db = require("../database/mysql");
+
 const {
   ChannelType,
   ActionRowBuilder,
@@ -36,7 +37,7 @@ async function getNextLobbyName(guild, categoryId) {
     number++;
   }
 
-  return `Lobby ${number}`;
+  return "Lobby " + number;
 }
 
 async function getPanelChannel(guild, categoryId) {
@@ -81,15 +82,15 @@ async function sendControlPanel(guild, categoryId, voiceChannel, member) {
 
     if (!panelChannel || !panelChannel.isTextBased()) {
       console.log("❌ Kein gültiger Textkanal für TempVoice Panel gefunden.");
-      return;
+      return null;
     }
 
     const embed = new EmbedBuilder()
       .setTitle("🎛 TempVoice Control Panel")
       .setColor("Blue")
       .setDescription(
-        `🎙 Channel: ${voiceChannel}\n` +
-        `👑 Owner: ${member}\n\n` +
+        "🎙 Channel: " + voiceChannel.toString() + "\n" +
+        "👑 Owner: " + member.toString() + "\n\n" +
         "Verwalte deinen Voice Channel über die Buttons."
       );
 
@@ -132,14 +133,20 @@ async function sendControlPanel(guild, categoryId, voiceChannel, member) {
         .setStyle(ButtonStyle.Secondary)
     );
 
-    await panelChannel.send({
+    const panelMessage = await panelChannel.send({
       embeds: [embed],
       components: [row1, row2]
     });
 
-    console.log(`✅ TempVoice Panel gesendet in #${panelChannel.name}`);
+    console.log("✅ TempVoice Panel gesendet in #" + panelChannel.name);
+
+    return {
+      panelChannelId: panelChannel.id,
+      panelMessageId: panelMessage.id
+    };
   } catch (err) {
     console.error("❌ Panel Fehler:", err);
+    return null;
   }
 }
 
@@ -165,25 +172,27 @@ module.exports = {
         const member = newState.member;
         if (!member) return;
 
-       const lobbyName = await getNextLobbyName(guild, settings.categoryId);
+        const lobbyName = await getNextLobbyName(guild, settings.categoryId);
 
-	const channel = await guild.channels.create({
- 	name: lobbyName,
- 	type: ChannelType.GuildVoice,
- 	parent: settings.categoryId || null,
- 	userLimit: 0
-});
+        const channel = await guild.channels.create({
+          name: lobbyName,
+          type: ChannelType.GuildVoice,
+          parent: settings.categoryId || null,
+          userLimit: 0
+        });
 
         await member.voice.setChannel(channel);
 
         await db.execute(
-          `INSERT INTO temp_channels (channelId, ownerId, guildId, createdAt)
+          `INSERT INTO temp_channels
+           (channelId, ownerId, guildId, createdAt)
            VALUES (?, ?, ?, ?)`,
           [channel.id, member.id, guildId, Date.now()]
         );
 
         await db.execute(
-          `INSERT INTO temp_permissions (channelId, ownerId, coOwners)
+          `INSERT INTO temp_permissions
+           (channelId, ownerId, coOwners)
            VALUES (?, ?, ?)
            ON DUPLICATE KEY UPDATE
              ownerId = VALUES(ownerId),
@@ -191,7 +200,25 @@ module.exports = {
           [channel.id, member.id, JSON.stringify([])]
         );
 
-        await sendControlPanel(guild, settings.categoryId, channel, member);
+        const panelData = await sendControlPanel(
+          guild,
+          settings.categoryId,
+          channel,
+          member
+        );
+
+        if (panelData) {
+          await db.execute(
+            `UPDATE temp_channels
+             SET panelChannelId = ?, panelMessageId = ?
+             WHERE channelId = ?`,
+            [
+              panelData.panelChannelId,
+              panelData.panelMessageId,
+              channel.id
+            ]
+          );
+        }
       }
 
       if (oldState.channel) {
