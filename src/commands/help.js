@@ -32,7 +32,8 @@ function overviewHelp() {
         "`/panels` - alle zentralen Bot-Panels erstellen",
         "`/musicpanel` - Music Panel aktualisieren",
         "`/gluecksradpanel` - Glücksrad Panel aktualisieren",
-        "`/panelcleanup` - alte Einzel-Panel-Channels finden"
+        "`/panelcleanup` - alte Einzel-Panel-Channels finden",
+        "`/panelcheck` - Panel-Rechte prüfen"
       ]),
       field("🎧 TempVoice", [
         "`/setup`, `/stats`, `/lock`, `/unlock`, `/rename`",

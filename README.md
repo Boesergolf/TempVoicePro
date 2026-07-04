@@ -853,3 +853,32 @@ Aktualisiert werden:
 
 Der Button befindet sich im Übersichts-Panel im zentralen Panel-Channel.
 
+
+## Panel Check
+
+Mit `/panelcheck` kann der zentrale Panel-Channel geprüft werden.
+
+Der Command zeigt:
+
+- zentraler Panel-Channel
+- Kategorie
+- gefundene Panel-Nachrichten
+- Auto-Lösch-Timer
+- Auto-Refresh-Timer
+- Bot-Berechtigungen im Panel-Channel
+
+Geprüfte Rechte:
+
+- Channel sehen
+- Nachrichten senden
+- Embeds senden
+- Nachrichtenverlauf lesen
+- Nachrichten verwalten
+- Channel verwalten
+
+Beispiel:
+
+`/panelcheck`
+
+Der Command ist hilfreich, wenn Auto-Löschen, Anpinnen oder Panel-Updates nicht funktionieren.
+
