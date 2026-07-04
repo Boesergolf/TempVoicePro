@@ -910,3 +910,18 @@ Die Einstellung kommt aus `.env`:
 
 `PANEL_REFRESH_BUTTON_COOLDOWN_MS=10000`
 
+
+## Code Check
+
+Mit folgendem Befehl können alle wichtigen JavaScript-Dateien auf Syntaxfehler geprüft werden:
+
+`npm run check`
+
+Der Check prüft unter anderem:
+
+- alle Dateien in `src/`
+- `deploy-commands.js`
+- `init-db.js`
+
+Das ist hilfreich vor jedem Neustart, Deploy oder Commit.
+
