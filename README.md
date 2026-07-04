@@ -616,3 +616,20 @@ Auto-Leave greift nur, wenn:
 
 Dadurch bleibt die aktuelle Wiedergabe erhalten, wenn der Bot pausiert wurde.
 
+
+## Panel Kategorie Auswahl
+
+Beim Erstellen oder Aktualisieren der zentralen Panels muss eine Kategorie ausgewählt werden.
+
+Betroffene Commands:
+
+- `/panels`
+- `/musicpanel`
+- `/gluecksradpanel`
+
+Beispiel:
+
+`/panels kategorie:Bot`
+
+Der Bot erstellt oder verschiebt den zentralen Panel-Channel `#bot-panels` in die ausgewählte Kategorie.
+

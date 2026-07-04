@@ -5,80 +5,76 @@ const {
 } = require("discord.js");
 
 const {
+  getOrCreatePanelChannel,
+  findPanelMessage,
+  cleanupDuplicatePanelMessages
+} = require("../utils/panelChannel");
+
+const {
   createMusicPanelEmbed,
   createMusicPanelRows
 } = require("../utils/musicPanelView");
 
-async function findPanelMessages(channel, botId) {
-  const messages = await channel.messages.fetch({ limit: 50 });
-
-  return messages.filter(message =>
-    message.author &&
-    message.author.id === botId &&
-    message.embeds &&
-    message.embeds.some(embed =>
-      String(embed.title || "").includes("Music Player")
-    )
-  );
-}
-
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("musicpanel")
-    .setDescription("Erstellt oder aktualisiert den Music Player Channel")
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
+    .setDescription("Erstellt oder aktualisiert das Music Panel")
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
+    .addChannelOption(option =>
+      option
+        .setName("kategorie")
+        .setDescription("In welcher Kategorie soll der Panel-Channel erstellt oder verschoben werden?")
+        .setRequired(true)
+        .addChannelTypes(ChannelType.GuildCategory)
+    ),
 
   async execute(interaction) {
     await interaction.deferReply({ flags: 64 });
 
-    const guild = interaction.guild;
-    const channelName = "music-player";
+    const category = interaction.options.getChannel("kategorie");
+    const panelChannel = await getOrCreatePanelChannel(interaction.guild, category.id);
+    const botId = interaction.client.user.id;
 
-    let panelChannel = guild.channels.cache.find(channel =>
-      channel &&
-      channel.type === ChannelType.GuildText &&
-      channel.name === channelName
-    );
-
-    if (!panelChannel) {
-      panelChannel = await guild.channels.create({
-        name: channelName,
-        type: ChannelType.GuildText,
-        topic: "Music Player Control Panel für TempVoicePro"
-      });
-    }
-
-    const panelMessages = await findPanelMessages(
+    const existingPanel = await findPanelMessage(
       panelChannel,
-      interaction.client.user.id
+      botId,
+      "Music Player"
     );
 
-    const panels = Array.from(panelMessages.values());
-
-    if (panels.length > 0) {
-      const newestPanel = panels[0];
-
-      await newestPanel.edit({
-        embeds: [createMusicPanelEmbed(guild.id)],
+    if (existingPanel) {
+      await existingPanel.edit({
+        embeds: [createMusicPanelEmbed(interaction.guild.id)],
         components: createMusicPanelRows()
       });
 
-      for (const oldPanel of panels.slice(1)) {
-        await oldPanel.delete().catch(() => {});
-      }
+      await cleanupDuplicatePanelMessages(
+        panelChannel,
+        botId,
+        "Music Player",
+        existingPanel.id
+      );
 
       return interaction.editReply(
-        "✅ Music Player Panel wurde aktualisiert in " + panelChannel.toString()
+        "✅ Music Player Panel wurde aktualisiert in " + panelChannel.toString() +
+        "\n📁 Kategorie: **" + category.name + "**"
       );
     }
 
-    await panelChannel.send({
-      embeds: [createMusicPanelEmbed(guild.id)],
+    const message = await panelChannel.send({
+      embeds: [createMusicPanelEmbed(interaction.guild.id)],
       components: createMusicPanelRows()
     });
 
+    await cleanupDuplicatePanelMessages(
+      panelChannel,
+      botId,
+      "Music Player",
+      message.id
+    );
+
     return interaction.editReply(
-      "✅ Music Player Panel wurde erstellt in " + panelChannel.toString()
+      "✅ Music Player Panel wurde erstellt in " + panelChannel.toString() +
+      "\n📁 Kategorie: **" + category.name + "**"
     );
   }
 };
