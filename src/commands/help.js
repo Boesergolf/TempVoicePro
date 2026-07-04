@@ -33,7 +33,8 @@ function overviewHelp() {
         "`/musicpanel` - Music Panel aktualisieren",
         "`/gluecksradpanel` - Glücksrad Panel aktualisieren",
         "`/panelcleanup` - alte Einzel-Panel-Channels finden",
-        "`/panelcheck` - Panel-Rechte prüfen"
+        "`/panelcheck` - Panel-Rechte prüfen",
+        "`/module` - Module pro Server verwalten"
       ]),
       field("🎧 TempVoice", [
         "`/setup`, `/stats`, `/lock`, `/unlock`, `/rename`",
@@ -230,6 +231,11 @@ function techHelp() {
       field("Sicherheit", [
         "`.env`, Bot Token, API Keys und Passwörter niemals veröffentlichen.",
         "Secrets niemals committen."
+      ]),
+      field("Modul-System", [
+        "`/module list` - Module anzeigen",
+        "`/module enable name:Music` - Modul aktivieren",
+        "`/module disable name:Music` - Modul deaktivieren"
       ])
     ],
     0x2f3136

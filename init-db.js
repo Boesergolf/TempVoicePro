@@ -163,6 +163,19 @@ async function main() {
 
   console.log("✅ Tabelle music_settings geprüft/erstellt.");
 
+
+  await connection.query(`
+    CREATE TABLE IF NOT EXISTS guild_modules (
+      guildId VARCHAR(32) NOT NULL,
+      moduleName VARCHAR(64) NOT NULL,
+      enabled TINYINT(1) NOT NULL DEFAULT 1,
+      updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      PRIMARY KEY (guildId, moduleName)
+    )
+  `);
+
+  console.log("✅ Tabelle guild_modules geprüft/erstellt.");
+
   await connection.end();
 
   console.log("✅ Datenbank-Setup erfolgreich abgeschlossen.");

@@ -1,3 +1,7 @@
+const {
+  isModuleEnabled
+} = require("../utils/guildModules");
+
 const fs = require("fs");
 const path = require("path");
 const db = require("../database/mysql");
@@ -185,6 +189,60 @@ async function hasTempVoiceAccess(userId, channelId) {
   return data.ownerId === userId || coOwners.includes(userId);
 }
 
+const COMMAND_MODULES = {
+  setup: "tempvoice",
+  stats: "tempvoice",
+  lock: "tempvoice",
+  unlock: "tempvoice",
+  rename: "tempvoice",
+  addcoowner: "tempvoice",
+  removecoowner: "tempvoice",
+
+  music: "music",
+  playlist: "playlist",
+
+  gluecksrad: "gluecksrad",
+  gluecksradpanel: "gluecksrad",
+
+  panels: "panels",
+  musicpanel: "panels",
+  panelcleanup: "panels",
+  panelcheck: "panels",
+
+  chatgpt: "chatgpt"
+};
+
+async function checkCommandModule(interaction) {
+  const moduleName = COMMAND_MODULES[interaction.commandName];
+
+  if (!moduleName) {
+    return true;
+  }
+
+  try {
+    const enabled = await isModuleEnabled(interaction.guild.id, moduleName);
+
+    if (enabled) {
+      return true;
+    }
+
+    await interaction.reply({
+      content:
+        "❌ Dieses Modul ist auf diesem Server deaktiviert.\n\n" +
+        "Modul: `" + moduleName + "`\n" +
+        "Aktivieren mit:\n" +
+        "`/module enable name:" + moduleName + "`",
+      flags: 64
+    });
+
+    return false;
+  } catch (err) {
+    console.error("❌ Modul-Check Fehler:", err.message);
+    return true;
+  }
+}
+
+
 module.exports = {
   name: "interactionCreate",
 
@@ -203,6 +261,12 @@ module.exports = {
       }
 
       try {
+        const moduleAllowed = await checkCommandModule(interaction);
+
+        if (!moduleAllowed) {
+          return;
+        }
+
         return await command.execute(interaction, client);
       } catch (err) {
         console.error(`❌ Command Fehler /${interaction.commandName}:`, err);

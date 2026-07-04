@@ -956,3 +956,47 @@ Beispiele:
 
 Änderungen werden pro Server gespeichert und beim nächsten Abspielen automatisch wieder geladen.
 
+
+
+## Server Modul-System
+
+TempVoicePro besitzt ein Server-Modul-System.
+
+Damit können einzelne Funktionen pro Discord-Server aktiviert oder deaktiviert werden.
+
+Command:
+
+`/module`
+
+Verfügbare Subcommands:
+
+- `/module list`
+- `/module enable`
+- `/module disable`
+
+Aktuelle Module:
+
+- TempVoice
+- Music
+- Playlist
+- Glücksrad
+- Panels
+- ChatGPT
+- Moderation
+- Leveling
+- Tickets
+
+Beispiel:
+
+`/module disable name:Music`
+
+Danach werden Music-Commands auf diesem Server blockiert.
+
+Wieder aktivieren:
+
+`/module enable name:Music`
+
+Das Modul-System nutzt die MySQL-Tabelle:
+
+`guild_modules`
+
