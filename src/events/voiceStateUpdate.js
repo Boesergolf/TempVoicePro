@@ -137,9 +137,21 @@ async function sendControlPanel(guild, categoryId, voiceChannel, member) {
         .setStyle(ButtonStyle.Danger)
     );
 
+    const row4 = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId("tv_private")
+        .setLabel("🔐 Private")
+        .setStyle(ButtonStyle.Secondary),
+
+      new ButtonBuilder()
+        .setCustomId("tv_public")
+        .setLabel("🌐 Public")
+        .setStyle(ButtonStyle.Success)
+    );
+
     const panelMessage = await panelChannel.send({
       embeds: [embed],
-      components: [row1, row2, row3]
+      components: [row1, row2, row3, row4]
     });
 
     console.log("✅ Temporäres Panel erstellt: #" + panelChannel.name);
