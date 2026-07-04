@@ -9,10 +9,10 @@ const {
   createMusicPanelRows
 } = require("../utils/musicPanelView");
 
-async function findExistingPanelMessage(channel, botId) {
+async function findPanelMessages(channel, botId) {
   const messages = await channel.messages.fetch({ limit: 50 });
 
-  return messages.find(message =>
+  return messages.filter(message =>
     message.author &&
     message.author.id === botId &&
     message.embeds &&
@@ -48,16 +48,24 @@ module.exports = {
       });
     }
 
-    const existingPanel = await findExistingPanelMessage(
+    const panelMessages = await findPanelMessages(
       panelChannel,
       interaction.client.user.id
     );
 
-    if (existingPanel) {
-      await existingPanel.edit({
+    const panels = Array.from(panelMessages.values());
+
+    if (panels.length > 0) {
+      const newestPanel = panels[0];
+
+      await newestPanel.edit({
         embeds: [createMusicPanelEmbed(guild.id)],
         components: createMusicPanelRows()
       });
+
+      for (const oldPanel of panels.slice(1)) {
+        await oldPanel.delete().catch(() => {});
+      }
 
       return interaction.editReply(
         "✅ Music Player Panel wurde aktualisiert in " + panelChannel.toString()
