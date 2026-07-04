@@ -4,14 +4,21 @@ const {
   MessageFlags
 } = require("discord.js");
 
+function field(name, lines) {
+  return {
+    name,
+    value: Array.isArray(lines) ? lines.join("\n") : String(lines)
+  };
+}
+
 function makeEmbed(title, description, fields, color) {
   return new EmbedBuilder()
     .setTitle(title)
-    .setColor(color || "Blue")
+    .setColor(color || 0x3498db)
     .setDescription(description)
     .addFields(fields)
     .setFooter({
-      text: "TempVoicePro • Erstellt mit Unterstützung von ChatGPT"
+      text: "TempVoicePro Hilfe"
     })
     .setTimestamp();
 }
@@ -21,51 +28,51 @@ function overviewHelp() {
     "📘 TempVoicePro Hilfe",
     "Wähle eine Kategorie mit `/help kategorie:...` aus.",
     [
-      {
-        name: "🎧 TempVoice",
-        value:
-          "/setup - TempVoice einrichten\n" +
-          "/stats - Statistiken anzeigen\n" +
-          "/lock - Channel sperren\n" +
-          "/unlock - Channel entsperren\n" +
-          "/rename - Channel umbenennen\n" +
-          "/addcoowner - Co-Owner hinzufügen\n" +
-          "/removecoowner - Co-Owner entfernen"
-      },
-      {
-        name: "🎵 Musik",
-        value:
-          "/music play - Musik abspielen\n" +
-          "/music playlist - Playlist abspielen\n" +
-          "/music queue - Queue anzeigen\n" +
-          "/music nowplaying - aktuellen Song anzeigen\n" +
-          "/music skip - Song überspringen\n" +
-          "/music stop - Musik stoppen\n" +
-          "/music pause - pausieren\n" +
-          "/music resume - fortsetzen\n" +
-          "/music clear - Queue leeren\n" +
-          "/music shuffle - Queue mischen\n" +
-          "/music remove - Song aus Queue entfernen\n" +
-          "/music volume - Lautstärke setzen"
-      },
-      {
-        name: "📂 Playlists",
-        value:
-          "/playlist create - Playlist erstellen\n" +
-          "/playlist list - Playlists anzeigen\n" +
-          "/playlist add - Link hinzufügen\n" +
-          "/playlist show - Playlist anzeigen\n" +
-          "/playlist import - Spotify/YouTube Playlist importieren\n" +
-          "/playlist remove - Eintrag entfernen\n" +
-          "/playlist delete - Playlist löschen"
-      },
-      {
-        name: "🤖 ChatGPT",
-        value:
-          "/chatgpt - ChatGPT eine Frage stellen"
-      }
+      field("📌 Panels", [
+        "`/panels` - alle zentralen Bot-Panels erstellen",
+        "`/musicpanel` - Music Panel aktualisieren",
+        "`/gluecksradpanel` - Glücksrad Panel aktualisieren"
+      ]),
+      field("🎧 TempVoice", [
+        "`/setup`, `/stats`, `/lock`, `/unlock`, `/rename`",
+        "`/addcoowner`, `/removecoowner`"
+      ]),
+      field("🎵 Musik", [
+        "`/music play`, `/music playlist`, `/music queue`",
+        "`/music pause`, `/music resume`, `/music skip`, `/music stop`",
+        "`/music clear`, `/music shuffle`, `/music remove`, `/music volume`"
+      ]),
+      field("🎡 Glücksrad", [
+        "`/gluecksrad liste` - eigene Liste drehen",
+        "`/gluecksrad voice` - Voice Mitglieder auswählen",
+        "`/gluecksradpanel` - Panel mit Dropdown und Buttons"
+      ]),
+      field("🤖 ChatGPT", [
+        "`/chatgpt` - ChatGPT eine Frage stellen"
+      ])
     ],
-    "Blue"
+    0x3498db
+  );
+}
+
+function panelsHelp() {
+  return makeEmbed(
+    "📌 Panel Hilfe",
+    "Zentrale Panels werden im Channel `#bot-panels` angezeigt.",
+    [
+      field("/panels kategorie:...", [
+        "Erstellt oder aktualisiert alle zentralen Panels.",
+        "Die Kategorie muss direkt beim Command ausgewählt werden.",
+        "Normale Nachrichten im Panel-Channel werden automatisch gelöscht."
+      ]),
+      field("/musicpanel kategorie:...", [
+        "Aktualisiert das Music Panel im zentralen Panel-Channel."
+      ]),
+      field("/gluecksradpanel kategorie:...", [
+        "Aktualisiert das Glücksrad Panel im zentralen Panel-Channel."
+      ])
+    ],
+    0x2f80ed
   );
 }
 
@@ -74,75 +81,15 @@ function tempvoiceHelp() {
     "🎧 TempVoice Hilfe",
     "Diese Befehle verwalten temporäre Voice Channels.",
     [
-      {
-        name: "/setup",
-        value: "Richtet das TempVoice System ein."
-      },
-      {
-        name: "/stats",
-        value: "Zeigt Statistiken zum TempVoice System."
-      },
-      {
-        name: "/lock",
-        value: "Sperrt deinen aktuellen TempVoice Channel."
-      },
-      {
-        name: "/unlock",
-        value: "Entsperrt deinen aktuellen TempVoice Channel."
-      },
-      {
-        name: "/rename name:...",
-        value: "Benennt deinen aktuellen TempVoice Channel um."
-      },
-      {
-        name: "/addcoowner user:@User",
-        value: "Fügt einen Co-Owner zu deinem TempVoice Channel hinzu."
-      },
-      {
-        name: "/removecoowner user:@User",
-        value: "Entfernt einen Co-Owner aus deinem TempVoice Channel."
-      }
+      field("/setup", "Richtet das TempVoice System ein."),
+      field("/stats", "Zeigt Statistiken zum TempVoice System."),
+      field("/lock", "Sperrt deinen aktuellen TempVoice Channel."),
+      field("/unlock", "Entsperrt deinen aktuellen TempVoice Channel."),
+      field("/rename name:...", "Benennt deinen aktuellen TempVoice Channel um."),
+      field("/addcoowner user:@User", "Fügt einen Co-Owner hinzu."),
+      field("/removecoowner user:@User", "Entfernt einen Co-Owner.")
     ],
-    "Green"
-  );
-}
-
-function panelHelp() {
-  return makeEmbed(
-    "🎛 Panel Button Hilfe",
-    "Diese Buttons erscheinen im temporären Panel-Textkanal.",
-    [
-      {
-        name: "Channel Verwaltung",
-        value:
-          "Lock - Channel sperren\n" +
-          "Unlock - Channel entsperren\n" +
-          "Hide - Channel verstecken\n" +
-          "Show - Channel sichtbar machen\n" +
-          "Rename - Channel umbenennen\n" +
-          "Limit - Userlimit setzen\n" +
-          "Bitrate - Bitrate ändern"
-      },
-      {
-        name: "Owner Funktionen",
-        value:
-          "Owner - Owner anzeigen\n" +
-          "Claim - Owner übernehmen\n" +
-          "Add Co-Owner - Co-Owner hinzufügen\n" +
-          "Remove Co-Owner - Co-Owner entfernen"
-      },
-      {
-        name: "Moderation",
-        value:
-          "Private - Channel privat machen\n" +
-          "Public - Channel öffentlich machen\n" +
-          "Kick - User aus dem Channel kicken\n" +
-          "Ban - User aus dem Channel ausschließen\n" +
-          "Unban - User wieder erlauben\n" +
-          "Close - Channel schließen"
-      }
-    ],
-    "Purple"
+    0x2ecc71
   );
 }
 
@@ -151,41 +98,28 @@ function musicHelp() {
     "🎵 Musik Hilfe",
     "Diese Befehle steuern den Musikplayer.",
     [
-      {
-        name: "/music play input:...",
-        value:
-          "Spielt einen Song, YouTube-Link oder Spotify-Link ab.\n" +
-          "Beispiel: /music play input:Never gonna give you up"
-      },
-      {
-        name: "/music playlist name:...",
-        value: "Spielt eine gespeicherte Playlist ab."
-      },
-      {
-        name: "Queue",
-        value:
-          "/music queue - Queue anzeigen\n" +
-          "/music nowplaying - aktuellen Song anzeigen\n" +
-          "/music skip - Song überspringen\n" +
-          "/music clear - Queue leeren\n" +
-          "/music shuffle - Queue mischen\n" +
-          "/music remove position:1 - Song entfernen"
-      },
-      {
-        name: "Player",
-        value:
-          "/music pause - pausieren\n" +
-          "/music resume - fortsetzen\n" +
-          "/music stop - stoppen\n" +
-          "/music volume percent:50 - Lautstärke setzen"
-      },
-      {
-        name: "Spotify Hinweis",
-        value:
-          "Spotify-Link erkannt: Der Bot liest Titel/Künstler aus Spotify und spielt den passenden Track über YouTube ab."
-      }
+      field("/music play input:...", [
+        "Spielt Suchbegriffe, YouTube-Links, YouTube Shorts oder Spotify-Links ab.",
+        "YouTube Links werden direkt abgespielt.",
+        "Spotify wird über Titel/Künstler erkannt und über YouTube gesucht."
+      ]),
+      field("/music playlist name:...", "Spielt eine gespeicherte Playlist ab."),
+      field("Queue", [
+        "`/music queue` - Queue anzeigen",
+        "`/music nowplaying` - aktuellen Track anzeigen",
+        "`/music skip` - Track überspringen",
+        "`/music clear` - Queue leeren",
+        "`/music shuffle` - Queue mischen",
+        "`/music remove position:1` - Track entfernen"
+      ]),
+      field("Player", [
+        "`/music pause` - pausieren",
+        "`/music resume` - fortsetzen",
+        "`/music stop` - stoppen",
+        "`/music volume percent:50` - Lautstärke setzen"
+      ])
     ],
-    "Orange"
+    0xe67e22
   );
 }
 
@@ -194,36 +128,43 @@ function playlistHelp() {
     "📂 Playlist Hilfe",
     "Playlists können pro User oder global für den Server gespeichert werden.",
     [
-      {
-        name: "/playlist create name:... scope:User",
-        value: "Erstellt eine neue Playlist."
-      },
-      {
-        name: "/playlist list scope:User",
-        value: "Zeigt gespeicherte Playlists an."
-      },
-      {
-        name: "/playlist add playlist:... url:...",
-        value: "Fügt einen YouTube-, Spotify- oder normalen Link hinzu."
-      },
-      {
-        name: "/playlist show playlist:...",
-        value: "Zeigt den Inhalt einer Playlist."
-      },
-      {
-        name: "/playlist import playlist:... url:...",
-        value: "Importiert eine Spotify- oder YouTube-Playlist."
-      },
-      {
-        name: "/playlist remove playlist:... position:1",
-        value: "Entfernt einen Eintrag aus der Playlist."
-      },
-      {
-        name: "/playlist delete playlist:...",
-        value: "Löscht eine komplette Playlist."
-      }
+      field("/playlist create", "Erstellt eine neue Playlist."),
+      field("/playlist list", "Zeigt gespeicherte Playlists an."),
+      field("/playlist add", "Fügt einen YouTube-, Spotify- oder normalen Link hinzu."),
+      field("/playlist show", "Zeigt den Inhalt einer Playlist."),
+      field("/playlist import", "Importiert eine Spotify- oder YouTube-Playlist."),
+      field("/playlist remove", "Entfernt einen Eintrag aus einer Playlist."),
+      field("/playlist delete", "Löscht eine komplette Playlist."),
+      field("Favorites", [
+        "Der `⭐ Favorite` Button speichert den aktuellen Track in deiner Playlist `Favorites`.",
+        "Doppelte Einträge werden verhindert."
+      ])
     ],
-    "Aqua"
+    0x00ffff
+  );
+}
+
+function luckWheelHelp() {
+  return makeEmbed(
+    "🎡 Glücksrad Hilfe",
+    "Das Glücksrad wählt zufällig Maps, Karten oder Mitglieder aus.",
+    [
+      field("/gluecksrad liste", [
+        "Wählt zufällig aus einer eigenen Liste.",
+        "Beispiel:",
+        "`/gluecksrad liste eintraege: Inferno, Mirage, Dust2 titel: Nächste Map`"
+      ]),
+      field("/gluecksrad voice", [
+        "Wählt zufällige Mitglieder aus deinem aktuellen Voice Channel.",
+        "Beispiel:",
+        "`/gluecksrad voice anzahl:2 titel: Team Auswahl`"
+      ]),
+      field("/gluecksradpanel kategorie:...", [
+        "Erstellt das Glücksrad Panel im zentralen Panel-Channel.",
+        "Das Panel enthält Dropdowns für Voice-Auswahl und Teams sowie einen Button für eigene Listen."
+      ])
+    ],
+    0xf1c40f
   );
 }
 
@@ -232,25 +173,17 @@ function chatgptHelp() {
     "🤖 ChatGPT Hilfe",
     "Mit diesem Command kannst du dem Bot eine Frage stellen.",
     [
-      {
-        name: "/chatgpt frage:...",
-        value:
-          "Stellt ChatGPT eine Frage.\n" +
-          "Beispiel: /chatgpt frage:Was kannst du?"
-      },
-      {
-        name: "Private Antwort",
-        value:
-          "Mit private:Ja ist die Antwort nur für dich sichtbar.\n" +
-          "Mit private:Nein ist sie öffentlich."
-      },
-      {
-        name: "Hinweis",
-        value:
-          "Diese Funktion benötigt einen gültigen OpenAI API Key und verfügbares API-Guthaben."
-      }
+      field("/chatgpt frage:...", "Stellt ChatGPT eine Frage."),
+      field("Private Antwort", [
+        "`private:Ja` - Antwort nur für dich sichtbar",
+        "`private:Nein` - Antwort öffentlich"
+      ]),
+      field("Hinweis", [
+        "Benötigt einen gültigen OpenAI API Key und verfügbares API-Guthaben.",
+        "API-Fehler werden nutzerfreundlich angezeigt."
+      ])
     ],
-    "Blue"
+    0x3498db
   );
 }
 
@@ -259,40 +192,32 @@ function techHelp() {
     "🛠 Technik Hilfe",
     "Nützliche Befehle für Wartung und Fehlerbehebung.",
     [
-      {
-        name: "PM2",
-        value:
-          "pm2 restart tempvoice --update-env\n" +
-          "pm2 logs tempvoice --lines 80\n" +
-          "pm2 flush tempvoice\n" +
-          "pm2 save"
-      },
-      {
-        name: "Slash Commands",
-        value:
-          "node deploy-commands.js\n" +
-          "Danach Discord mit STRG + R neu laden."
-      },
-      {
-        name: "Datenbank",
-        value:
-          "npm run db:init"
-      },
-      {
-        name: "Sicherheit",
-        value:
-          ".env, Bot Token, API Keys und Passwörter niemals veröffentlichen."
-      }
+      field("PM2", [
+        "`pm2 restart tempvoice --update-env`",
+        "`pm2 logs tempvoice --lines 80`",
+        "`pm2 flush tempvoice`",
+        "`pm2 save`"
+      ]),
+      field("Slash Commands", [
+        "`node deploy-commands.js`",
+        "Danach Discord mit `STRG + R` neu laden."
+      ]),
+      field("Datenbank", "`npm run db:init`"),
+      field("Sicherheit", [
+        "`.env`, Bot Token, API Keys und Passwörter niemals veröffentlichen.",
+        "Secrets niemals committen."
+      ])
     ],
-    "DarkGrey"
+    0x2f3136
   );
 }
 
 function getHelp(category) {
+  if (category === "panels") return panelsHelp();
   if (category === "tempvoice") return tempvoiceHelp();
-  if (category === "panel") return panelHelp();
   if (category === "music") return musicHelp();
   if (category === "playlist") return playlistHelp();
+  if (category === "gluecksrad") return luckWheelHelp();
   if (category === "chatgpt") return chatgptHelp();
   if (category === "technik") return techHelp();
 
@@ -310,10 +235,11 @@ module.exports = {
         .setRequired(false)
         .addChoices(
           { name: "Übersicht", value: "uebersicht" },
+          { name: "Panels", value: "panels" },
           { name: "TempVoice", value: "tempvoice" },
-          { name: "Panel Buttons", value: "panel" },
           { name: "Musik", value: "music" },
           { name: "Playlists", value: "playlist" },
+          { name: "Glücksrad", value: "gluecksrad" },
           { name: "ChatGPT", value: "chatgpt" },
           { name: "Technik", value: "technik" }
         )
