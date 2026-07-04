@@ -735,3 +735,20 @@ Dadurch werden Änderungen an aktiven Lobbys automatisch sichtbar, zum Beispiel:
 
 Das Update wird mit kurzer Verzögerung ausgeführt, damit Datenbank und Discord Channels vorher sauber aktualisiert sind.
 
+
+## Panel Channel Sofort-Bereinigung
+
+Beim Ausführen von `/panels` räumt der Bot den zentralen Panel-Channel automatisch auf.
+
+Dabei werden normale Nachrichten entfernt, damit die Panels direkt sichtbar bleiben.
+
+Nicht gelöscht werden:
+
+- angepinnte Nachrichten
+- TempVoicePro Übersicht
+- TempVoice Status Panel
+- Music Player Panel
+- Glücksrad Panel
+
+Neue normale Nachrichten im Panel-Channel werden weiterhin automatisch nach dem eingestellten Timer gelöscht.
+

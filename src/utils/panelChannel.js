@@ -119,6 +119,34 @@ async function pinPanelMessage(message) {
   }
 }
 
+
+async function cleanupPanelChannelMessages(channel, botId, limit = 100) {
+  if (!channel || !channel.messages) return 0;
+
+  let deleted = 0;
+
+  try {
+    const messages = await channel.messages.fetch({ limit });
+
+    for (const message of messages.values()) {
+      if (!message) continue;
+      if (message.pinned) continue;
+      if (isProtectedPanelMessage(message)) continue;
+
+      try {
+        if (message.deletable) {
+          await message.delete();
+          deleted += 1;
+        }
+      } catch {}
+    }
+  } catch (err) {
+    console.error("❌ Panel Channel Cleanup Fehler:", err.message);
+  }
+
+  return deleted;
+}
+
 module.exports = {
   PANEL_CHANNEL_NAME,
   getPanelMessageDeleteMs,
@@ -127,5 +155,6 @@ module.exports = {
   findPanelMessage,
   cleanupDuplicatePanelMessages,
   schedulePanelMessageDelete,
-  pinPanelMessage
+  pinPanelMessage,
+  cleanupPanelChannelMessages
 };

@@ -10,7 +10,8 @@ const {
   findPanelMessage,
   cleanupDuplicatePanelMessages,
   getPanelMessageDeleteMs,
-  pinPanelMessage
+  pinPanelMessage,
+  cleanupPanelChannelMessages
 } = require("../utils/panelChannel");
 
 const {
@@ -90,6 +91,8 @@ module.exports = {
     const channel = await getOrCreatePanelChannel(interaction.guild, category.id);
     const botId = interaction.client.user.id;
 
+    const deletedMessages = await cleanupPanelChannelMessages(channel, botId);
+
     await upsertPanel(channel, botId, "TempVoicePro Panels", {
       embeds: [createOverviewEmbed()],
       components: []
@@ -112,7 +115,8 @@ module.exports = {
 
     return interaction.editReply(
       "✅ Alle Panels wurden erstellt oder aktualisiert in " + channel.toString() +
-      "\n📁 Kategorie: **" + category.name + "**"
+      "\n📁 Kategorie: **" + category.name + "**" +
+      "\n🧹 Aufgeräumte Nachrichten: **" + deletedMessages + "**"
     );
   }
 };
