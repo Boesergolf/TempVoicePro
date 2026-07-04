@@ -39,6 +39,15 @@ async function getNextPosition(playlistId) {
   return Number(rows[0]?.maxPosition || 0) + 1;
 }
 
+async function isAlreadyFavorite(playlistId, url, title) {
+  const [rows] = await db.execute(
+    "SELECT id FROM music_playlist_items WHERE playlistId = ? AND (url = ? OR title = ?) LIMIT 1",
+    [playlistId, url, title]
+  );
+
+  return rows.length > 0;
+}
+
 module.exports = {
   customId: "mp_favorite",
 
@@ -73,6 +82,18 @@ module.exports = {
     }
 
     const playlist = await getOrCreateFavoritesPlaylist(interaction);
+
+    const exists = await isAlreadyFavorite(playlist.id, url, title);
+
+    if (exists) {
+      return interaction.reply({
+        content:
+          "⭐ Dieser Track ist bereits in deiner Playlist **Favorites**:\n" +
+          "**" + title + "**",
+        flags: 64
+      });
+    }
+
     const position = await getNextPosition(playlist.id);
 
     await db.execute(

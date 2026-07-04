@@ -470,3 +470,23 @@ Abspielen:
 
 `/music playlist name:Favorites`
 
+
+## Music Panel Favorite Duplikat-Schutz
+
+Der `⭐ Favorite` Button prüft, ob der aktuell laufende Track bereits in der persönlichen Playlist `Favorites` gespeichert ist.
+
+Wenn der Track noch nicht vorhanden ist:
+
+`⭐ Gespeichert in deiner Playlist Favorites`
+
+Wenn der Track bereits vorhanden ist:
+
+`⭐ Dieser Track ist bereits in deiner Playlist Favorites`
+
+Geprüft wird anhand von:
+
+- gespeicherter URL
+- Track-Titel
+
+Dadurch werden doppelte Einträge in `Favorites` verhindert.
+
