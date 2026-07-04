@@ -1,28 +1,68 @@
 const { SlashCommandBuilder } = require("discord.js");
 const db = require("../database/mysql");
+const { isOwner } = require("../utils/permissions");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("removecoowner")
-    .setDescription("Entfernt einen Co-Owner")
-    .addUserOption(opt =>
-      opt.setName("user").setDescription("User").setRequired(true)
+    .setDescription("Entfernt einen Co-Owner aus deinem TempVoice Channel")
+    .addUserOption(option =>
+      option
+        .setName("user")
+        .setDescription("User, der entfernt werden soll")
+        .setRequired(true)
     ),
 
   async execute(interaction) {
-    const channel = interaction.member.voice.channel;
-    if (!channel) return interaction.reply({ content: "❌ Kein Channel", ephemeral: true });
+    const channel = interaction.member?.voice?.channel;
 
-    const user = interaction.options.getUser("user");
+    if (!channel) {
+      return interaction.reply({
+        content: "❌ Du bist in keinem Voice Channel.",
+        ephemeral: true
+      });
+    }
+
+    const owner = await isOwner(interaction.user.id, channel.id);
+
+    if (!owner) {
+      return interaction.reply({
+        content: "❌ Nur der Channel Owner darf Co-Owner entfernen.",
+        ephemeral: true
+      });
+    }
+
+    const user = interaction.options.getUser("user", true);
 
     const [rows] = await db.execute(
       "SELECT * FROM temp_permissions WHERE channelId = ?",
       [channel.id]
     );
 
-    if (!rows[0]) return interaction.reply({ content: "❌ Kein Temp Channel", ephemeral: true });
+    const data = rows[0];
 
-    let coOwners = JSON.parse(rows[0].coOwners || "[]");
+    if (!data) {
+      return interaction.reply({
+        content: "❌ Das ist kein TempVoice Channel.",
+        ephemeral: true
+      });
+    }
+
+    let coOwners = [];
+
+    try {
+      coOwners = JSON.parse(data.coOwners || "[]");
+    } catch {
+      coOwners = [];
+    }
+
+    if (!coOwners.includes(user.id)) {
+      return interaction.reply({
+        content: `ℹ️ ${user} ist kein Co-Owner.`,
+        ephemeral: true
+      });
+    }
+
     coOwners = coOwners.filter(id => id !== user.id);
 
     await db.execute(
@@ -31,7 +71,7 @@ module.exports = {
     );
 
     return interaction.reply({
-      content: `❌ ${user.username} ist kein Co-Owner mehr`,
+      content: `🗑️ ${user} ist kein Co-Owner mehr.`,
       ephemeral: true
     });
   }

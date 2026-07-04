@@ -1,22 +1,37 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
-const { isOwnerOrCoOwner } = require("../utils/permissions");
+const { SlashCommandBuilder } = require("discord.js");
+const { hasAccess } = require("../utils/permissions");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("lock")
-    .setDescription("Lock your TempVoice channel"),
+    .setDescription("Sperrt deinen TempVoice Channel"),
 
   async execute(interaction) {
-    const channel = interaction.member.voice.channel;
-    if (!channel) return interaction.reply({ content: "❌ Kein Channel", ephemeral: true });
+    const channel = interaction.member?.voice?.channel;
 
-    const allowed = await isOwnerOrCoOwner(interaction.user.id, channel.id);
-    if (!allowed) return interaction.reply({ content: "❌ Kein Zugriff", ephemeral: true });
+    if (!channel) {
+      return interaction.reply({
+        content: "❌ Du bist in keinem Voice Channel.",
+        ephemeral: true
+      });
+    }
+
+    const allowed = await hasAccess(interaction.user.id, channel.id);
+
+    if (!allowed) {
+      return interaction.reply({
+        content: "❌ Nur Owner oder Co-Owner dürfen das nutzen.",
+        ephemeral: true
+      });
+    }
 
     await channel.permissionOverwrites.edit(interaction.guild.roles.everyone, {
       Connect: false
     });
 
-    return interaction.reply({ content: "🔒 Channel gesperrt", ephemeral: true });
+    return interaction.reply({
+      content: "🔒 Channel gesperrt.",
+      ephemeral: true
+    });
   }
 };

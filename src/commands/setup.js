@@ -1,7 +1,8 @@
 const {
   SlashCommandBuilder,
   PermissionFlagsBits,
-  ChannelType
+  ChannelType,
+  EmbedBuilder
 } = require("discord.js");
 
 const db = require("../database/mysql");
@@ -10,7 +11,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("setup")
     .setDescription("TempVoice System einrichten")
-
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .addChannelOption(option =>
       option
         .setName("creator")
@@ -18,71 +19,48 @@ module.exports = {
         .addChannelTypes(ChannelType.GuildVoice)
         .setRequired(true)
     )
-
     .addChannelOption(option =>
       option
         .setName("category")
-        .setDescription("TempVoice Kategorie")
+        .setDescription("Kategorie für TempVoice Channels")
         .addChannelTypes(ChannelType.GuildCategory)
         .setRequired(true)
-    )
-
-    .setDefaultMemberPermissions(
-      PermissionFlagsBits.Administrator
     ),
 
   async execute(interaction) {
+    const creator = interaction.options.getChannel("creator", true);
+    const category = interaction.options.getChannel("category", true);
 
-    const creator = interaction.options.getChannel("creator");
-    const category = interaction.options.getChannel("category");
-
-    const guildId = interaction.guild.id;
-
-    // Prüfen ob Server bereits existiert
-    const [rows] = await db.execute(
-      "SELECT guildId FROM guild_settings WHERE guildId = ?",
-      [guildId]
+    await db.execute(
+      `INSERT INTO guild_settings
+       (guildId, creatorChannelId, categoryId)
+       VALUES (?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         creatorChannelId = VALUES(creatorChannelId),
+         categoryId = VALUES(categoryId)`,
+      [interaction.guild.id, creator.id, category.id]
     );
 
-    if (rows.length === 0) {
-
-      await db.execute(
-        `INSERT INTO guild_settings
-        (guildId, creatorChannelId, categoryId)
-        VALUES (?, ?, ?)`,
-        [
-          guildId,
-          creator.id,
-          category.id
-        ]
-      );
-
-    } else {
-
-      await db.execute(
-        `UPDATE guild_settings
-        SET creatorChannelId = ?, categoryId = ?
-        WHERE guildId = ?`,
-        [
-          creator.id,
-          category.id,
-          guildId
-        ]
-      );
-
-    }
+    const embed = new EmbedBuilder()
+      .setTitle("✅ TempVoice eingerichtet")
+      .setColor("Green")
+      .addFields(
+        {
+          name: "🎤 Creator Channel",
+          value: `${creator}`,
+          inline: true
+        },
+        {
+          name: "📂 Kategorie",
+          value: `${category}`,
+          inline: true
+        }
+      )
+      .setTimestamp();
 
     return interaction.reply({
-      content:
-`✅ TempVoice erfolgreich eingerichtet!
-
-🎤 Creator:
-${creator}
-
-📂 Kategorie:
-${category}`,
+      embeds: [embed],
       ephemeral: true
     });
-
   }
 };
