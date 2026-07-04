@@ -28,6 +28,17 @@ const {
   createTempVoicePanelEmbed
 } = require("../utils/tempVoicePanelView");
 
+
+function getPanelAutoRefreshSeconds() {
+  const value = Number(process.env.PANEL_AUTO_REFRESH_MS || 30000);
+
+  if (Number.isNaN(value) || value < 10000) {
+    return 30;
+  }
+
+  return Math.round(value / 1000);
+}
+
 function createOverviewEmbed() {
   const seconds = Math.round(getPanelMessageDeleteMs() / 1000);
 

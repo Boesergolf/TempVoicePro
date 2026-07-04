@@ -796,3 +796,26 @@ Beispiele:
 
 Der Auto-Refresh startet automatisch beim Bot-Start.
 
+
+## Erweiterte Panel Übersicht
+
+Die zentrale Panel-Übersicht im Channel `#bot-panels` zeigt wichtige Informationen direkt im Panel an.
+
+Angezeigt werden:
+
+- Auto-Lösch-Timer für normale Nachrichten
+- Auto-Refresh-Timer für Status-Panels
+- TempVoice Status Panel
+- Music Player Panel
+- Glücksrad Panel
+- automatische Bereinigung
+- wichtige Panel-Commands
+
+Wichtige Commands:
+
+- `/panels`
+- `/musicpanel`
+- `/gluecksradpanel`
+- `/panelcleanup`
+- `/help kategorie:Panels`
+
