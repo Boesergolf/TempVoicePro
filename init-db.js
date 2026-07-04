@@ -38,15 +38,15 @@ async function addColumnIfMissing(connection, tableName, columnName, definition)
   const exists = await columnExists(connection, tableName, columnName);
 
   if (exists) {
-    console.log(`✅ Spalte vorhanden: ${tableName}.${columnName}`);
+    console.log("✅ Spalte vorhanden: " + tableName + "." + columnName);
     return;
   }
 
   await connection.query(
-    `ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${definition}`
+    "ALTER TABLE " + tableName + " ADD COLUMN " + columnName + " " + definition
   );
 
-  console.log(`➕ Spalte erstellt: ${tableName}.${columnName}`);
+  console.log("➕ Spalte erstellt: " + tableName + "." + columnName);
 }
 
 async function main() {
@@ -67,9 +67,9 @@ async function main() {
      COLLATE utf8mb4_unicode_ci`
   );
 
-  console.log(`✅ Datenbank bereit: ${DB_NAME}`);
+  console.log("✅ Datenbank bereit: " + DB_NAME);
 
-  await connection.query(`USE ${dbName}`);
+  await connection.query("USE " + dbName);
 
   await connection.query(`
     CREATE TABLE IF NOT EXISTS guild_settings (
@@ -117,6 +117,40 @@ async function main() {
     "panelMessageId",
     "VARCHAR(20) NULL"
   );
+
+  await connection.query(`
+    CREATE TABLE IF NOT EXISTS music_playlists (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      guildId VARCHAR(20) NOT NULL,
+      ownerKey VARCHAR(20) NOT NULL,
+      scope VARCHAR(20) NOT NULL,
+      name VARCHAR(100) NOT NULL,
+      createdAt BIGINT NOT NULL,
+      UNIQUE KEY uniq_music_playlist (guildId, ownerKey, scope, name)
+    )
+  `);
+
+  console.log("✅ Tabelle bereit: music_playlists");
+
+  await connection.query(`
+    CREATE TABLE IF NOT EXISTS music_playlist_items (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      playlistId INT NOT NULL,
+      source VARCHAR(20) NOT NULL DEFAULT 'url',
+      title VARCHAR(200) NULL,
+      url TEXT NOT NULL,
+      addedBy VARCHAR(20) NOT NULL,
+      position INT NOT NULL,
+      createdAt BIGINT NOT NULL,
+      INDEX idx_playlist_position (playlistId, position),
+      CONSTRAINT fk_music_playlist_items_playlist
+        FOREIGN KEY (playlistId)
+        REFERENCES music_playlists(id)
+        ON DELETE CASCADE
+    )
+  `);
+
+  console.log("✅ Tabelle bereit: music_playlist_items");
 
   await connection.end();
 
