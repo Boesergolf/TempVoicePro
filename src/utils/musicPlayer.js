@@ -1,5 +1,5 @@
 const fs = require("fs");
-const { spawn } = require("child_process");
+const { spawn, execFile } = require("child_process");
 
 const {
   joinVoiceChannel,
@@ -30,6 +30,53 @@ function getYtDlpPath() {
 
   return "yt-dlp";
 }
+
+function execFilePromise(file, args) {
+  const timeoutMs = Number(process.env.YTDLP_TIMEOUT_MS || 20000);
+
+  return new Promise((resolve, reject) => {
+    const child = execFile(file, args, {
+      maxBuffer: 1024 * 1024 * 10,
+      timeout: timeoutMs
+    }, (error, stdout, stderr) => {
+      if (error) {
+        if (error.killed || error.signal === "SIGTERM") {
+          return reject(new Error("yt-dlp Timeout nach " + Math.round(timeoutMs / 1000) + " Sekunden."));
+        }
+
+        error.stderr = stderr;
+        return reject(error);
+      }
+
+      resolve({
+        stdout,
+        stderr
+      });
+    });
+
+    child.on("error", err => {
+      reject(err);
+    });
+  });
+}
+
+async function getYtDlpInfo(url) {
+  const ytDlpPath = getYtDlpPath();
+
+  const result = await execFilePromise(ytDlpPath, [
+    "--dump-single-json",
+    "--no-playlist",
+    "--quiet",
+    "--no-warnings",
+    "--force-ipv4",
+    "--extractor-args",
+    "youtube:player_client=android,web",
+    url
+  ]);
+
+  return JSON.parse(result.stdout);
+}
+
 
 function isHttpUrl(value) {
   try {
@@ -137,7 +184,8 @@ function getOrCreateQueue(guildId) {
     textChannel: null,
     current: null,
     playing: false,
-    stopped: false
+    stopped: false,
+    volume: 70
   };
 
   player.on(AudioPlayerStatus.Idle, () => {
@@ -203,31 +251,65 @@ async function searchYouTube(query) {
     throw new Error("Kein Suchbegriff gefunden.");
   }
 
-  const results = await play.search(searchQuery, {
-    limit: 5,
-    source: {
-      youtube: "video"
-    }
+  const ytDlpPath = getYtDlpPath();
+  const searchUrl = "ytsearch5:" + searchQuery;
+
+  const result = await execFilePromise(ytDlpPath, [
+    "--dump-single-json",
+    "--quiet",
+    "--no-warnings",
+    "--force-ipv4",
+    "--extractor-args",
+    "youtube:player_client=android,web",
+    searchUrl
+  ]).catch(err => {
+    console.error("❌ yt-dlp Suche Fehler:", err.stderr || err.message);
+    throw new Error("YouTube-Suche fehlgeschlagen.");
   });
 
-  if (!results || results.length === 0) {
-    throw new Error("Kein YouTube-Treffer gefunden.");
+  let data;
+
+  try {
+    data = JSON.parse(result.stdout);
+  } catch {
+    throw new Error("YouTube-Suche konnte nicht gelesen werden.");
   }
 
-  const result = results.find(item => {
-    if (!item || !item.url) return false;
-    return Boolean(makeYouTubeVideoUrl(item.url));
+  const entries = Array.isArray(data.entries)
+    ? data.entries
+    : [data];
+
+  const video = entries.find(entry => {
+    if (!entry) return false;
+    if (entry.url && String(entry.url).includes("youtube.com/watch")) return true;
+    if (entry.webpage_url && String(entry.webpage_url).includes("youtube.com/watch")) return true;
+    if (entry.id) return true;
+    return false;
   });
 
-  if (!result) {
-    throw new Error("Kein gültiger YouTube-Video-Treffer gefunden.");
+  if (!video) {
+    throw new Error("Kein gültiger YouTube-Treffer gefunden.");
+  }
+
+  const videoUrl =
+    video.webpage_url ||
+    video.original_url ||
+    video.url ||
+    ("https://www.youtube.com/watch?v=" + video.id);
+
+  const normalizedUrl = makeYouTubeVideoUrl(videoUrl) ||
+    (video.id ? "https://www.youtube.com/watch?v=" + video.id : null);
+
+  if (!normalizedUrl) {
+    throw new Error("YouTube-Treffer hatte keine gültige Video-URL.");
   }
 
   return {
-    title: cleanTitle(result.title || searchQuery),
-    url: makeYouTubeVideoUrl(result.url)
+    title: cleanTitle(video.title || searchQuery),
+    url: normalizedUrl
   };
 }
+
 
 async function resolveTrack(track) {
   let source = track.source || "url";
@@ -255,8 +337,8 @@ async function resolveTrack(track) {
     }
 
     if (!title) {
-      const info = await play.video_basic_info(playableUrl).catch(() => null);
-      title = cleanTitle(info?.video_details?.title) || playableUrl;
+      const info = await getYtDlpInfo(playableUrl).catch(() => null);
+      title = cleanTitle(info?.title) || playableUrl;
     }
 
     return {
@@ -364,6 +446,7 @@ async function createResource(track) {
 
   const resource = createAudioResource(child.stdout, {
     inputType: StreamType.Arbitrary,
+    inlineVolume: true,
     metadata: resolved
   });
 
@@ -399,6 +482,11 @@ async function playNext(guildId) {
     const data = await createResource(nextTrack);
 
     queue.current = data.resolved;
+
+    if (data.resource.volume) {
+      data.resource.volume.setVolume((queue.volume || 70) / 100);
+    }
+
     queue.player.play(data.resource);
 
     if (queue.textChannel) {
@@ -432,7 +520,15 @@ async function addTracks(interaction, tracks) {
   }
 
   if (!queue.playing) {
-    await playNext(interaction.guild.id);
+    playNext(interaction.guild.id).catch(err => {
+      console.error("❌ Music Start Fehler:", err);
+
+      if (queue.textChannel) {
+        queue.textChannel
+          .send("❌ Musik konnte nicht gestartet werden: " + err.message)
+          .catch(() => {});
+      }
+    });
   }
 
   return queue;
@@ -535,6 +631,39 @@ function shuffleQueue(guildId) {
   return true;
 }
 
+
+function setVolume(guildId, percent) {
+  const queue = getQueue(guildId);
+
+  if (!queue) {
+    return false;
+  }
+
+  const volume = Math.max(0, Math.min(200, Number(percent)));
+
+  queue.volume = volume;
+
+  if (queue.player && queue.player.state && queue.player.state.resource) {
+    const resource = queue.player.state.resource;
+
+    if (resource.volume) {
+      resource.volume.setVolume(volume / 100);
+    }
+  }
+
+  return volume;
+}
+
+function getVolume(guildId) {
+  const queue = getQueue(guildId);
+
+  if (!queue) {
+    return null;
+  }
+
+  return queue.volume || 70;
+}
+
 function skipTrack(guildId) {
   const queue = getQueue(guildId);
 
@@ -594,6 +723,8 @@ module.exports = {
   clearQueue,
   removeTrack,
   shuffleQueue,
+  setVolume,
+  getVolume,
   skipTrack,
   stopMusic,
   pauseMusic,
