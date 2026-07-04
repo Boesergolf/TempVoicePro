@@ -72,6 +72,11 @@ function panelsHelp() {
       field("/gluecksradpanel kategorie:...", [
         "Aktualisiert das Glücksrad Panel im zentralen Panel-Channel."
       ]),
+      field("Panel Auto-Refresh", [
+        "TempVoice Status und Music Player Panel aktualisieren sich automatisch.",
+        "Standard: alle 30 Sekunden.",
+        "Einstellung in `.env`: `PANEL_AUTO_REFRESH_MS=30000`"
+      ]),
       field("/panelcleanup", [
         "Findet alte einzelne Panel-Channels wie `#music-player` oder `#gluecksrad`.",
         "Mit `/panelcleanup loeschen:Ja` können diese alten Channels entfernt werden."
