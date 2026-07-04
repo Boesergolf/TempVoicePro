@@ -9,7 +9,8 @@ const {
   getOrCreatePanelChannel,
   findPanelMessage,
   cleanupDuplicatePanelMessages,
-  getPanelMessageDeleteMs
+  getPanelMessageDeleteMs,
+  pinPanelMessage
 } = require("../utils/panelChannel");
 
 const {
@@ -54,11 +55,13 @@ async function upsertPanel(channel, botId, titlePart, payload) {
 
   if (existing) {
     await existing.edit(payload);
+    await pinPanelMessage(existing);
     await cleanupDuplicatePanelMessages(channel, botId, titlePart, existing.id);
     return existing;
   }
 
   const message = await channel.send(payload);
+  await pinPanelMessage(message);
   await cleanupDuplicatePanelMessages(channel, botId, titlePart, message.id);
   return message;
 }

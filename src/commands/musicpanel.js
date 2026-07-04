@@ -7,7 +7,8 @@ const {
 const {
   getOrCreatePanelChannel,
   findPanelMessage,
-  cleanupDuplicatePanelMessages
+  cleanupDuplicatePanelMessages,
+  pinPanelMessage
 } = require("../utils/panelChannel");
 
 const {
@@ -47,6 +48,8 @@ module.exports = {
         components: createMusicPanelRows()
       });
 
+      await pinPanelMessage(existingPanel);
+
       await cleanupDuplicatePanelMessages(
         panelChannel,
         botId,
@@ -64,6 +67,8 @@ module.exports = {
       embeds: [createMusicPanelEmbed(interaction.guild.id)],
       components: createMusicPanelRows()
     });
+
+    await pinPanelMessage(message);
 
     await cleanupDuplicatePanelMessages(
       panelChannel,

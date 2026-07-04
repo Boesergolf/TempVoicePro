@@ -102,6 +102,22 @@ function schedulePanelMessageDelete(message) {
   }, delay);
 }
 
+
+async function pinPanelMessage(message) {
+  if (!message) return false;
+
+  try {
+    if (!message.pinned) {
+      await message.pin();
+    }
+
+    return true;
+  } catch (err) {
+    console.error("❌ Panel Nachricht konnte nicht angepinnt werden:", err.message);
+    return false;
+  }
+}
+
 module.exports = {
   PANEL_CHANNEL_NAME,
   getPanelMessageDeleteMs,
@@ -109,5 +125,6 @@ module.exports = {
   isProtectedPanelMessage,
   findPanelMessage,
   cleanupDuplicatePanelMessages,
-  schedulePanelMessageDelete
+  schedulePanelMessageDelete,
+  pinPanelMessage
 };
