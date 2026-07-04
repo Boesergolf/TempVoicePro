@@ -5,6 +5,7 @@ const {
 } = require("discord.js");
 
 const db = require("../database/mysql");
+const { getMetadataForUrl } = require("../utils/musicMetadata");
 
 function normalizeName(name) {
   return name.trim().replace(/\s+/g, " ");
@@ -303,7 +304,7 @@ module.exports = {
         const name = normalizeName(interaction.options.getString("playlist"));
         const url = interaction.options.getString("url").trim();
         const titleRaw = interaction.options.getString("title");
-        const title = titleRaw ? titleRaw.trim() : null;
+        let title = titleRaw ? titleRaw.trim() : null;
         const scope = getScope(interaction);
 
         if (scope === "global" && !canManageGlobal(interaction)) {
@@ -330,7 +331,17 @@ module.exports = {
         );
 
         const nextPosition = positionRows[0].nextPosition || 1;
-        const source = detectSource(url);
+
+        let source = detectSource(url);
+
+        if (!title) {
+          const metadata = await getMetadataForUrl(url);
+
+          if (metadata) {
+            source = metadata.source || source;
+            title = metadata.displayTitle || metadata.title || title;
+          }
+        }
 
         await db.execute(
           `INSERT INTO music_playlist_items
@@ -347,10 +358,15 @@ module.exports = {
           ]
         );
 
+        const titleText = title
+          ? "\nTitel: **" + String(title).replace(/\*/g, "") + "**"
+          : "";
+
         return interaction.editReply(
           "✅ Eintrag wurde zu **" + playlist.name + "** hinzugefügt.\n" +
           "Position: **" + nextPosition + "**\n" +
-          "Quelle: **" + source + "**"
+          "Quelle: **" + source + "**" +
+          titleText
         );
       }
 
