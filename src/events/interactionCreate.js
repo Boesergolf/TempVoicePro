@@ -1,6 +1,54 @@
 const fs = require("fs");
 const path = require("path");
 const db = require("../database/mysql");
+const { addTracks, setVolume, removeTrack } = require("../utils/musicPlayer");
+const { detectSource, getMetadataForUrl } = require("../utils/musicMetadata");
+
+
+function isHttpUrl(value) {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+async function playMusicInput(interaction, input) {
+  const value = String(input || "").trim();
+
+  if (!value) {
+    return interaction.editReply("❌ Bitte gib einen Song, YouTube-Link oder Spotify-Link ein.");
+  }
+
+  let track;
+
+  if (isHttpUrl(value)) {
+    const source = detectSource(value);
+    let title = null;
+
+    if (source === "spotify") {
+      const metadata = await getMetadataForUrl(value).catch(() => null);
+      title = metadata?.displayTitle || metadata?.title || null;
+    }
+
+    track = {
+      source,
+      url: value,
+      title
+    };
+  } else {
+    track = {
+      source: "search",
+      query: value,
+      title: value
+    };
+  }
+
+  await addTracks(interaction, [track]);
+
+  return interaction.editReply("✅ Track wurde zur Queue hinzugefügt.");
+}
 
 async function safeReply(interaction, options) {
   try {
@@ -109,6 +157,61 @@ module.exports = {
      * MODALS
      */
     if (interaction.isModalSubmit()) {
+
+      if (interaction.customId === "mp_play_modal") {
+        await interaction.deferReply({ ephemeral: true });
+
+        const input = interaction.fields.getTextInputValue("input");
+
+        try {
+          return await playMusicInput(interaction, input);
+        } catch (err) {
+          console.error("❌ Music Panel Play Fehler:", err);
+          return interaction.editReply("❌ Fehler: " + err.message);
+        }
+      }
+
+
+      if (interaction.customId === "mp_volume_modal") {
+        await interaction.deferReply({ ephemeral: true });
+
+        const raw = interaction.fields.getTextInputValue("percent");
+        const percent = Number.parseInt(raw, 10);
+
+        if (Number.isNaN(percent) || percent < 0 || percent > 200) {
+          return interaction.editReply("❌ Bitte gib eine Zahl zwischen 0 und 200 ein.");
+        }
+
+        const volume = setVolume(interaction.guild.id, percent);
+
+        if (volume === false) {
+          return interaction.editReply("❌ Es läuft aktuell keine Musik.");
+        }
+
+        return interaction.editReply("🔊 Lautstärke gesetzt auf **" + volume + "%**.");
+      }
+
+      if (interaction.customId === "mp_remove_modal") {
+        await interaction.deferReply({ ephemeral: true });
+
+        const raw = interaction.fields.getTextInputValue("position");
+        const position = Number.parseInt(raw, 10);
+
+        if (Number.isNaN(position) || position < 1) {
+          return interaction.editReply("❌ Bitte gib eine gültige Position ein.");
+        }
+
+        const removed = removeTrack(interaction.guild.id, position);
+
+        if (!removed) {
+          return interaction.editReply("❌ An dieser Position wurde kein Track gefunden.");
+        }
+
+        return interaction.editReply(
+          "🗑 Entfernt: **" + (removed.title || removed.query || removed.url || "Unbekannt") + "**"
+        );
+      }
+
       const channel = interaction.member?.voice?.channel;
 
       if (!channel) {
@@ -168,6 +271,136 @@ module.exports = {
 
         return safeReply(interaction, {
           content: `✏️ Kanal umbenannt zu **${newName}**.`,
+          ephemeral: true
+        });
+      }
+
+      if (interaction.customId === "tv_addcoowner_modal") {
+        const rawUser = interaction.fields
+          .getTextInputValue("user")
+          .trim();
+
+        const userId = rawUser.replace(/[<@!>]/g, "");
+
+        if (!/^\d{17,20}$/.test(userId)) {
+          return safeReply(interaction, {
+            content: "❌ Bitte gib eine gültige User-ID oder @Mention ein.",
+            ephemeral: true
+          });
+        }
+
+        const [rows] = await db.execute(
+          "SELECT ownerId, coOwners FROM temp_permissions WHERE channelId = ?",
+          [channel.id]
+        );
+
+        const data = rows[0];
+
+        if (!data || data.ownerId !== interaction.user.id) {
+          return safeReply(interaction, {
+            content: "❌ Nur der Owner darf Co-Owner hinzufügen.",
+            ephemeral: true
+          });
+        }
+
+        if (userId === data.ownerId) {
+          return safeReply(interaction, {
+            content: "❌ Der Owner ist bereits Owner und muss kein Co-Owner sein.",
+            ephemeral: true
+          });
+        }
+
+        const targetMember = await interaction.guild.members
+          .fetch(userId)
+          .catch(() => null);
+
+        if (!targetMember) {
+          return safeReply(interaction, {
+            content: "❌ User wurde auf diesem Server nicht gefunden.",
+            ephemeral: true
+          });
+        }
+
+        let coOwners = [];
+
+        try {
+          coOwners = JSON.parse(data.coOwners || "[]");
+        } catch {
+          coOwners = [];
+        }
+
+        if (coOwners.includes(userId)) {
+          return safeReply(interaction, {
+            content: "❌ <@" + userId + "> ist bereits Co-Owner.",
+            ephemeral: true
+          });
+        }
+
+        coOwners.push(userId);
+
+        await db.execute(
+          "UPDATE temp_permissions SET coOwners = ? WHERE channelId = ?",
+          [JSON.stringify(coOwners), channel.id]
+        );
+
+        return safeReply(interaction, {
+          content: "🤝 <@" + userId + "> ist jetzt Co-Owner.",
+          ephemeral: true
+        });
+      }
+
+      if (interaction.customId === "tv_removecoowner_modal") {
+        const rawUser = interaction.fields
+          .getTextInputValue("user")
+          .trim();
+
+        const userId = rawUser.replace(/[<@!>]/g, "");
+
+        if (!/^\d{17,20}$/.test(userId)) {
+          return safeReply(interaction, {
+            content: "❌ Bitte gib eine gültige User-ID oder @Mention ein.",
+            ephemeral: true
+          });
+        }
+
+        const [rows] = await db.execute(
+          "SELECT ownerId, coOwners FROM temp_permissions WHERE channelId = ?",
+          [channel.id]
+        );
+
+        const data = rows[0];
+
+        if (!data || data.ownerId !== interaction.user.id) {
+          return safeReply(interaction, {
+            content: "❌ Nur der Owner darf Co-Owner entfernen.",
+            ephemeral: true
+          });
+        }
+
+        let coOwners = [];
+
+        try {
+          coOwners = JSON.parse(data.coOwners || "[]");
+        } catch {
+          coOwners = [];
+        }
+
+        if (!coOwners.includes(userId)) {
+          return safeReply(interaction, {
+            content: "❌ <@" + userId + "> ist kein Co-Owner.",
+            ephemeral: true
+          });
+        }
+
+        coOwners = coOwners.filter(id => id !== userId);
+
+        await db.execute(
+          "UPDATE temp_permissions SET coOwners = ? WHERE channelId = ?",
+          [JSON.stringify(coOwners), channel.id]
+        );
+
+        return safeReply(interaction, {
+          content: "❌ <@" + userId + "> ist kein Co-Owner mehr.",
           ephemeral: true
         });
       }
