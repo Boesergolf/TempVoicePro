@@ -270,7 +270,7 @@ module.exports = {
     ),
 
   async execute(interaction) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: 64 });
 
     const guildId = interaction.guild.id;
     const userId = interaction.user.id;

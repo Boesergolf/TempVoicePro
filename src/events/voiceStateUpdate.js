@@ -149,9 +149,21 @@ async function sendControlPanel(guild, categoryId, voiceChannel, member) {
         .setStyle(ButtonStyle.Success)
     );
 
+    const row5 = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId("tv_addcoowner")
+        .setLabel("🤝 Add Co-Owner")
+        .setStyle(ButtonStyle.Primary),
+
+      new ButtonBuilder()
+        .setCustomId("tv_removecoowner")
+        .setLabel("❌ Remove Co-Owner")
+        .setStyle(ButtonStyle.Secondary)
+    );
+
     const panelMessage = await panelChannel.send({
       embeds: [embed],
-      components: [row1, row2, row3, row4]
+      components: [row1, row2, row3, row4, row5]
     });
 
     console.log("✅ Temporäres Panel erstellt: #" + panelChannel.name);

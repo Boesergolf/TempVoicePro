@@ -19,7 +19,7 @@ module.exports = {
     if (!channel) {
       return interaction.reply({
         content: "❌ Du bist in keinem Voice Channel.",
-        ephemeral: true
+        flags: 64
       });
     }
 
@@ -28,7 +28,7 @@ module.exports = {
     if (!allowed) {
       return interaction.reply({
         content: "❌ Nur Owner oder Co-Owner dürfen das nutzen.",
-        ephemeral: true
+        flags: 64
       });
     }
 
@@ -37,7 +37,7 @@ module.exports = {
     if (!name || name.length < 1 || name.length > 100) {
       return interaction.reply({
         content: "❌ Der Channelname muss zwischen 1 und 100 Zeichen lang sein.",
-        ephemeral: true
+        flags: 64
       });
     }
 
@@ -45,7 +45,7 @@ module.exports = {
 
     return interaction.reply({
       content: `✏️ Channel umbenannt zu **${name}**.`,
-      ephemeral: true
+      flags: 64
     });
   }
 };

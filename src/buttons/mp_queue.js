@@ -6,7 +6,7 @@ module.exports = {
   async execute(interaction) {
     return interaction.reply({
       content: getQueueText(interaction.guild.id),
-      ephemeral: true
+      flags: 64
     });
   }
 };

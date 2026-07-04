@@ -5,10 +5,10 @@ const {
   ActionRowBuilder
 } = require("discord.js");
 
-const { hasAccess } = require("../utils/permissions");
+const { isOwner } = require("../utils/permissions");
 
 module.exports = {
-  customId: "tv_limit",
+  customId: "tv_removecoowner",
 
   async execute(interaction) {
     const channel = interaction.member?.voice?.channel;
@@ -20,28 +20,28 @@ module.exports = {
       });
     }
 
-    const allowed = await hasAccess(interaction.user.id, channel.id);
+    const owner = await isOwner(interaction.user.id, channel.id);
 
-    if (!allowed) {
+    if (!owner) {
       return interaction.reply({
-        content: "❌ Nur Owner oder Co-Owner dürfen das nutzen.",
+        content: "❌ Nur der Owner darf Co-Owner entfernen.",
         flags: 64
       });
     }
 
     const modal = new ModalBuilder()
-      .setCustomId("tv_limit_modal")
-      .setTitle("User Limit ändern");
+      .setCustomId("tv_removecoowner_modal")
+      .setTitle("Co-Owner entfernen");
 
-    const input = new TextInputBuilder()
-      .setCustomId("limit")
-      .setLabel("Maximale Nutzer 0-99")
-      .setPlaceholder("0 = unbegrenzt")
+    const userInput = new TextInputBuilder()
+      .setCustomId("user")
+      .setLabel("User-ID oder @Mention")
+      .setPlaceholder("@User oder 123456789012345678")
       .setStyle(TextInputStyle.Short)
       .setRequired(true);
 
     modal.addComponents(
-      new ActionRowBuilder().addComponents(input)
+      new ActionRowBuilder().addComponents(userInput)
     );
 
     return interaction.showModal(modal);

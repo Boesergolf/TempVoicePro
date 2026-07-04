@@ -3,6 +3,7 @@ const path = require("path");
 const db = require("../database/mysql");
 const { addTracks, setVolume, removeTrack } = require("../utils/musicPlayer");
 const { detectSource, getMetadataForUrl } = require("../utils/musicMetadata");
+const { refreshLatestMusicPanel } = require("../utils/musicPanelView");
 
 
 function isHttpUrl(value) {
@@ -64,6 +65,7 @@ async function playMusicInput(interaction, input) {
       title: value
     }]);
 
+    await refreshLatestMusicPanel(interaction);
     return interaction.editReply("✅ Link wurde zur Queue hinzugefügt.");
   }
 
@@ -73,6 +75,7 @@ async function playMusicInput(interaction, input) {
     title: value
   }]);
 
+  await refreshLatestMusicPanel(interaction);
   return interaction.editReply("✅ Track wurde zur Queue hinzugefügt.");
 }
 
@@ -176,7 +179,7 @@ module.exports = {
       if (!command) {
         return safeReply(interaction, {
           content: "❌ Dieser Command wurde nicht gefunden.",
-          ephemeral: true
+          flags: 64
         });
       }
 
@@ -187,7 +190,7 @@ module.exports = {
 
         return safeReply(interaction, {
           content: "❌ Fehler beim Ausführen des Commands.",
-          ephemeral: true
+          flags: 64
         });
       }
     }
@@ -203,7 +206,7 @@ module.exports = {
 
         return safeReply(interaction, {
           content: "❌ Button-System ist nicht eingerichtet.",
-          ephemeral: true
+          flags: 64
         });
       }
 
@@ -230,7 +233,7 @@ module.exports = {
 
       return safeReply(interaction, {
         content: "❌ Unbekannter Button.",
-        ephemeral: true
+        flags: 64
       });
     }
 
@@ -240,7 +243,7 @@ module.exports = {
     if (interaction.isModalSubmit()) {
 
       if (interaction.customId === "mp_play_modal") {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: 64 });
 
         const input = interaction.fields.getTextInputValue("input");
 
@@ -254,7 +257,7 @@ module.exports = {
 
 
       if (interaction.customId === "mp_volume_modal") {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: 64 });
 
         const raw = interaction.fields.getTextInputValue("percent");
         const percent = Number.parseInt(raw, 10);
@@ -269,11 +272,12 @@ module.exports = {
           return interaction.editReply("❌ Es läuft aktuell keine Musik.");
         }
 
+        await refreshLatestMusicPanel(interaction);
         return interaction.editReply("🔊 Lautstärke gesetzt auf **" + volume + "%**.");
       }
 
       if (interaction.customId === "mp_remove_modal") {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: 64 });
 
         const raw = interaction.fields.getTextInputValue("position");
         const position = Number.parseInt(raw, 10);
@@ -295,7 +299,7 @@ module.exports = {
 
 
       if (interaction.customId === "mp_playlist_modal") {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: 64 });
 
         const playlist = interaction.fields.getTextInputValue("playlist");
         const scope = interaction.fields.getTextInputValue("scope") || "user";
@@ -313,7 +317,7 @@ module.exports = {
       if (!channel) {
         return safeReply(interaction, {
           content: "❌ Du bist in keinem Voice Channel.",
-          ephemeral: true
+          flags: 64
         });
       }
 
@@ -322,7 +326,7 @@ module.exports = {
       if (!allowed) {
         return safeReply(interaction, {
           content: "❌ Nur Owner oder Co-Owner dürfen das nutzen.",
-          ephemeral: true
+          flags: 64
         });
       }
 
@@ -336,7 +340,7 @@ module.exports = {
         if (Number.isNaN(limit) || limit < 0 || limit > 99) {
           return safeReply(interaction, {
             content: "❌ Bitte gib ein gültiges Limit zwischen 0 und 99 ein.",
-            ephemeral: true
+            flags: 64
           });
         }
 
@@ -344,7 +348,7 @@ module.exports = {
 
         return safeReply(interaction, {
           content: `🔢 Limit gesetzt auf **${limit}**.`,
-          ephemeral: true
+          flags: 64
         });
       }
 
@@ -359,7 +363,7 @@ module.exports = {
         if (!newName || newName.length < 1 || newName.length > 100) {
           return safeReply(interaction, {
             content: "❌ Der Channelname muss zwischen 1 und 100 Zeichen lang sein.",
-            ephemeral: true
+            flags: 64
           });
         }
 
@@ -367,7 +371,7 @@ module.exports = {
 
         return safeReply(interaction, {
           content: `✏️ Kanal umbenannt zu **${newName}**.`,
-          ephemeral: true
+          flags: 64
         });
       }
 
@@ -381,7 +385,7 @@ module.exports = {
         if (!/^\d{17,20}$/.test(userId)) {
           return safeReply(interaction, {
             content: "❌ Bitte gib eine gültige User-ID oder @Mention ein.",
-            ephemeral: true
+            flags: 64
           });
         }
 
@@ -395,14 +399,14 @@ module.exports = {
         if (!data || data.ownerId !== interaction.user.id) {
           return safeReply(interaction, {
             content: "❌ Nur der Owner darf Co-Owner hinzufügen.",
-            ephemeral: true
+            flags: 64
           });
         }
 
         if (userId === data.ownerId) {
           return safeReply(interaction, {
             content: "❌ Der Owner ist bereits Owner und muss kein Co-Owner sein.",
-            ephemeral: true
+            flags: 64
           });
         }
 
@@ -413,7 +417,7 @@ module.exports = {
         if (!targetMember) {
           return safeReply(interaction, {
             content: "❌ User wurde auf diesem Server nicht gefunden.",
-            ephemeral: true
+            flags: 64
           });
         }
 
@@ -428,7 +432,7 @@ module.exports = {
         if (coOwners.includes(userId)) {
           return safeReply(interaction, {
             content: "❌ <@" + userId + "> ist bereits Co-Owner.",
-            ephemeral: true
+            flags: 64
           });
         }
 
@@ -441,7 +445,7 @@ module.exports = {
 
         return safeReply(interaction, {
           content: "🤝 <@" + userId + "> ist jetzt Co-Owner.",
-          ephemeral: true
+          flags: 64
         });
       }
 
@@ -455,7 +459,7 @@ module.exports = {
         if (!/^\d{17,20}$/.test(userId)) {
           return safeReply(interaction, {
             content: "❌ Bitte gib eine gültige User-ID oder @Mention ein.",
-            ephemeral: true
+            flags: 64
           });
         }
 
@@ -469,7 +473,7 @@ module.exports = {
         if (!data || data.ownerId !== interaction.user.id) {
           return safeReply(interaction, {
             content: "❌ Nur der Owner darf Co-Owner entfernen.",
-            ephemeral: true
+            flags: 64
           });
         }
 
@@ -484,7 +488,7 @@ module.exports = {
         if (!coOwners.includes(userId)) {
           return safeReply(interaction, {
             content: "❌ <@" + userId + "> ist kein Co-Owner.",
-            ephemeral: true
+            flags: 64
           });
         }
 
@@ -497,13 +501,13 @@ module.exports = {
 
         return safeReply(interaction, {
           content: "❌ <@" + userId + "> ist kein Co-Owner mehr.",
-          ephemeral: true
+          flags: 64
         });
       }
 
       return safeReply(interaction, {
         content: "❌ Unbekanntes Modal.",
-        ephemeral: true
+        flags: 64
       });
     }
   }

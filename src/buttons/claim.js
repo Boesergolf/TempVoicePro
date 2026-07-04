@@ -9,7 +9,7 @@ module.exports = {
     if (!channel) {
       return interaction.reply({
         content: "❌ Du bist in keinem Voice Channel.",
-        ephemeral: true
+        flags: 64
       });
     }
 
@@ -23,14 +23,14 @@ module.exports = {
     if (!data) {
       return interaction.reply({
         content: "❌ Dieser Voice Channel ist kein TempVoice Channel.",
-        ephemeral: true
+        flags: 64
       });
     }
 
     if (data.ownerId === interaction.user.id) {
       return interaction.reply({
         content: "👑 Du bist bereits Owner dieses Channels.",
-        ephemeral: true
+        flags: 64
       });
     }
 
@@ -39,7 +39,7 @@ module.exports = {
     if (oldOwnerStillInside) {
       return interaction.reply({
         content: "❌ Der aktuelle Owner ist noch im Channel. Du kannst ihn nicht claimen.",
-        ephemeral: true
+        flags: 64
       });
     }
 
@@ -55,7 +55,7 @@ module.exports = {
 
     return interaction.reply({
       content: "👑 Du bist jetzt Owner dieses TempVoice Channels.",
-      ephemeral: true
+      flags: 64
     });
   }
 };

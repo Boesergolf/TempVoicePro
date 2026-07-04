@@ -19,7 +19,7 @@ module.exports = {
     if (!channel) {
       return interaction.reply({
         content: "❌ Du bist in keinem Voice Channel.",
-        ephemeral: true
+        flags: 64
       });
     }
 
@@ -28,7 +28,7 @@ module.exports = {
     if (!owner) {
       return interaction.reply({
         content: "❌ Nur der Channel Owner darf Co-Owner entfernen.",
-        ephemeral: true
+        flags: 64
       });
     }
 
@@ -44,7 +44,7 @@ module.exports = {
     if (!data) {
       return interaction.reply({
         content: "❌ Das ist kein TempVoice Channel.",
-        ephemeral: true
+        flags: 64
       });
     }
 
@@ -59,7 +59,7 @@ module.exports = {
     if (!coOwners.includes(user.id)) {
       return interaction.reply({
         content: `ℹ️ ${user} ist kein Co-Owner.`,
-        ephemeral: true
+        flags: 64
       });
     }
 
@@ -72,7 +72,7 @@ module.exports = {
 
     return interaction.reply({
       content: `🗑️ ${user} ist kein Co-Owner mehr.`,
-      ephemeral: true
+      flags: 64
     });
   }
 };

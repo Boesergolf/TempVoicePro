@@ -39,14 +39,14 @@ module.exports = {
 
       return interaction.reply({
         embeds: [embed],
-        ephemeral: true
+        flags: 64
       });
     } catch (err) {
       console.error("❌ Stats Fehler:", err);
 
       return interaction.reply({
         content: "❌ Fehler beim Laden der Statistiken.",
-        ephemeral: true
+        flags: 64
       });
     }
   }

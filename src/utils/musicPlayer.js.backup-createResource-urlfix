@@ -1,0 +1,755 @@
+const fs = require("fs");
+const { spawn, execFile } = require("child_process");
+
+const {
+  joinVoiceChannel,
+  createAudioPlayer,
+  createAudioResource,
+  AudioPlayerStatus,
+  VoiceConnectionStatus,
+  entersState,
+  getVoiceConnection,
+  NoSubscriberBehavior,
+  StreamType
+} = require("@discordjs/voice");
+
+const play = require("play-dl");
+
+const { detectSource, getMetadataForUrl } = require("./musicMetadata");
+
+const queues = new Map();
+
+function getYtDlpPath() {
+  if (process.env.YTDLP_PATH) {
+    return process.env.YTDLP_PATH;
+  }
+
+  if (fs.existsSync("/usr/local/bin/yt-dlp")) {
+    return "/usr/local/bin/yt-dlp";
+  }
+
+  return "yt-dlp";
+}
+
+function execFilePromise(file, args) {
+  const timeoutMs = Number(process.env.YTDLP_TIMEOUT_MS || 20000);
+
+  return new Promise((resolve, reject) => {
+    const child = execFile(file, args, {
+      maxBuffer: 1024 * 1024 * 10,
+      timeout: timeoutMs
+    }, (error, stdout, stderr) => {
+      if (error) {
+        if (error.killed || error.signal === "SIGTERM") {
+          return reject(new Error("yt-dlp Timeout nach " + Math.round(timeoutMs / 1000) + " Sekunden."));
+        }
+
+        error.stderr = stderr;
+        return reject(error);
+      }
+
+      resolve({
+        stdout,
+        stderr
+      });
+    });
+
+    child.on("error", err => {
+      reject(err);
+    });
+  });
+}
+
+async function getYtDlpInfo(url) {
+  const ytDlpPath = getYtDlpPath();
+
+  const result = await execFilePromise(ytDlpPath, [
+    "--dump-single-json",
+    "--no-playlist",
+    "--quiet",
+    "--no-warnings",
+    "--force-ipv4",
+    "--extractor-args",
+    "youtube:player_client=android,web",
+    url
+  ]);
+
+  return JSON.parse(result.stdout);
+}
+
+
+function isHttpUrl(value) {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function cleanTitle(value) {
+  if (!value) return null;
+
+  return String(value)
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 200);
+}
+
+function getYouTubeVideoId(value) {
+  try {
+    const parsed = new URL(value);
+    const host = parsed.hostname
+      .replace(/^www\./, "")
+      .replace(/^m\./, "");
+
+    const pathParts = parsed.pathname
+      .split("/")
+      .filter(Boolean);
+
+    if (host === "youtu.be") {
+      return pathParts[0] || null;
+    }
+
+    if (
+      host === "youtube.com" ||
+      host === "music.youtube.com" ||
+      host.endsWith(".youtube.com")
+    ) {
+      if (parsed.pathname === "/watch") {
+        return parsed.searchParams.get("v");
+      }
+
+      if (pathParts[0] === "shorts" && pathParts[1]) {
+        return pathParts[1];
+      }
+
+      if (pathParts[0] === "embed" && pathParts[1]) {
+        return pathParts[1];
+      }
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function makeYouTubeVideoUrl(value) {
+  const videoId = getYouTubeVideoId(value);
+
+  if (!videoId) {
+    return null;
+  }
+
+  return "https://www.youtube.com/watch?v=" + videoId;
+}
+
+function isYouTubePlaylistUrl(value) {
+  try {
+    const parsed = new URL(value);
+    const lower = value.toLowerCase();
+
+    if (
+      !lower.includes("youtube.com") &&
+      !lower.includes("youtu.be") &&
+      !lower.includes("music.youtube.com")
+    ) {
+      return false;
+    }
+
+    return parsed.searchParams.has("list") && !parsed.searchParams.has("v");
+  } catch {
+    return false;
+  }
+}
+
+function getOrCreateQueue(guildId) {
+  let queue = queues.get(guildId);
+
+  if (queue) return queue;
+
+  const player = createAudioPlayer({
+    behaviors: {
+      noSubscriber: NoSubscriberBehavior.Play
+    }
+  });
+
+  queue = {
+    guildId,
+    tracks: [],
+    player,
+    connection: null,
+    voiceChannel: null,
+    textChannel: null,
+    current: null,
+    playing: false,
+    stopped: false,
+    volume: 70
+  };
+
+  player.on(AudioPlayerStatus.Idle, () => {
+    playNext(guildId).catch(err => {
+      console.error("❌ Music Idle Fehler:", err);
+    });
+  });
+
+  player.on("error", err => {
+    console.error("❌ Music Player Fehler:", err);
+
+    if (queue.textChannel) {
+      queue.textChannel
+        .send("❌ Fehler beim Abspielen. Überspringe Track.")
+        .catch(() => {});
+    }
+
+    playNext(guildId).catch(error => {
+      console.error("❌ Music Next Fehler:", error);
+    });
+  });
+
+  queues.set(guildId, queue);
+  return queue;
+}
+
+async function connectToVoice(interaction, queue) {
+  const voiceChannel = interaction.member?.voice?.channel;
+
+  if (!voiceChannel) {
+    throw new Error("Du bist in keinem Voice Channel.");
+  }
+
+  queue.voiceChannel = voiceChannel;
+  queue.textChannel = interaction.channel;
+  queue.stopped = false;
+
+  let connection = getVoiceConnection(interaction.guild.id);
+
+  if (!connection) {
+    connection = joinVoiceChannel({
+      channelId: voiceChannel.id,
+      guildId: interaction.guild.id,
+      adapterCreator: interaction.guild.voiceAdapterCreator,
+      selfDeaf: true
+    });
+  }
+
+  queue.connection = connection;
+  queue.connection.subscribe(queue.player);
+
+  try {
+    await entersState(connection, VoiceConnectionStatus.Ready, 20_000);
+  } catch {
+    throw new Error("Ich konnte dem Voice Channel nicht korrekt beitreten.");
+  }
+}
+
+async function searchYouTube(query) {
+  const cleanQuery = String(query || "").trim();
+
+  if (!cleanQuery) {
+    throw new Error("Kein Suchbegriff angegeben.");
+  }
+
+  const result = await execFilePromise(getYtDlpPath(), [
+    "--dump-single-json",
+    "--no-playlist",
+    "--no-warnings",
+    "--ignore-errors",
+    "--force-ipv4",
+    "ytsearch5:" + cleanQuery
+  ]);
+
+  const raw = typeof result === "string"
+    ? result
+    : (result.stdout || "");
+
+  if (!raw.trim()) {
+    throw new Error("YouTube-Suche hat keine Daten geliefert.");
+  }
+
+  const data = JSON.parse(raw);
+  const entries = Array.isArray(data.entries) ? data.entries.filter(Boolean) : [];
+  const entry = entries[0];
+
+  if (!entry) {
+    throw new Error("Kein YouTube-Ergebnis gefunden.");
+  }
+
+  let url =
+    entry.webpage_url ||
+    entry.original_url ||
+    entry.url ||
+    null;
+
+  if ((!url || !url.includes("youtube.com/watch")) && entry.id) {
+    url = "https://www.youtube.com/watch?v=" + entry.id;
+  }
+
+  if (!url || (!url.includes("youtube.com/watch") && !url.includes("youtu.be/"))) {
+    throw new Error("YouTube-Suche hat keine gültige Video-URL geliefert.");
+  }
+
+  return {
+    source: "youtube",
+    title: entry.title || cleanQuery,
+    url,
+    duration: entry.duration || null,
+    thumbnail: entry.thumbnail || null
+  };
+}
+
+
+async function resolveTrack(track) {
+  if (!track) {
+    throw new Error("Kein Track angegeben.");
+  }
+
+  const inputUrl = track.url || null;
+  const inputQuery = track.query || track.title || null;
+
+  let source = track.source || null;
+
+  if (!source && inputUrl) {
+    source = detectSource(inputUrl);
+  }
+
+  // Spotify-Links können nicht direkt gestreamt werden.
+  // Deshalb: Spotify Metadaten lesen -> YouTube Suche -> YouTube abspielen.
+  if (source === "spotify" && inputUrl) {
+    let title = track.title || track.query || null;
+
+    if (!title) {
+      const metadata = await getMetadataForUrl(inputUrl).catch(() => null);
+      title = metadata?.displayTitle || metadata?.title || null;
+    }
+
+    if (!title) {
+      throw new Error("Spotify-Link erkannt, aber ich konnte den Titel nicht lesen. Bitte gib den Songnamen direkt ein.");
+    }
+
+    console.log("🟢 Spotify-Link erkannt, suche über YouTube:", title);
+
+    const found = await searchYouTube(title);
+
+    return {
+      ...track,
+      ...found,
+      source: "youtube",
+      originalSource: "spotify",
+      originalUrl: inputUrl,
+      title: found.title || title,
+      query: title
+    };
+  }
+
+  // YouTube-Links werden zur Sicherheit ebenfalls über den Titel neu gesucht.
+  // Das ist robuster, wenn direkte Links/Playlist-Parameter/Shortlinks Probleme machen.
+  if (source === "youtube" && inputUrl) {
+    let title = track.title || track.query || null;
+
+    if (!title) {
+      const info = await getYtDlpInfo(inputUrl).catch(() => null);
+      title = info?.title || null;
+    }
+
+    if (title) {
+      console.log("🔴 YouTube-Link erkannt, suche robust über YouTube:", title);
+
+      const found = await searchYouTube(title);
+
+      return {
+        ...track,
+        ...found,
+        source: "youtube",
+        originalSource: "youtube",
+        originalUrl: inputUrl,
+        title: found.title || title,
+        query: title
+      };
+    }
+
+    console.log("🔴 YouTube-Link erkannt, nutze direkten Link:", inputUrl);
+
+    return {
+      ...track,
+      source: "youtube",
+      url: inputUrl,
+      title: track.title || inputUrl
+    };
+  }
+
+  // Normale Links: versuchen wie direkten Link zu behandeln.
+  if (inputUrl) {
+    return {
+      ...track,
+      source: source || "url",
+      url: inputUrl,
+      title: track.title || inputUrl
+    };
+  }
+
+  // Normale Texteingabe funktioniert bei dir bereits:
+  // genau diesen Weg nutzen wir als Standard.
+  if (inputQuery) {
+    const found = await searchYouTube(inputQuery);
+
+    return {
+      ...track,
+      ...found,
+      source: "youtube",
+      title: found.title || inputQuery,
+      query: inputQuery
+    };
+  }
+
+  throw new Error("Kein gültiger Song, Link oder Suchbegriff angegeben.");
+}
+
+async function createResource(track) {
+  const resolved = await resolveTrack(track);
+
+  if (!resolved.playableUrl) {
+    throw new Error("Keine gültige YouTube-URL zum Abspielen gefunden.");
+  }
+
+  console.log("🎵 Spiele Track:", resolved.title);
+  console.log("🔗 YouTube URL:", resolved.playableUrl);
+
+  const ytDlpPath = getYtDlpPath();
+
+  const args = [
+    "-f",
+    "bestaudio[ext=webm]/bestaudio/best",
+    "-o",
+    "-",
+    "--no-playlist",
+    "--quiet",
+    "--no-warnings",
+    "--force-ipv4",
+    "--extractor-args",
+    "youtube:player_client=android,web",
+    resolved.playableUrl
+  ];
+
+  const child = spawn(ytDlpPath, args, {
+    stdio: ["ignore", "pipe", "pipe"]
+  });
+
+  let stderr = "";
+
+  child.stderr.on("data", chunk => {
+    stderr += chunk.toString();
+
+    if (stderr.length > 5000) {
+      stderr = stderr.slice(-5000);
+    }
+  });
+
+  child.on("error", err => {
+    console.error("❌ yt-dlp Startfehler:", err);
+  });
+
+  child.on("close", code => {
+    const stderrText = stderr.trim();
+
+    if (
+      code !== 0 &&
+      code !== null &&
+      !stderrText.includes("Broken pipe") &&
+      !stderrText.includes("unable to write data")
+    ) {
+      console.error("❌ yt-dlp beendet mit Code " + code);
+
+      if (stderrText) {
+        console.error(stderrText);
+      }
+    }
+  });
+
+  const resource = createAudioResource(child.stdout, {
+    inputType: StreamType.Arbitrary,
+    inlineVolume: true,
+    metadata: resolved
+  });
+
+  return {
+    resource,
+    resolved
+  };
+}
+
+async function playNext(guildId) {
+  const queue = queues.get(guildId);
+
+  if (!queue || queue.stopped) return;
+
+  const nextTrack = queue.tracks.shift();
+
+  if (!nextTrack) {
+    queue.current = null;
+    queue.playing = false;
+
+    if (queue.textChannel) {
+      queue.textChannel
+        .send("✅ Queue ist leer.")
+        .catch(() => {});
+    }
+
+    return;
+  }
+
+  try {
+    queue.playing = true;
+
+    const data = await createResource(nextTrack);
+
+    queue.current = data.resolved;
+
+    if (data.resource.volume) {
+      data.resource.volume.setVolume((queue.volume || 70) / 100);
+    }
+
+    queue.player.play(data.resource);
+
+    if (queue.textChannel) {
+      queue.textChannel
+        .send("▶️ Spiele jetzt: **" + data.resolved.title + "**")
+        .catch(() => {});
+    }
+  } catch (err) {
+    console.error("❌ Track Fehler:", err);
+
+    if (queue.textChannel) {
+      queue.textChannel
+        .send("❌ Konnte Track nicht abspielen: " + err.message)
+        .catch(() => {});
+    }
+
+    return playNext(guildId);
+  }
+}
+
+async function addTracks(interaction, tracks) {
+  const queue = getOrCreateQueue(interaction.guild.id);
+
+  await connectToVoice(interaction, queue);
+
+  for (const track of tracks) {
+    queue.tracks.push({
+      ...track,
+      requestedBy: interaction.user.id
+    });
+  }
+
+  if (!queue.playing) {
+    playNext(interaction.guild.id).catch(err => {
+      console.error("❌ Music Start Fehler:", err);
+
+      if (queue.textChannel) {
+        queue.textChannel
+          .send("❌ Musik konnte nicht gestartet werden: " + err.message)
+          .catch(() => {});
+      }
+    });
+  }
+
+  return queue;
+}
+
+function getQueue(guildId) {
+  return queues.get(guildId) || null;
+}
+
+function getQueueText(guildId) {
+  const queue = getQueue(guildId);
+
+  if (!queue) {
+    return "❌ Es läuft aktuell keine Musik.";
+  }
+
+  const lines = [];
+
+  if (queue.current) {
+    lines.push("▶️ **Jetzt:** " + queue.current.title);
+  }
+
+  if (queue.tracks.length > 0) {
+    lines.push("");
+    lines.push("📜 **Queue:**");
+
+    queue.tracks.slice(0, 10).forEach((track, index) => {
+      const title = track.title || track.query || track.url || "Unbekannt";
+      lines.push((index + 1) + ". " + title);
+    });
+
+    if (queue.tracks.length > 10) {
+      lines.push("... und " + (queue.tracks.length - 10) + " weitere.");
+    }
+  } else {
+    lines.push("");
+    lines.push("Queue ist leer.");
+  }
+
+  return lines.join("\n");
+}
+
+
+function getNowPlayingText(guildId) {
+  const queue = getQueue(guildId);
+
+  if (!queue || !queue.current) {
+    return "❌ Es läuft aktuell kein Track.";
+  }
+
+  return (
+    "▶️ **Jetzt läuft:** " + queue.current.title + "\n" +
+    "🔗 Quelle: " + (queue.current.url || "Unbekannt")
+  );
+}
+
+function clearQueue(guildId) {
+  const queue = getQueue(guildId);
+
+  if (!queue) return 0;
+
+  const count = queue.tracks.length;
+  queue.tracks = [];
+
+  return count;
+}
+
+function removeTrack(guildId, position) {
+  const queue = getQueue(guildId);
+
+  if (!queue || !queue.tracks.length) {
+    return null;
+  }
+
+  const index = position - 1;
+
+  if (index < 0 || index >= queue.tracks.length) {
+    return null;
+  }
+
+  const removed = queue.tracks.splice(index, 1)[0];
+
+  return removed;
+}
+
+function shuffleQueue(guildId) {
+  const queue = getQueue(guildId);
+
+  if (!queue || queue.tracks.length < 2) {
+    return false;
+  }
+
+  for (let i = queue.tracks.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const temp = queue.tracks[i];
+    queue.tracks[i] = queue.tracks[j];
+    queue.tracks[j] = temp;
+  }
+
+  return true;
+}
+
+
+function setVolume(guildId, percent) {
+  const queue = getQueue(guildId);
+
+  if (!queue) {
+    return false;
+  }
+
+  const volume = Math.max(0, Math.min(200, Number(percent)));
+
+  queue.volume = volume;
+
+  if (queue.player && queue.player.state && queue.player.state.resource) {
+    const resource = queue.player.state.resource;
+
+    if (resource.volume) {
+      resource.volume.setVolume(volume / 100);
+    }
+  }
+
+  return volume;
+}
+
+function getVolume(guildId) {
+  const queue = getQueue(guildId);
+
+  if (!queue) {
+    return null;
+  }
+
+  return queue.volume || 70;
+}
+
+function skipTrack(guildId) {
+  const queue = getQueue(guildId);
+
+  if (!queue || !queue.playing) {
+    return false;
+  }
+
+  queue.player.stop(true);
+  return true;
+}
+
+function stopMusic(guildId) {
+  const queue = getQueue(guildId);
+
+  if (!queue) return false;
+
+  queue.stopped = true;
+  queue.tracks = [];
+  queue.current = null;
+  queue.playing = false;
+
+  try {
+    queue.player.stop(true);
+  } catch {}
+
+  try {
+    if (queue.connection) {
+      queue.connection.destroy();
+    }
+  } catch {}
+
+  queues.delete(guildId);
+  return true;
+}
+
+function pauseMusic(guildId) {
+  const queue = getQueue(guildId);
+
+  if (!queue) return false;
+
+  return queue.player.pause();
+}
+
+function resumeMusic(guildId) {
+  const queue = getQueue(guildId);
+
+  if (!queue) return false;
+
+  return queue.player.unpause();
+}
+
+module.exports = {
+  addTracks,
+  getQueue,
+  getQueueText,
+  getNowPlayingText,
+  clearQueue,
+  removeTrack,
+  shuffleQueue,
+  setVolume,
+  getVolume,
+  skipTrack,
+  stopMusic,
+  pauseMusic,
+  resumeMusic
+};

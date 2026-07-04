@@ -9,7 +9,7 @@ module.exports = {
     if (!channel) {
       return interaction.reply({
         content: "❌ Du bist in keinem Voice Channel.",
-        ephemeral: true
+        flags: 64
       });
     }
 
@@ -18,7 +18,7 @@ module.exports = {
     if (!allowed) {
       return interaction.reply({
         content: "❌ Nur Owner oder Co-Owner dürfen das nutzen.",
-        ephemeral: true
+        flags: 64
       });
     }
 
@@ -29,7 +29,7 @@ module.exports = {
 
     return interaction.reply({
       content: "🔐 Channel ist jetzt privat.",
-      ephemeral: true
+      flags: 64
     });
   }
 };

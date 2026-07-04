@@ -1,21 +1,35 @@
 const {
   SlashCommandBuilder,
   PermissionFlagsBits,
-  ChannelType,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  EmbedBuilder
+  ChannelType
 } = require("discord.js");
+
+const {
+  createMusicPanelEmbed,
+  createMusicPanelRows
+} = require("../utils/musicPanelView");
+
+async function findExistingPanelMessage(channel, botId) {
+  const messages = await channel.messages.fetch({ limit: 50 });
+
+  return messages.find(message =>
+    message.author &&
+    message.author.id === botId &&
+    message.embeds &&
+    message.embeds.some(embed =>
+      String(embed.title || "").includes("Music Player")
+    )
+  );
+}
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("musicpanel")
-    .setDescription("Erstellt einen Music Player Channel mit Buttons")
+    .setDescription("Erstellt oder aktualisiert den Music Player Channel")
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 
   async execute(interaction) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: 64 });
 
     const guild = interaction.guild;
     const channelName = "music-player";
@@ -34,86 +48,25 @@ module.exports = {
       });
     }
 
-    const embed = new EmbedBuilder()
-      .setTitle("🎵 Music Player")
-      .setColor("Orange")
-      .setDescription(
-        "Steuere den Musikplayer direkt über die Buttons.\n\n" +
-        "Du musst zum Abspielen in einem Voice Channel sein."
-      )
-      .setFooter({
-        text: "TempVoicePro Music Panel"
+    const existingPanel = await findExistingPanelMessage(
+      panelChannel,
+      interaction.client.user.id
+    );
+
+    if (existingPanel) {
+      await existingPanel.edit({
+        embeds: [createMusicPanelEmbed(guild.id)],
+        components: createMusicPanelRows()
       });
 
-    const row1 = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId("mp_play")
-        .setLabel("▶ Play")
-        .setStyle(ButtonStyle.Success),
-
-      new ButtonBuilder()
-        .setCustomId("mp_playlist")
-        .setLabel("📂 Playlist")
-        .setStyle(ButtonStyle.Primary),
-
-      new ButtonBuilder()
-        .setCustomId("mp_queue")
-        .setLabel("📜 Queue")
-        .setStyle(ButtonStyle.Secondary),
-
-      new ButtonBuilder()
-        .setCustomId("mp_now")
-        .setLabel("🎵 Now")
-        .setStyle(ButtonStyle.Secondary),
-
-      new ButtonBuilder()
-        .setCustomId("mp_skip")
-        .setLabel("⏭ Skip")
-        .setStyle(ButtonStyle.Secondary)
-    );
-
-    const row2 = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId("mp_pause")
-        .setLabel("⏸ Pause")
-        .setStyle(ButtonStyle.Secondary),
-
-      new ButtonBuilder()
-        .setCustomId("mp_resume")
-        .setLabel("▶ Resume")
-        .setStyle(ButtonStyle.Secondary),
-
-      new ButtonBuilder()
-        .setCustomId("mp_stop")
-        .setLabel("⏹ Stop")
-        .setStyle(ButtonStyle.Danger)
-    );
-
-    const row3 = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId("mp_clear")
-        .setLabel("🧹 Clear")
-        .setStyle(ButtonStyle.Danger),
-
-      new ButtonBuilder()
-        .setCustomId("mp_shuffle")
-        .setLabel("🔀 Shuffle")
-        .setStyle(ButtonStyle.Secondary),
-
-      new ButtonBuilder()
-        .setCustomId("mp_remove")
-        .setLabel("🗑 Remove")
-        .setStyle(ButtonStyle.Secondary),
-
-      new ButtonBuilder()
-        .setCustomId("mp_volume")
-        .setLabel("🔊 Volume")
-        .setStyle(ButtonStyle.Primary)
-    );
+      return interaction.editReply(
+        "✅ Music Player Panel wurde aktualisiert in " + panelChannel.toString()
+      );
+    }
 
     await panelChannel.send({
-      embeds: [embed],
-      components: [row1, row2, row3]
+      embeds: [createMusicPanelEmbed(guild.id)],
+      components: createMusicPanelRows()
     });
 
     return interaction.editReply(

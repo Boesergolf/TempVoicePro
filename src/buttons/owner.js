@@ -9,7 +9,7 @@ module.exports = {
     if (!channel) {
       return interaction.reply({
         content: "❌ Du bist in keinem Voice Channel.",
-        ephemeral: true
+        flags: 64
       });
     }
 
@@ -23,7 +23,7 @@ module.exports = {
     if (!data) {
       return interaction.reply({
         content: "❌ Dieser Voice Channel ist kein TempVoice Channel.",
-        ephemeral: true
+        flags: 64
       });
     }
 
@@ -44,7 +44,7 @@ module.exports = {
       content:
         "👑 **Aktueller Owner:** " + ownerText + "\n" +
         "🤝 **Co-Owner:** " + coOwnerText,
-      ephemeral: true
+      flags: 64
     });
   }
 };

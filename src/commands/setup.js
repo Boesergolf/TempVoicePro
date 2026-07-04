@@ -37,11 +37,11 @@ module.exports = {
     if (!botMember.permissions.has(PermissionFlagsBits.ManageChannels)) {
       return interaction.reply({
         content: "❌ Mir fehlt die Berechtigung **Kanäle verwalten**.",
-        ephemeral: true
+        flags: 64
       });
     }
 
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: 64 });
 
     let creator = interaction.options.getChannel("creator");
     let category = interaction.options.getChannel("category");
