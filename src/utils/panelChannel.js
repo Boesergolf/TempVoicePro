@@ -52,6 +52,7 @@ function isProtectedPanelMessage(message) {
   return (
     titles.includes("TempVoicePro Panels") ||
     titles.includes("Bot Status") ||
+    titles.includes("Server Module") ||
     titles.includes("TempVoice Status") ||
     titles.includes("Music Player") ||
     titles.includes("Glücksrad Panel")

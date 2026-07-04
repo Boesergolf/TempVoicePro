@@ -1000,3 +1000,34 @@ Das Modul-System nutzt die MySQL-Tabelle:
 
 `guild_modules`
 
+
+## Module Panel
+
+Der zentrale Panel-Channel enthält ein Server Module Panel.
+
+Dieses Panel zeigt den aktuellen Status aller Server-Module:
+
+- TempVoice
+- Music
+- Playlist
+- Glücksrad
+- Panels
+- ChatGPT
+- Moderation
+- Leveling
+- Tickets
+
+Aktive Module werden mit ✅ angezeigt.
+
+Deaktivierte Module werden mit ❌ angezeigt.
+
+Das Panel wird über `/panels` erstellt und danach automatisch aktualisiert.
+
+Verwaltung:
+
+`/module list`
+
+`/module enable`
+
+`/module disable`
+

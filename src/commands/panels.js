@@ -45,6 +45,10 @@ const {
   createBotStatusPanelEmbed
 } = require("../utils/botStatusPanelView");
 
+const {
+  createModulePanelEmbed
+} = require("../utils/modulePanelView");
+
 
 function getPanelAutoRefreshSeconds() {
   const value = Number(process.env.PANEL_AUTO_REFRESH_MS || 30000);
@@ -152,6 +156,11 @@ module.exports = {
 
     await upsertPanel(channel, botId, "Bot Status", {
       embeds: [await createBotStatusPanelEmbed(interaction.client)],
+      components: []
+    });
+
+    await upsertPanel(channel, botId, "Server Module", {
+      embeds: [await createModulePanelEmbed(interaction.guild.id)],
       components: []
     });
 

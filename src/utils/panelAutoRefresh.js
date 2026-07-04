@@ -18,6 +18,10 @@ const {
   createBotStatusPanelEmbed
 } = require("./botStatusPanelView");
 
+const {
+  createModulePanelEmbed
+} = require("./modulePanelView");
+
 let started = false;
 
 function getRefreshMs() {
@@ -52,6 +56,19 @@ async function updateGuildPanels(guild) {
   if (botStatusPanel) {
     await botStatusPanel.edit({
       embeds: [await createBotStatusPanelEmbed(guild.client)],
+      components: []
+    }).catch(() => {});
+  }
+
+  const modulePanel = await findPanelMessage(
+    panelChannel,
+    botId,
+    "Server Module"
+  );
+
+  if (modulePanel) {
+    await modulePanel.edit({
+      embeds: [await createModulePanelEmbed(guild.id)],
       components: []
     }).catch(() => {});
   }
