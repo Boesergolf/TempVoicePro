@@ -182,6 +182,13 @@ module.exports = {
   name: "voiceStateUpdate",
 
   async execute(oldState, newState) {
+    // Ignoriere Mute/Unmute, Deaf/Undeaf, Kamera/Stream Updates.
+    // Der TempVoice Bot soll nur auf echte Channel-Wechsel reagieren.
+    if (oldState.channelId === newState.channelId) {
+      return;
+    }
+
+
     try {
       const guild = newState.guild || oldState.guild;
       if (!guild) return;
