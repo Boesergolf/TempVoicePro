@@ -771,3 +771,28 @@ Nicht gelöscht werden:
 - Music Player Panel
 - Glücksrad Panel
 
+
+## Panel Auto-Refresh
+
+Die zentralen Panels im Panel-Channel werden automatisch aktualisiert.
+
+Betroffene Panels:
+
+- TempVoice Status Panel
+- Music Player Panel
+
+Standardmäßig werden die Panels alle 30 Sekunden aktualisiert.
+
+Optionale `.env` Einstellung:
+
+`PANEL_AUTO_REFRESH_MS=30000`
+
+Der Wert ist in Millisekunden angegeben.
+
+Beispiele:
+
+- `30000` = 30 Sekunden
+- `60000` = 60 Sekunden
+
+Der Auto-Refresh startet automatisch beim Bot-Start.
+

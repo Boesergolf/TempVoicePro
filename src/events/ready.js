@@ -1,3 +1,7 @@
+const {
+  startPanelAutoRefresh
+} = require("../utils/panelAutoRefresh");
+
 const { Events } = require("discord.js");
 
 module.exports = {
@@ -5,6 +9,7 @@ module.exports = {
   once: true,
 
   execute(client) {
+    startPanelAutoRefresh(client);
     console.log(`✅ Eingeloggt als ${client.user.tag}`);
   }
 };
