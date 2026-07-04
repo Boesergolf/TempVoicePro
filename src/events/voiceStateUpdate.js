@@ -5,8 +5,7 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  EmbedBuilder,
-  PermissionFlagsBits
+  EmbedBuilder
 } = require("discord.js");
 
 const {
@@ -21,7 +20,6 @@ async function getNextLobbyName(guild, categoryId) {
   for (const channel of channels.values()) {
     if (!channel) continue;
     if (channel.type !== ChannelType.GuildVoice) continue;
-
     if (categoryId && channel.parentId !== categoryId) continue;
 
     const match = channel.name.match(/^Lobby\s+(\d+)$/i);
@@ -40,48 +38,37 @@ async function getNextLobbyName(guild, categoryId) {
   return "Lobby " + number;
 }
 
-async function getPanelChannel(guild, categoryId) {
-  const panelName = "tempvoice-panel";
+function makePanelChannelName(voiceChannelName) {
+  const cleanName = voiceChannelName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
 
-  const channels = await guild.channels.fetch();
+  return "panel-" + (cleanName || "tempvoice");
+}
 
-  let panelChannel = channels.find(channel =>
-    channel &&
-    channel.type === ChannelType.GuildText &&
-    channel.name === panelName &&
-    channel.parentId === categoryId
-  );
-
-  if (panelChannel) return panelChannel;
-
-  panelChannel = channels.find(channel =>
-    channel &&
-    channel.type === ChannelType.GuildText &&
-    channel.name === panelName
-  );
-
-  if (panelChannel) return panelChannel;
-
-  const botMember = guild.members.me || await guild.members.fetchMe().catch(() => null);
-
-  if (!botMember || !botMember.permissions.has(PermissionFlagsBits.ManageChannels)) {
-    console.log("❌ Kann Panel-Channel nicht erstellen: ManageChannels fehlt.");
-    return null;
-  }
+async function createPanelChannel(guild, categoryId, voiceChannel) {
+  const panelName = makePanelChannelName(voiceChannel.name);
 
   return guild.channels.create({
     name: panelName,
     type: ChannelType.GuildText,
-    parent: categoryId || null
+    parent: categoryId || null,
+    topic: "Temporäres Control Panel für " + voiceChannel.name
   });
 }
 
 async function sendControlPanel(guild, categoryId, voiceChannel, member) {
   try {
-    const panelChannel = await getPanelChannel(guild, categoryId);
+    const panelChannel = await createPanelChannel(
+      guild,
+      categoryId,
+      voiceChannel
+    );
 
     if (!panelChannel || !panelChannel.isTextBased()) {
-      console.log("❌ Kein gültiger Textkanal für TempVoice Panel gefunden.");
+      console.log("❌ Kein gültiger temporärer Panel-Textkanal erstellt.");
       return null;
     }
 
@@ -91,7 +78,7 @@ async function sendControlPanel(guild, categoryId, voiceChannel, member) {
       .setDescription(
         "🎙 Channel: " + voiceChannel.toString() + "\n" +
         "👑 Owner: " + member.toString() + "\n\n" +
-        "Verwalte deinen Voice Channel über die Buttons."
+        "Dieser Textkanal wird automatisch gelöscht, wenn der Voice Channel leer ist."
       );
 
     const row1 = new ActionRowBuilder().addComponents(
@@ -138,7 +125,7 @@ async function sendControlPanel(guild, categoryId, voiceChannel, member) {
       components: [row1, row2]
     });
 
-    console.log("✅ TempVoice Panel gesendet in #" + panelChannel.name);
+    console.log("✅ Temporäres Panel erstellt: #" + panelChannel.name);
 
     return {
       panelChannelId: panelChannel.id,
