@@ -865,12 +865,27 @@ function toggleLoop(guildId) {
   return queue.loop;
 }
 
+
+function clearHistory(guildId) {
+  const queue = getQueue(guildId);
+
+  if (!queue || !queue.history || queue.history.length === 0) {
+    return 0;
+  }
+
+  const count = queue.history.length;
+  queue.history = [];
+
+  return count;
+}
+
 module.exports = {
   addTracks,
   getQueue,
   getQueueText,
   getNowPlayingText,
   getHistoryText,
+  clearHistory,
   clearQueue,
   removeTrack,
   shuffleQueue,

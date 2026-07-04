@@ -490,3 +490,20 @@ Geprüft wird anhand von:
 
 Dadurch werden doppelte Einträge in `Favorites` verhindert.
 
+
+## Music Panel Clear History Button
+
+Das Music Panel enthält einen `🗑 Clear History` Button.
+
+Damit kann die aktuelle Music History geleert werden.
+
+Der Button macht:
+
+- gespeicherte History des laufenden Bot-Prozesses leeren
+- Music Panel aktualisieren
+- Anzahl der entfernten History-Einträge anzeigen
+
+Hinweis:
+
+Die History ist nur im laufenden Bot-Prozess gespeichert und wird nicht dauerhaft in MySQL gespeichert.
+
