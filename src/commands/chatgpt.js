@@ -32,6 +32,71 @@ function isOnCooldown(userId) {
   return 0;
 }
 
+function getFriendlyOpenAIError(err) {
+  const status = err && err.status ? Number(err.status) : null;
+  const code = err && err.code ? String(err.code) : "";
+  const type = err && err.type ? String(err.type) : "";
+  const message = String(err && err.message ? err.message : "").toLowerCase();
+
+  if (
+    status === 429 ||
+    message.includes("429") ||
+    message.includes("quota") ||
+    message.includes("billing") ||
+    message.includes("usage limit") ||
+    code.includes("insufficient_quota") ||
+    type.includes("insufficient_quota")
+  ) {
+    return (
+      "❌ **ChatGPT API-Limit erreicht.**\n\n" +
+      "Bitte prüfe im OpenAI Account:\n" +
+      "- Billing / Zahlungsmethode\n" +
+      "- API-Guthaben\n" +
+      "- Projekt- oder Usage-Limits\n\n" +
+      "Das ist kein Discord-Bot-Codefehler."
+    );
+  }
+
+  if (
+    status === 401 ||
+    message.includes("401") ||
+    message.includes("invalid api key") ||
+    message.includes("incorrect api key")
+  ) {
+    return (
+      "❌ **OpenAI API-Key ist ungültig oder fehlt.**\n\n" +
+      "Bitte prüfe `OPENAI_API_KEY` in der `.env` Datei."
+    );
+  }
+
+  if (
+    status === 403 ||
+    message.includes("403") ||
+    message.includes("permission")
+  ) {
+    return (
+      "❌ **OpenAI Zugriff verweigert.**\n\n" +
+      "Bitte prüfe, ob dein API-Key Zugriff auf das eingestellte Modell hat."
+    );
+  }
+
+  if (
+    status === 400 ||
+    message.includes("model") ||
+    message.includes("not found")
+  ) {
+    return (
+      "❌ **ChatGPT Modell konnte nicht genutzt werden.**\n\n" +
+      "Bitte prüfe `OPENAI_MODEL` in der `.env` Datei."
+    );
+  }
+
+  return (
+    "❌ **ChatGPT konnte gerade nicht antworten.**\n\n" +
+    "Bitte später erneut versuchen oder die Bot-Logs prüfen."
+  );
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("chatgpt")
@@ -102,7 +167,7 @@ module.exports = {
       console.error("❌ ChatGPT Fehler:", err);
 
       return interaction.editReply(
-        "❌ ChatGPT konnte gerade nicht antworten: " + err.message
+        getFriendlyOpenAIError(err)
       );
     }
   }
