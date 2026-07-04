@@ -576,6 +576,13 @@ async function playNext(guildId) {
 
     queue.current = data.resolved;
 
+    if (!queue.history) {
+      queue.history = [];
+    }
+
+    queue.history.unshift(data.resolved);
+    queue.history = queue.history.slice(0, 20);
+
     if (data.resource.volume) {
       data.resource.volume.setVolume((queue.volume || 70) / 100);
     }
@@ -757,6 +764,24 @@ function getVolume(guildId) {
   return queue.volume || 70;
 }
 
+
+function getHistoryText(guildId) {
+  const queue = getQueue(guildId);
+
+  if (!queue || !queue.history || queue.history.length === 0) {
+    return "📜 Es gibt noch keine History.";
+  }
+
+  const lines = ["📜 **Zuletzt gespielt:**"];
+
+  queue.history.slice(0, 10).forEach((track, index) => {
+    const title = track.title || track.query || track.url || "Unbekannt";
+    lines.push((index + 1) + ". " + title);
+  });
+
+  return lines.join("\n");
+}
+
 function skipTrack(guildId) {
   const queue = getQueue(guildId);
 
@@ -845,6 +870,7 @@ module.exports = {
   getQueue,
   getQueueText,
   getNowPlayingText,
+  getHistoryText,
   clearQueue,
   removeTrack,
   shuffleQueue,

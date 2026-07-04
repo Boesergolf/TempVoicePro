@@ -431,3 +431,18 @@ Beispiel:
 
 `🔁 Loop: Track`
 
+
+## Music Panel History Button
+
+Das Music Panel enthält einen `📜 History` Button.
+
+Damit können die zuletzt gespielten Tracks angezeigt werden.
+
+Die History speichert aktuell die letzten 20 Tracks im laufenden Bot-Prozess.
+
+Angezeigt werden bis zu 10 zuletzt gespielte Tracks.
+
+Hinweis:
+
+Die History ist nicht dauerhaft in der Datenbank gespeichert. Nach einem Bot-Neustart ist sie wieder leer.
+
