@@ -895,3 +895,18 @@ Das entspricht 10 Sekunden pro Server.
 
 Dadurch kann der Refresh-Button nicht dauerhaft gespammt werden.
 
+
+## Refresh Cooldown in Panel Übersicht
+
+Die zentrale Panel-Übersicht zeigt den Cooldown des Buttons `🔄 Panels aktualisieren` direkt an.
+
+Angezeigt wird:
+
+- Refresh-Button Cooldown in Sekunden
+- gilt pro Server
+- verhindert Button-Spam
+
+Die Einstellung kommt aus `.env`:
+
+`PANEL_REFRESH_BUTTON_COOLDOWN_MS=10000`
+
