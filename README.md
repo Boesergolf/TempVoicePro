@@ -751,3 +751,23 @@ Nicht gelöscht werden:
 - Glücksrad Panel
 
 Neue normale Nachrichten im Panel-Channel werden weiterhin automatisch nach dem eingestellten Timer gelöscht.
+
+## Auch Einzel-Panel Commands räumen auf
+
+Neben `/panels` räumen auch die einzelnen Panel-Commands den zentralen Panel-Channel auf.
+
+Betroffene Commands:
+
+- `/musicpanel`
+- `/gluecksradpanel`
+
+Dabei werden normale Nachrichten im Panel-Channel entfernt.
+
+Nicht gelöscht werden:
+
+- angepinnte Panel-Nachrichten
+- TempVoicePro Übersicht
+- TempVoice Status Panel
+- Music Player Panel
+- Glücksrad Panel
+

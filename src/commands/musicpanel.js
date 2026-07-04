@@ -8,7 +8,8 @@ const {
   getOrCreatePanelChannel,
   findPanelMessage,
   cleanupDuplicatePanelMessages,
-  pinPanelMessage
+  pinPanelMessage,
+  cleanupPanelChannelMessages
 } = require("../utils/panelChannel");
 
 const {
@@ -36,6 +37,8 @@ module.exports = {
     const panelChannel = await getOrCreatePanelChannel(interaction.guild, category.id);
     const botId = interaction.client.user.id;
 
+    const deletedMessages = await cleanupPanelChannelMessages(panelChannel, botId);
+
     const existingPanel = await findPanelMessage(
       panelChannel,
       botId,
@@ -59,7 +62,8 @@ module.exports = {
 
       return interaction.editReply(
         "✅ Music Player Panel wurde aktualisiert in " + panelChannel.toString() +
-        "\n📁 Kategorie: **" + category.name + "**"
+        "\n📁 Kategorie: **" + category.name + "**" +
+        "\n🧹 Aufgeräumte Nachrichten: **" + deletedMessages + "**"
       );
     }
 
@@ -79,7 +83,8 @@ module.exports = {
 
     return interaction.editReply(
       "✅ Music Player Panel wurde erstellt in " + panelChannel.toString() +
-      "\n📁 Kategorie: **" + category.name + "**"
+      "\n📁 Kategorie: **" + category.name + "**" +
+      "\n🧹 Aufgeräumte Nachrichten: **" + deletedMessages + "**"
     );
   }
 };
