@@ -136,6 +136,11 @@ function musicHelp() {
         "`/music resume` - fortsetzen",
         "`/music stop` - stoppen",
         "`/music volume percent:50` - Lautstärke setzen"
+      ]),
+      field("Gespeicherte Lautstärke", [
+        "Der Music Player startet standardmäßig mit 20 Prozent.",
+        "Wenn die Lautstärke geändert wird, speichert der Bot sie pro Server.",
+        "Beim nächsten Abspielen wird die gespeicherte Lautstärke automatisch geladen."
       ])
     ],
     0xe67e22
