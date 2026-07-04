@@ -18,6 +18,7 @@ const play = require("play-dl");
 const { detectSource, getMetadataForUrl } = require("./musicMetadata");
 
 const queues = new Map();
+const leaveTimers = new Map();
 
 function getYtDlpPath() {
   if (process.env.YTDLP_PATH) {
@@ -536,6 +537,67 @@ async function createResource(track) {
   return { resource, resolved };
 }
 
+function cancelLeaveTimer(guildId) {
+  const timer = leaveTimers.get(guildId);
+
+  if (timer) {
+    clearTimeout(timer);
+    leaveTimers.delete(guildId);
+  }
+}
+
+function scheduleLeaveIfIdle(guildId) {
+  cancelLeaveTimer(guildId);
+
+  const timer = setTimeout(() => {
+    const queue = queues.get(guildId);
+
+    if (!queue) {
+      leaveTimers.delete(guildId);
+      return;
+    }
+
+    const status = queue.player && queue.player.state
+      ? String(queue.player.state.status || "")
+      : "";
+
+    const isPaused =
+      queue.paused === true ||
+      status === "paused" ||
+      status === "autopaused";
+
+    const hasCurrent = Boolean(queue.current);
+    const hasTracks = Array.isArray(queue.tracks) && queue.tracks.length > 0;
+
+    if (isPaused || hasCurrent || hasTracks || queue.playing) {
+      leaveTimers.delete(guildId);
+      return;
+    }
+
+    let connection = queue.connection || null;
+
+    if (!connection) {
+      try {
+        const { getVoiceConnection } = require("@discordjs/voice");
+        connection = getVoiceConnection(guildId);
+      } catch {}
+    }
+
+    if (connection) {
+      connection.destroy();
+      console.log("👋 Music Auto-Leave: Voice Channel verlassen wegen leerer Queue.");
+    }
+
+    queue.current = null;
+    queue.playing = false;
+    queue.paused = false;
+
+    leaveTimers.delete(guildId);
+  }, 60_000);
+
+  leaveTimers.set(guildId, timer);
+}
+
 async function playNext(guildId) {
   const queue = queues.get(guildId);
 
@@ -566,11 +628,14 @@ async function playNext(guildId) {
         .catch(() => {});
     }
 
+    scheduleLeaveIfIdle(guildId);
+
     return;
   }
 
   try {
     queue.playing = true;
+    queue.paused = false;
 
     const data = await createResource(nextTrack);
 
@@ -609,6 +674,10 @@ async function playNext(guildId) {
 
 async function addTracks(interaction, tracks) {
   const queue = getOrCreateQueue(interaction.guild.id);
+
+  cancelLeaveTimer(interaction.guild.id);
+  queue.paused = false;
+  queue.stopped = false;
 
   await connectToVoice(interaction, queue);
 
@@ -799,6 +868,8 @@ function stopMusic(guildId) {
 
   if (!queue) return false;
 
+  cancelLeaveTimer(guildId);
+
   queue.stopped = true;
   queue.tracks = [];
   queue.current = null;
@@ -823,6 +894,9 @@ function pauseMusic(guildId) {
 
   if (!queue) return false;
 
+  cancelLeaveTimer(guildId);
+  queue.paused = true;
+
   return queue.player.pause();
 }
 
@@ -830,6 +904,9 @@ function resumeMusic(guildId) {
   const queue = getQueue(guildId);
 
   if (!queue) return false;
+
+  cancelLeaveTimer(guildId);
+  queue.paused = false;
 
   return queue.player.unpause();
 }
