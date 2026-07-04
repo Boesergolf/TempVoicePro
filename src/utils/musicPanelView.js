@@ -47,6 +47,19 @@ function safeVolume(guildId) {
   return String(volume) + "%";
 }
 
+function safeLoop(guildId) {
+  if (typeof musicPlayer.getLoopMode !== "function") {
+    return "Aus";
+  }
+
+  const mode = musicPlayer.getLoopMode(guildId);
+
+  if (mode === "track") return "Track";
+  if (mode === "queue") return "Queue";
+
+  return "Aus";
+}
+
 function createMusicPanelEmbed(guildId) {
   return new EmbedBuilder()
     .setTitle("🎵 Music Player")
@@ -60,6 +73,7 @@ function createMusicPanelEmbed(guildId) {
         name: "📡 Status",
         value:
           "🔊 Lautstärke: **" + safeVolume(guildId) + "**\n" +
+          "🔁 Loop: **" + safeLoop(guildId) + "**\n" +
           "🔄 Anzeige kann mit Refresh aktualisiert werden."
       },
       {
@@ -163,7 +177,14 @@ function createMusicPanelRows() {
       .setStyle(ButtonStyle.Success)
   );
 
-  return [row1, row2, row3];
+  const row4 = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId("mp_loop")
+      .setLabel("🔁 Loop")
+      .setStyle(ButtonStyle.Primary)
+  );
+
+  return [row1, row2, row3, row4];
 }
 
 async function refreshMusicPanelMessage(interaction) {

@@ -541,7 +541,20 @@ async function playNext(guildId) {
 
   if (!queue || queue.stopped) return;
 
-  const nextTrack = queue.tracks.shift();
+  const previousTrack = queue.current;
+  let nextTrack = null;
+
+  if (queue.loop === "track" && previousTrack && !queue.skipRequested) {
+    nextTrack = previousTrack;
+  } else {
+    if (queue.loop === "queue" && previousTrack) {
+      queue.tracks.push(previousTrack);
+    }
+
+    nextTrack = queue.tracks.shift();
+  }
+
+  queue.skipRequested = false;
 
   if (!nextTrack) {
     queue.current = null;
@@ -751,6 +764,7 @@ function skipTrack(guildId) {
     return false;
   }
 
+  queue.skipRequested = true;
   queue.player.stop(true);
   return true;
 }
@@ -795,6 +809,37 @@ function resumeMusic(guildId) {
   return queue.player.unpause();
 }
 
+
+function getLoopMode(guildId) {
+  const queue = getQueue(guildId);
+
+  if (!queue || !queue.loop) {
+    return "off";
+  }
+
+  return queue.loop;
+}
+
+function toggleLoop(guildId) {
+  const queue = getQueue(guildId);
+
+  if (!queue) {
+    return null;
+  }
+
+  const current = queue.loop || "off";
+
+  if (current === "off") {
+    queue.loop = "track";
+  } else if (current === "track") {
+    queue.loop = "queue";
+  } else {
+    queue.loop = "off";
+  }
+
+  return queue.loop;
+}
+
 module.exports = {
   addTracks,
   getQueue,
@@ -808,5 +853,7 @@ module.exports = {
   skipTrack,
   stopMusic,
   pauseMusic,
-  resumeMusic
+  resumeMusic,
+  getLoopMode,
+  toggleLoop
 };

@@ -396,3 +396,38 @@ Der Button macht:
 - Voice Verbindung trennen
 - Music Panel aktualisieren
 
+
+## Music Panel Loop Button
+
+Das Music Panel enthält einen `🔁 Loop` Button.
+
+Der Button schaltet zwischen drei Modi um:
+
+- `Aus`
+- `Track`
+- `Queue`
+
+Ablauf:
+
+`Aus → Track wiederholen → Queue wiederholen → Aus`
+
+### Track Loop
+
+Im Modus `Track` wird der aktuell laufende Track wiederholt.
+
+Wenn Skip gedrückt wird, wird der Track trotzdem übersprungen.
+
+### Queue Loop
+
+Im Modus `Queue` wird die gesamte Queue wiederholt.
+
+Der vorherige Track wird wieder hinten an die Queue angehängt.
+
+### Anzeige im Music Panel
+
+Das Music Panel zeigt den aktuellen Loop-Modus in der Statusbox an.
+
+Beispiel:
+
+`🔁 Loop: Track`
+
