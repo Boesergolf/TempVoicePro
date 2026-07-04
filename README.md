@@ -657,3 +657,22 @@ Beispiele:
 
 `/help kategorie:Musik`
 
+
+## Angepinnte Panel Nachrichten
+
+Die zentralen Panel-Nachrichten im Panel-Channel werden automatisch angepinnt.
+
+Dadurch bleiben sie im Channel schnell erreichbar, ohne dass man hochscrollen muss.
+
+Betroffene Panels:
+
+- TempVoicePro Übersicht
+- Music Player Panel
+- Glücksrad Panel
+
+Der Bot benötigt dafür die Berechtigung:
+
+`Nachrichten verwalten`
+
+Falls das Anpinnen fehlschlägt, läuft der Bot trotzdem weiter und schreibt den Fehler nur in die Logs.
+
