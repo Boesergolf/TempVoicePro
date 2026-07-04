@@ -1,3 +1,7 @@
+const {
+  scheduleTempVoiceStatusUpdate
+} = require("../utils/tempVoicePanelUpdater");
+
 const db = require("../database/mysql");
 
 const {
@@ -182,6 +186,9 @@ module.exports = {
   name: "voiceStateUpdate",
 
   async execute(oldState, newState) {
+    if (oldState.channelId === newState.channelId) return;
+
+    scheduleTempVoiceStatusUpdate(newState.guild || oldState.guild);
     // Ignoriere Mute/Unmute, Deaf/Undeaf, Kamera/Stream Updates.
     // Der TempVoice Bot soll nur auf echte Channel-Wechsel reagieren.
     if (oldState.channelId === newState.channelId) {

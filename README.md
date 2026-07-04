@@ -721,3 +721,17 @@ Hinweis:
 Das TempVoice Status Panel wird nicht automatisch live jede Sekunde aktualisiert.
 Es wird beim Ausführen von `/panels` neu aufgebaut.
 
+
+## TempVoice Status Auto-Update
+
+Das TempVoice Status Panel im zentralen Panel-Channel wird automatisch aktualisiert, wenn jemand den Voice Channel wechselt.
+
+Dadurch werden Änderungen an aktiven Lobbys automatisch sichtbar, zum Beispiel:
+
+- neue TempVoice Lobby erstellt
+- TempVoice Lobby verlassen
+- leere Lobby gelöscht
+- Owner/Lobby-Status aktualisiert
+
+Das Update wird mit kurzer Verzögerung ausgeführt, damit Datenbank und Discord Channels vorher sauber aktualisiert sind.
+
