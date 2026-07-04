@@ -5,10 +5,7 @@ const {
   ButtonStyle
 } = require("discord.js");
 
-const {
-  getNowPlayingText,
-  getQueueText
-} = require("./musicPlayer");
+const musicPlayer = require("./musicPlayer");
 
 function cleanText(text, max = 1000) {
   const value = String(text || "Keine Daten.").trim();
@@ -18,6 +15,36 @@ function cleanText(text, max = 1000) {
   }
 
   return value.slice(0, max - 20) + "\n... gekürzt";
+}
+
+function safeNowPlaying(guildId) {
+  if (typeof musicPlayer.getNowPlayingText !== "function") {
+    return "Keine Now-Playing Funktion gefunden.";
+  }
+
+  return musicPlayer.getNowPlayingText(guildId);
+}
+
+function safeQueue(guildId) {
+  if (typeof musicPlayer.getQueueText !== "function") {
+    return "Keine Queue Funktion gefunden.";
+  }
+
+  return musicPlayer.getQueueText(guildId);
+}
+
+function safeVolume(guildId) {
+  if (typeof musicPlayer.getVolume !== "function") {
+    return "Standard";
+  }
+
+  const volume = musicPlayer.getVolume(guildId);
+
+  if (volume === false || volume === null || volume === undefined) {
+    return "Standard";
+  }
+
+  return String(volume) + "%";
 }
 
 function createMusicPanelEmbed(guildId) {
@@ -30,12 +57,18 @@ function createMusicPanelEmbed(guildId) {
     )
     .addFields(
       {
+        name: "📡 Status",
+        value:
+          "🔊 Lautstärke: **" + safeVolume(guildId) + "**\n" +
+          "🔄 Anzeige kann mit Refresh aktualisiert werden."
+      },
+      {
         name: "🎵 Aktuell",
-        value: cleanText(getNowPlayingText(guildId), 1000)
+        value: cleanText(safeNowPlaying(guildId), 1000)
       },
       {
         name: "📜 Queue",
-        value: cleanText(getQueueText(guildId), 1000)
+        value: cleanText(safeQueue(guildId), 1000)
       },
       {
         name: "Spotify Hinweis",
