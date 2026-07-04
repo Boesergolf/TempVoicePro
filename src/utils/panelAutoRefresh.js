@@ -14,6 +14,10 @@ const {
   createMusicPanelRows
 } = require("./musicPanelView");
 
+const {
+  createBotStatusPanelEmbed
+} = require("./botStatusPanelView");
+
 let started = false;
 
 function getRefreshMs() {
@@ -38,6 +42,19 @@ async function updateGuildPanels(guild) {
   if (!panelChannel) return false;
 
   const botId = guild.client.user.id;
+
+  const botStatusPanel = await findPanelMessage(
+    panelChannel,
+    botId,
+    "Bot Status"
+  );
+
+  if (botStatusPanel) {
+    await botStatusPanel.edit({
+      embeds: [await createBotStatusPanelEmbed(guild.client)],
+      components: []
+    }).catch(() => {});
+  }
 
   const tempVoicePanel = await findPanelMessage(
     panelChannel,

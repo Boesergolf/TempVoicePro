@@ -28,6 +28,10 @@ const {
   createTempVoicePanelEmbed
 } = require("../utils/tempVoicePanelView");
 
+const {
+  createBotStatusPanelEmbed
+} = require("../utils/botStatusPanelView");
+
 
 function getPanelAutoRefreshSeconds() {
   const value = Number(process.env.PANEL_AUTO_REFRESH_MS || 30000);
@@ -106,6 +110,11 @@ module.exports = {
 
     await upsertPanel(channel, botId, "TempVoicePro Panels", {
       embeds: [createOverviewEmbed()],
+      components: []
+    });
+
+    await upsertPanel(channel, botId, "Bot Status", {
+      embeds: [await createBotStatusPanelEmbed(interaction.client)],
       components: []
     });
 

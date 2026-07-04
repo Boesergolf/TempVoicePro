@@ -819,3 +819,20 @@ Wichtige Commands:
 - `/panelcleanup`
 - `/help kategorie:Panels`
 
+
+## Bot Status Panel
+
+Der zentrale Panel-Channel enthält zusätzlich ein Bot Status Panel.
+
+Dieses Panel zeigt:
+
+- Bot Online-Status
+- Ping
+- Uptime
+- RAM-Nutzung
+- Server-Anzahl
+- geladene Commands
+- Datenbankstatus
+
+Das Bot Status Panel wird über `/panels` erstellt und danach automatisch aktualisiert.
+
