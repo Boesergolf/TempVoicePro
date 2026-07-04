@@ -52,6 +52,11 @@ module.exports = {
         .setStyle(ButtonStyle.Success),
 
       new ButtonBuilder()
+        .setCustomId("mp_playlist")
+        .setLabel("📂 Playlist")
+        .setStyle(ButtonStyle.Primary),
+
+      new ButtonBuilder()
         .setCustomId("mp_queue")
         .setLabel("📜 Queue")
         .setStyle(ButtonStyle.Secondary),

@@ -50,6 +50,61 @@ async function playMusicInput(interaction, input) {
   return interaction.editReply("✅ Track wurde zur Queue hinzugefügt.");
 }
 
+
+function normalizeMusicPlaylistName(name) {
+  return String(name || "").trim().replace(/\s+/g, " ");
+}
+
+function getMusicPlaylistOwnerKey(scope, userId) {
+  return scope === "global" ? "GLOBAL" : userId;
+}
+
+async function playMusicPlaylistFromPanel(interaction, playlistName, scopeRaw) {
+  const name = normalizeMusicPlaylistName(playlistName);
+  const scopeValue = String(scopeRaw || "user").trim().toLowerCase();
+  const scope = scopeValue === "global" ? "global" : "user";
+
+  if (!name) {
+    return interaction.editReply("❌ Bitte gib einen Playlist-Namen ein.");
+  }
+
+  const ownerKey = getMusicPlaylistOwnerKey(scope, interaction.user.id);
+
+  const [playlistRows] = await db.execute(
+    "SELECT * FROM music_playlists WHERE guildId = ? AND ownerKey = ? AND scope = ? AND name = ?",
+    [interaction.guild.id, ownerKey, scope, name]
+  );
+
+  const playlist = playlistRows[0];
+
+  if (!playlist) {
+    return interaction.editReply("❌ Playlist wurde nicht gefunden.");
+  }
+
+  const [items] = await db.execute(
+    "SELECT * FROM music_playlist_items WHERE playlistId = ? ORDER BY position ASC LIMIT 100",
+    [playlist.id]
+  );
+
+  if (items.length === 0) {
+    return interaction.editReply("❌ Diese Playlist ist leer.");
+  }
+
+  const tracks = items.map(item => ({
+    source: item.source,
+    title: item.title,
+    url: item.url
+  }));
+
+  await addTracks(interaction, tracks);
+
+  return interaction.editReply(
+    "✅ Playlist **" + playlist.name + "** wurde gestartet.\n" +
+    "Scope: **" + scope + "**\n" +
+    "Einträge geladen: **" + tracks.length + "**"
+  );
+}
+
 async function safeReply(interaction, options) {
   try {
     if (interaction.replied || interaction.deferred) {
@@ -210,6 +265,21 @@ module.exports = {
         return interaction.editReply(
           "🗑 Entfernt: **" + (removed.title || removed.query || removed.url || "Unbekannt") + "**"
         );
+      }
+
+
+      if (interaction.customId === "mp_playlist_modal") {
+        await interaction.deferReply({ ephemeral: true });
+
+        const playlist = interaction.fields.getTextInputValue("playlist");
+        const scope = interaction.fields.getTextInputValue("scope") || "user";
+
+        try {
+          return await playMusicPlaylistFromPanel(interaction, playlist, scope);
+        } catch (err) {
+          console.error("❌ Music Panel Playlist Fehler:", err);
+          return interaction.editReply("❌ Fehler: " + err.message);
+        }
       }
 
       const channel = interaction.member?.voice?.channel;
