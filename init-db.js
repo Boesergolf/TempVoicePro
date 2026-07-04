@@ -152,6 +152,17 @@ async function main() {
 
   console.log("✅ Tabelle bereit: music_playlist_items");
 
+
+  await connection.query(`
+    CREATE TABLE IF NOT EXISTS music_settings (
+      guildId VARCHAR(32) NOT NULL PRIMARY KEY,
+      volumePercent INT NOT NULL DEFAULT 20,
+      updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    )
+  `);
+
+  console.log("✅ Tabelle music_settings geprüft/erstellt.");
+
   await connection.end();
 
   console.log("✅ Datenbank-Setup erfolgreich abgeschlossen.");
