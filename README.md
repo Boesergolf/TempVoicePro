@@ -507,3 +507,112 @@ Hinweis:
 
 Die History ist nur im laufenden Bot-Prozess gespeichert und wird nicht dauerhaft in MySQL gespeichert.
 
+
+## Glücksrad System
+
+TempVoicePro enthält ein Glücksrad-System für zufällige Auswahl.
+
+Es kann genutzt werden für:
+
+- nächste Karte auswählen
+- nächste Map auswählen
+- zufällige Spieler auswählen
+- Mitglieder für Teams auswählen
+- eigene Listen drehen
+
+## Glücksrad Command
+
+Der Slash Command lautet:
+
+`/gluecksrad`
+
+Verfügbare Modi:
+
+- `/gluecksrad liste`
+- `/gluecksrad voice`
+
+### Eigene Liste drehen
+
+Mit `/gluecksrad liste` kann aus einer eigenen Liste zufällig gewählt werden.
+
+Beispiele:
+
+`/gluecksrad liste eintraege: Inferno, Mirage, Dust2, Nuke titel: Nächste Map`
+
+`/gluecksrad liste eintraege: Karte 1, Karte 2, Karte 3 anzahl: 1 titel: Nächste Karte`
+
+Die Einträge können getrennt werden durch:
+
+- Komma
+- Semikolon
+- neue Zeile
+- senkrechten Strich
+
+### Voice Auswahl
+
+Mit `/gluecksrad voice` kann der Bot zufällige Mitglieder aus deinem aktuellen Voice Channel auswählen.
+
+Beispiel:
+
+`/gluecksrad voice anzahl: 2 titel: Team Auswahl`
+
+Optional können Bots mit einbezogen werden.
+
+## Glücksrad Panel
+
+Mit `/gluecksradpanel` erstellt oder aktualisiert der Bot einen eigenen Channel:
+
+`#gluecksrad`
+
+Das Panel enthält:
+
+- Dropdown-Menü für Voice-Auswahl
+- Dropdown-Menü für Team-Auswahl
+- Button für eigene Liste
+- Hilfe Button
+
+### Panel Funktionen
+
+Das Glücksrad Panel kann:
+
+- 1 Mitglied aus dem Voice Channel auswählen
+- 2 Mitglieder aus dem Voice Channel auswählen
+- 3 Mitglieder aus dem Voice Channel auswählen
+- 2 zufällige Teams bilden
+- 3 zufällige Teams bilden
+- eigene Liste per Eingabefenster drehen
+
+### Eigene Liste im Panel
+
+Der Button `🎡 Eigene Liste drehen` öffnet ein Eingabefenster.
+
+Dort können eingetragen werden:
+
+- Titel
+- Anzahl Gewinner
+- Einträge
+
+Beispiel für Einträge:
+
+`Inferno, Mirage, Dust2, Nuke`
+
+### Team-Auswahl
+
+Die Team-Auswahl nutzt die Mitglieder aus dem aktuellen Voice Channel des Users, der das Dropdown benutzt.
+
+Bots werden dabei standardmäßig ignoriert.
+
+
+## Music Player Pause und Auto-Leave
+
+Der Music Player verlässt den Voice Channel nicht, solange ein Track pausiert ist.
+
+Auto-Leave greift nur, wenn:
+
+- keine Queue vorhanden ist
+- kein aktueller Track läuft
+- der Player nicht pausiert ist
+- keine neuen Tracks hinzugefügt wurden
+
+Dadurch bleibt die aktuelle Wiedergabe erhalten, wenn der Bot pausiert wurde.
+
