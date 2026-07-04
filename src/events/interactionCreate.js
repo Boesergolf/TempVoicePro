@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const db = require("../database/mysql");
+const luckWheel = require("../utils/luckWheel");
 const { addTracks, setVolume, removeTrack } = require("../utils/musicPlayer");
 const { detectSource, getMetadataForUrl } = require("../utils/musicMetadata");
 const { refreshLatestMusicPanel } = require("../utils/musicPanelView");
@@ -258,7 +259,20 @@ module.exports = {
     /**
      * MODALS
      */
+    
+    if (interaction.isStringSelectMenu && interaction.isStringSelectMenu()) {
+      if (interaction.customId === "gr_select") {
+        return luckWheel.handleWheelSelect(interaction);
+      }
+    }
+
     if (interaction.isModalSubmit()) {
+
+      if (interaction.customId === "gr_list_modal") {
+        return luckWheel.handleListModal(interaction);
+      }
+
+
 
       if (interaction.customId === "mp_play_modal") {
         await interaction.deferReply({ flags: 64 });
