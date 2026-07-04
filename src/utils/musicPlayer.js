@@ -31,32 +31,36 @@ function getYtDlpPath() {
   return "yt-dlp";
 }
 
-function execFilePromise(file, args) {
-  const timeoutMs = Number(process.env.YTDLP_TIMEOUT_MS || 20000);
+function execFilePromise(file, args, options = {}) {
+  const timeoutMs = Number(process.env.YTDLP_TIMEOUT_MS || 60000);
 
   return new Promise((resolve, reject) => {
-    const child = execFile(file, args, {
-      maxBuffer: 1024 * 1024 * 10,
-      timeout: timeoutMs
-    }, (error, stdout, stderr) => {
-      if (error) {
-        if (error.killed || error.signal === "SIGTERM") {
-          return reject(new Error("yt-dlp Timeout nach " + Math.round(timeoutMs / 1000) + " Sekunden."));
+    execFile(
+      file,
+      args,
+      {
+        maxBuffer: 1024 * 1024 * 20,
+        ...options,
+        timeout: timeoutMs
+      },
+      (error, stdout, stderr) => {
+        if (error) {
+          if (error.killed || error.signal === "SIGTERM") {
+            return reject(
+              new Error("yt-dlp Timeout nach " + Math.round(timeoutMs / 1000) + " Sekunden.")
+            );
+          }
+
+          if (stderr) {
+            error.message += "\n" + stderr;
+          }
+
+          return reject(error);
         }
 
-        error.stderr = stderr;
-        return reject(error);
+        return resolve(stdout);
       }
-
-      resolve({
-        stdout,
-        stderr
-      });
-    });
-
-    child.on("error", err => {
-      reject(err);
-    });
+    );
   });
 }
 
@@ -314,8 +318,6 @@ async function resolveTrack(track) {
     source = detectSource(inputUrl);
   }
 
-  // Spotify-Links können nicht direkt gestreamt werden.
-  // Deshalb: Spotify Metadaten lesen -> YouTube Suche -> YouTube abspielen.
   if (source === "spotify" && inputUrl) {
     let title = track.title || track.query || null;
 
@@ -343,32 +345,7 @@ async function resolveTrack(track) {
     };
   }
 
-  // YouTube-Links werden zur Sicherheit ebenfalls über den Titel neu gesucht.
-  // Das ist robuster, wenn direkte Links/Playlist-Parameter/Shortlinks Probleme machen.
   if (source === "youtube" && inputUrl) {
-    let title = track.title || track.query || null;
-
-    if (!title) {
-      const info = await getYtDlpInfo(inputUrl).catch(() => null);
-      title = info?.title || null;
-    }
-
-    if (title) {
-      console.log("🔴 YouTube-Link erkannt, suche robust über YouTube:", title);
-
-      const found = await searchYouTube(title);
-
-      return {
-        ...track,
-        ...found,
-        source: "youtube",
-        originalSource: "youtube",
-        originalUrl: inputUrl,
-        title: found.title || title,
-        query: title
-      };
-    }
-
     console.log("🔴 YouTube-Link erkannt, nutze direkten Link:", inputUrl);
 
     return {
@@ -379,7 +356,6 @@ async function resolveTrack(track) {
     };
   }
 
-  // Normale Links: versuchen wie direkten Link zu behandeln.
   if (inputUrl) {
     return {
       ...track,
@@ -389,8 +365,6 @@ async function resolveTrack(track) {
     };
   }
 
-  // Normale Texteingabe funktioniert bei dir bereits:
-  // genau diesen Weg nutzen wir als Standard.
   if (inputQuery) {
     const found = await searchYouTube(inputQuery);
 
@@ -412,33 +386,67 @@ async function createResource(track) {
   function getPlayableUrl(data) {
     if (!data) return null;
 
-    let url =
-      data.url ||
-      data.webpage_url ||
-      data.webpageUrl ||
-      data.original_url ||
-      null;
+    function videoIdToUrl(id) {
+      const cleanId = String(id || "").trim();
 
-    if (url && typeof url === "string") {
-      url = url.trim();
-
-      if (url.includes("youtube.com/watch") || url.includes("youtu.be/")) {
-        return url;
+      if (/^[a-zA-Z0-9_-]{11}$/.test(cleanId)) {
+        return "https://www.youtube.com/watch?v=" + cleanId;
       }
 
-      if (/^[a-zA-Z0-9_-]{11}$/.test(url)) {
-        return "https://www.youtube.com/watch?v=" + url;
-      }
+      return null;
     }
 
-    const id =
-      data.id ||
-      data.videoId ||
-      data.video_id ||
-      null;
+    function normalizeYouTubeUrl(url) {
+      const value = String(url || "").trim();
 
-    if (id && /^[a-zA-Z0-9_-]{11}$/.test(String(id))) {
-      return "https://www.youtube.com/watch?v=" + String(id);
+      if (!value) return null;
+
+      const directId = videoIdToUrl(value);
+      if (directId) return directId;
+
+      try {
+        const parsed = new URL(value);
+
+        if (parsed.hostname.includes("youtube.com")) {
+          const v = parsed.searchParams.get("v");
+          if (v) return videoIdToUrl(v);
+
+          const shortsMatch = parsed.pathname.match(/\/shorts\/([a-zA-Z0-9_-]{11})/);
+          if (shortsMatch) return videoIdToUrl(shortsMatch[1]);
+
+          const embedMatch = parsed.pathname.match(/\/embed\/([a-zA-Z0-9_-]{11})/);
+          if (embedMatch) return videoIdToUrl(embedMatch[1]);
+
+          const liveMatch = parsed.pathname.match(/\/live\/([a-zA-Z0-9_-]{11})/);
+          if (liveMatch) return videoIdToUrl(liveMatch[1]);
+        }
+
+        if (parsed.hostname.includes("youtu.be")) {
+          const id = parsed.pathname.replace("/", "").split("?")[0];
+          return videoIdToUrl(id);
+        }
+      } catch {
+        return null;
+      }
+
+      return null;
+    }
+
+    const possibleValues = [
+      data.url,
+      data.webpage_url,
+      data.webpageUrl,
+      data.original_url,
+      data.originalUrl,
+      data.originalUrl,
+      data.id,
+      data.videoId,
+      data.video_id
+    ];
+
+    for (const value of possibleValues) {
+      const normalized = normalizeYouTubeUrl(value);
+      if (normalized) return normalized;
     }
 
     return null;

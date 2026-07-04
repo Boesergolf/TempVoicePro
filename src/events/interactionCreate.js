@@ -25,48 +25,65 @@ async function playMusicInput(interaction, input) {
   if (isHttpUrl(value)) {
     const source = detectSource(value);
 
-    const metadata = await getMetadataForUrl(value).catch(err => {
-      console.log("⚠️ Link-Metadaten konnten nicht gelesen werden:", err.message);
-      return null;
-    });
+    if (source === "spotify") {
+      const metadata = await getMetadataForUrl(value).catch(err => {
+        console.log("⚠️ Spotify-Metadaten konnten nicht gelesen werden:", err.message);
+        return null;
+      });
 
-    const title =
-      metadata?.displayTitle ||
-      metadata?.title ||
-      null;
+      const title =
+        metadata?.displayTitle ||
+        metadata?.title ||
+        null;
 
-    if (title) {
-      console.log("🔗 Link erkannt, spiele über YouTube-Suche:", title);
+      if (!title) {
+        return interaction.editReply(
+          "❌ Spotify-Link erkannt, aber ich konnte den Titel nicht lesen. Bitte gib den Songnamen direkt ein."
+        );
+      }
+
+      console.log("🟢 Spotify-Link erkannt, suche über YouTube:", title);
 
       await addTracks(interaction, [{
         source: "search",
         query: title,
         title: title,
-        originalSource: source,
+        originalSource: "spotify",
         originalUrl: value
       }]);
 
+      await refreshLatestMusicPanel(interaction);
+
       return interaction.editReply(
-        "✅ Link erkannt. Ich suche **" + title + "** über YouTube und füge es zur Queue hinzu."
+        "✅ Spotify-Link erkannt. Ich suche **" + title + "** über YouTube und füge es zur Queue hinzu."
       );
     }
 
-    if (source === "spotify") {
-      return interaction.editReply(
-        "❌ Spotify-Link erkannt, aber ich konnte den Titel nicht lesen. Bitte gib den Songnamen direkt ein."
-      );
+    if (source === "youtube") {
+      console.log("🔴 YouTube-Link erkannt, spiele direkten Link:", value);
+
+      await addTracks(interaction, [{
+        source: "youtube",
+        url: value,
+        title: value
+      }]);
+
+      await refreshLatestMusicPanel(interaction);
+
+      return interaction.editReply("✅ YouTube-Link wurde direkt zur Queue hinzugefügt.");
     }
 
-    console.log("🔗 Link erkannt, keine Metadaten gefunden. Versuche direkten Link:", value);
+    console.log("🔗 Link erkannt, spiele direkten Link:", value);
 
     await addTracks(interaction, [{
-      source: source,
+      source: source || "url",
       url: value,
       title: value
     }]);
 
     await refreshLatestMusicPanel(interaction);
-    return interaction.editReply("✅ Link wurde zur Queue hinzugefügt.");
+
+    return interaction.editReply("✅ Link wurde direkt zur Queue hinzugefügt.");
   }
 
   await addTracks(interaction, [{
@@ -76,6 +93,7 @@ async function playMusicInput(interaction, input) {
   }]);
 
   await refreshLatestMusicPanel(interaction);
+
   return interaction.editReply("✅ Track wurde zur Queue hinzugefügt.");
 }
 
