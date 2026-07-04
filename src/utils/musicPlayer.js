@@ -1,3 +1,10 @@
+const {
+  DEFAULT_VOLUME_PERCENT,
+  clampVolumePercent,
+  getSavedVolumePercent,
+  saveVolumePercent
+} = require("./musicSettings");
+
 const fs = require("fs");
 const { spawn, execFile } = require("child_process");
 
@@ -201,7 +208,7 @@ function getOrCreateQueue(guildId) {
     current: null,
     playing: false,
     stopped: false,
-    volume: 70
+    volume: DEFAULT_VOLUME_PERCENT
   };
 
   player.on(AudioPlayerStatus.Idle, () => {
@@ -390,6 +397,30 @@ async function resolveTrack(track) {
   }
 
   throw new Error("Kein gültiger Song, Link oder Suchbegriff angegeben.");
+}
+
+async function loadSavedVolumeForQueue(guildId, queue) {
+  if (!queue) return DEFAULT_VOLUME_PERCENT;
+
+  if (queue.volumeLoaded) {
+    return queue.volume ?? DEFAULT_VOLUME_PERCENT;
+  }
+
+  try {
+    const savedVolume = await getSavedVolumePercent(guildId);
+
+    queue.volume = savedVolume;
+    queue.volumeLoaded = true;
+
+    return savedVolume;
+  } catch (err) {
+    console.error("❌ Gespeicherte Music-Lautstärke konnte nicht geladen werden:", err.message);
+
+    queue.volume = queue.volume ?? DEFAULT_VOLUME_PERCENT;
+    queue.volumeLoaded = true;
+
+    return queue.volume;
+  }
 }
 
 async function createResource(track) {
@@ -637,6 +668,8 @@ async function playNext(guildId) {
     queue.playing = true;
     queue.paused = false;
 
+    await loadSavedVolumeForQueue(guildId, queue);
+
     const data = await createResource(nextTrack);
 
     queue.current = data.resolved;
@@ -649,7 +682,7 @@ async function playNext(guildId) {
     queue.history = queue.history.slice(0, 20);
 
     if (data.resource.volume) {
-      data.resource.volume.setVolume((queue.volume || 70) / 100);
+      data.resource.volume.setVolume((queue.volume ?? DEFAULT_VOLUME_PERCENT) / 100);
     }
 
     queue.player.play(data.resource);
@@ -674,6 +707,8 @@ async function playNext(guildId) {
 
 async function addTracks(interaction, tracks) {
   const queue = getOrCreateQueue(interaction.guild.id);
+
+  await loadSavedVolumeForQueue(interaction.guild.id, queue);
 
   cancelLeaveTimer(interaction.guild.id);
   queue.paused = false;
@@ -804,20 +839,23 @@ function shuffleQueue(guildId) {
 function setVolume(guildId, percent) {
   const queue = getQueue(guildId);
 
-  if (!queue) {
-    return false;
-  }
+  if (!queue) return false;
 
-  const volume = Math.max(0, Math.min(200, Number(percent)));
+  const volume = clampVolumePercent(percent);
 
   queue.volume = volume;
+  queue.volumeLoaded = true;
 
-  if (queue.player && queue.player.state && queue.player.state.resource) {
-    const resource = queue.player.state.resource;
+  saveVolumePercent(guildId, volume).catch(err => {
+    console.error("❌ Music-Lautstärke konnte nicht gespeichert werden:", err.message);
+  });
 
-    if (resource.volume) {
-      resource.volume.setVolume(volume / 100);
-    }
+  const resource = queue.player && queue.player.state
+    ? queue.player.state.resource
+    : null;
+
+  if (resource && resource.volume) {
+    resource.volume.setVolume(volume / 100);
   }
 
   return volume;
@@ -827,10 +865,10 @@ function getVolume(guildId) {
   const queue = getQueue(guildId);
 
   if (!queue) {
-    return null;
+    return DEFAULT_VOLUME_PERCENT;
   }
 
-  return queue.volume || 70;
+  return queue.volume ?? DEFAULT_VOLUME_PERCENT;
 }
 
 

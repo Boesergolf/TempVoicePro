@@ -925,3 +925,16 @@ Der Check prüft unter anderem:
 
 Das ist hilfreich vor jedem Neustart, Deploy oder Commit.
 
+
+## Music Lautstärke speichern
+
+Der Music Player startet standardmäßig mit 20 Prozent Lautstärke.
+
+Standardwert in `.env`:
+
+`MUSIC_DEFAULT_VOLUME_PERCENT=20`
+
+Wenn die Lautstärke über `/music volume` oder das Music Panel geändert wird, speichert der Bot die Lautstärke pro Server in MySQL.
+
+Beim nächsten Abspielen wird die gespeicherte Lautstärke automatisch wieder geladen.
+
