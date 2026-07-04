@@ -245,157 +245,238 @@ async function connectToVoice(interaction, queue) {
 }
 
 async function searchYouTube(query) {
-  const searchQuery = cleanTitle(query);
+  const cleanQuery = String(query || "").trim();
 
-  if (!searchQuery) {
-    throw new Error("Kein Suchbegriff gefunden.");
+  if (!cleanQuery) {
+    throw new Error("Kein Suchbegriff angegeben.");
   }
 
-  const ytDlpPath = getYtDlpPath();
-  const searchUrl = "ytsearch5:" + searchQuery;
-
-  const result = await execFilePromise(ytDlpPath, [
+  const result = await execFilePromise(getYtDlpPath(), [
     "--dump-single-json",
-    "--quiet",
+    "--no-playlist",
     "--no-warnings",
+    "--ignore-errors",
     "--force-ipv4",
-    "--extractor-args",
-    "youtube:player_client=android,web",
-    searchUrl
-  ]).catch(err => {
-    console.error("❌ yt-dlp Suche Fehler:", err.stderr || err.message);
-    throw new Error("YouTube-Suche fehlgeschlagen.");
-  });
+    "ytsearch5:" + cleanQuery
+  ]);
 
-  let data;
+  const raw = typeof result === "string"
+    ? result
+    : (result.stdout || "");
 
-  try {
-    data = JSON.parse(result.stdout);
-  } catch {
-    throw new Error("YouTube-Suche konnte nicht gelesen werden.");
+  if (!raw.trim()) {
+    throw new Error("YouTube-Suche hat keine Daten geliefert.");
   }
 
-  const entries = Array.isArray(data.entries)
-    ? data.entries
-    : [data];
+  const data = JSON.parse(raw);
+  const entries = Array.isArray(data.entries) ? data.entries.filter(Boolean) : [];
+  const entry = entries[0];
 
-  const video = entries.find(entry => {
-    if (!entry) return false;
-    if (entry.url && String(entry.url).includes("youtube.com/watch")) return true;
-    if (entry.webpage_url && String(entry.webpage_url).includes("youtube.com/watch")) return true;
-    if (entry.id) return true;
-    return false;
-  });
-
-  if (!video) {
-    throw new Error("Kein gültiger YouTube-Treffer gefunden.");
+  if (!entry) {
+    throw new Error("Kein YouTube-Ergebnis gefunden.");
   }
 
-  const videoUrl =
-    video.webpage_url ||
-    video.original_url ||
-    video.url ||
-    ("https://www.youtube.com/watch?v=" + video.id);
+  let url =
+    entry.webpage_url ||
+    entry.original_url ||
+    entry.url ||
+    null;
 
-  const normalizedUrl = makeYouTubeVideoUrl(videoUrl) ||
-    (video.id ? "https://www.youtube.com/watch?v=" + video.id : null);
+  if ((!url || !url.includes("youtube.com/watch")) && entry.id) {
+    url = "https://www.youtube.com/watch?v=" + entry.id;
+  }
 
-  if (!normalizedUrl) {
-    throw new Error("YouTube-Treffer hatte keine gültige Video-URL.");
+  if (!url || (!url.includes("youtube.com/watch") && !url.includes("youtu.be/"))) {
+    throw new Error("YouTube-Suche hat keine gültige Video-URL geliefert.");
   }
 
   return {
-    title: cleanTitle(video.title || searchQuery),
-    url: normalizedUrl
+    source: "youtube",
+    title: entry.title || cleanQuery,
+    url,
+    duration: entry.duration || null,
+    thumbnail: entry.thumbnail || null
   };
 }
 
 
 async function resolveTrack(track) {
-  let source = track.source || "url";
-  let input = track.url || track.query || track.title;
-  let title = cleanTitle(track.title);
-  let playableUrl = null;
-
-  if (!input) {
+  if (!track) {
     throw new Error("Kein Track angegeben.");
   }
 
-  if (isHttpUrl(input)) {
-    source = detectSource(input);
+  const inputUrl = track.url || null;
+  const inputQuery = track.query || track.title || null;
+
+  let source = track.source || null;
+
+  if (!source && inputUrl) {
+    source = detectSource(inputUrl);
   }
 
-  if (isYouTubePlaylistUrl(input)) {
-    throw new Error("Das ist ein YouTube-Playlist-Link. Bitte nutze zuerst /playlist import und danach /music playlist.");
-  }
+  // Spotify-Links können nicht direkt gestreamt werden.
+  // Deshalb: Spotify Metadaten lesen -> YouTube Suche -> YouTube abspielen.
+  if (source === "spotify" && inputUrl) {
+    let title = track.title || track.query || null;
 
-  if (source === "youtube" && isHttpUrl(input)) {
-    playableUrl = makeYouTubeVideoUrl(input);
-
-    if (!playableUrl) {
-      throw new Error("Das ist keine gültige YouTube-Video-URL.");
+    if (!title) {
+      const metadata = await getMetadataForUrl(inputUrl).catch(() => null);
+      title = metadata?.displayTitle || metadata?.title || null;
     }
 
     if (!title) {
-      const info = await getYtDlpInfo(playableUrl).catch(() => null);
-      title = cleanTitle(info?.title) || playableUrl;
+      throw new Error("Spotify-Link erkannt, aber ich konnte den Titel nicht lesen. Bitte gib den Songnamen direkt ein.");
     }
 
+    console.log("🟢 Spotify-Link erkannt, suche über YouTube:", title);
+
+    const found = await searchYouTube(title);
+
     return {
+      ...track,
+      ...found,
       source: "youtube",
-      title,
-      url: playableUrl,
-      playableUrl,
-      requestedBy: track.requestedBy
+      originalSource: "spotify",
+      originalUrl: inputUrl,
+      title: found.title || title,
+      query: title
     };
   }
 
-  if (source === "spotify") {
-    if (!title && isHttpUrl(input)) {
-      const metadata = await getMetadataForUrl(input).catch(() => null);
-      title = cleanTitle(metadata?.displayTitle || metadata?.title);
-    }
+  // YouTube-Links werden zur Sicherheit ebenfalls über den Titel neu gesucht.
+  // Das ist robuster, wenn direkte Links/Playlist-Parameter/Shortlinks Probleme machen.
+  if (source === "youtube" && inputUrl) {
+    let title = track.title || track.query || null;
 
     if (!title) {
-      throw new Error("Spotify-Track hat keinen Titel. Bitte speichere ihn mit Titel oder importiere ihn vorher.");
+      const info = await getYtDlpInfo(inputUrl).catch(() => null);
+      title = info?.title || null;
     }
 
-    const result = await searchYouTube(title);
+    if (title) {
+      console.log("🔴 YouTube-Link erkannt, suche robust über YouTube:", title);
+
+      const found = await searchYouTube(title);
+
+      return {
+        ...track,
+        ...found,
+        source: "youtube",
+        originalSource: "youtube",
+        originalUrl: inputUrl,
+        title: found.title || title,
+        query: title
+      };
+    }
+
+    console.log("🔴 YouTube-Link erkannt, nutze direkten Link:", inputUrl);
 
     return {
+      ...track,
       source: "youtube",
-      title,
-      url: track.url || result.url,
-      playableUrl: result.url,
-      requestedBy: track.requestedBy
+      url: inputUrl,
+      title: track.title || inputUrl
     };
   }
 
-  const searchQuery = cleanTitle(track.query || title || input);
-  const result = await searchYouTube(searchQuery);
+  // Normale Links: versuchen wie direkten Link zu behandeln.
+  if (inputUrl) {
+    return {
+      ...track,
+      source: source || "url",
+      url: inputUrl,
+      title: track.title || inputUrl
+    };
+  }
 
-  return {
-    source: "youtube",
-    title: cleanTitle(title || result.title || searchQuery),
-    url: result.url,
-    playableUrl: result.url,
-    requestedBy: track.requestedBy
-  };
+  // Normale Texteingabe funktioniert bei dir bereits:
+  // genau diesen Weg nutzen wir als Standard.
+  if (inputQuery) {
+    const found = await searchYouTube(inputQuery);
+
+    return {
+      ...track,
+      ...found,
+      source: "youtube",
+      title: found.title || inputQuery,
+      query: inputQuery
+    };
+  }
+
+  throw new Error("Kein gültiger Song, Link oder Suchbegriff angegeben.");
 }
 
 async function createResource(track) {
   const resolved = await resolveTrack(track);
 
-  if (!resolved.playableUrl) {
+  function getPlayableUrl(data) {
+    if (!data) return null;
+
+    let url =
+      data.url ||
+      data.webpage_url ||
+      data.webpageUrl ||
+      data.original_url ||
+      null;
+
+    if (url && typeof url === "string") {
+      url = url.trim();
+
+      if (url.includes("youtube.com/watch") || url.includes("youtu.be/")) {
+        return url;
+      }
+
+      if (/^[a-zA-Z0-9_-]{11}$/.test(url)) {
+        return "https://www.youtube.com/watch?v=" + url;
+      }
+    }
+
+    const id =
+      data.id ||
+      data.videoId ||
+      data.video_id ||
+      null;
+
+    if (id && /^[a-zA-Z0-9_-]{11}$/.test(String(id))) {
+      return "https://www.youtube.com/watch?v=" + String(id);
+    }
+
+    return null;
+  }
+
+  let playableUrl = getPlayableUrl(resolved);
+
+  if (!playableUrl) {
+    const retryQuery =
+      resolved.query ||
+      resolved.title ||
+      track.query ||
+      track.title ||
+      null;
+
+    if (retryQuery) {
+      console.log("🔁 Keine direkte YouTube-URL, suche erneut:", retryQuery);
+
+      const found = await searchYouTube(retryQuery);
+
+      Object.assign(resolved, found);
+
+      playableUrl = getPlayableUrl(resolved);
+    }
+  }
+
+  if (!playableUrl) {
+    console.error("❌ Track ohne gültige URL:", resolved);
     throw new Error("Keine gültige YouTube-URL zum Abspielen gefunden.");
   }
 
-  console.log("🎵 Spiele Track:", resolved.title);
-  console.log("🔗 YouTube URL:", resolved.playableUrl);
+  resolved.url = playableUrl;
+  resolved.source = "youtube";
 
-  const ytDlpPath = getYtDlpPath();
+  console.log("🎵 Spiele Track:", resolved.title || resolved.query || playableUrl);
+  console.log("🔗 YouTube URL:", playableUrl);
 
-  const args = [
+  const child = spawn(getYtDlpPath(), [
     "-f",
     "bestaudio[ext=webm]/bestaudio/best",
     "-o",
@@ -406,54 +487,34 @@ async function createResource(track) {
     "--force-ipv4",
     "--extractor-args",
     "youtube:player_client=android,web",
-    resolved.playableUrl
-  ];
-
-  const child = spawn(ytDlpPath, args, {
+    playableUrl
+  ], {
     stdio: ["ignore", "pipe", "pipe"]
   });
 
-  let stderr = "";
+  child.stderr.on("data", data => {
+    const msg = String(data || "").trim();
 
-  child.stderr.on("data", chunk => {
-    stderr += chunk.toString();
+    if (!msg) return;
+    if (msg.toLowerCase().includes("broken pipe")) return;
 
-    if (stderr.length > 5000) {
-      stderr = stderr.slice(-5000);
-    }
+    console.error("yt-dlp:", msg);
   });
 
   child.on("error", err => {
-    console.error("❌ yt-dlp Startfehler:", err);
-  });
-
-  child.on("close", code => {
-    const stderrText = stderr.trim();
-
-    if (
-      code !== 0 &&
-      code !== null &&
-      !stderrText.includes("Broken pipe") &&
-      !stderrText.includes("unable to write data")
-    ) {
-      console.error("❌ yt-dlp beendet mit Code " + code);
-
-      if (stderrText) {
-        console.error(stderrText);
-      }
-    }
+    console.error("❌ yt-dlp Prozess Fehler:", err.message);
   });
 
   const resource = createAudioResource(child.stdout, {
     inputType: StreamType.Arbitrary,
     inlineVolume: true,
-    metadata: resolved
+    metadata: {
+      ...resolved,
+      child
+    }
   });
 
-  return {
-    resource,
-    resolved
-  };
+  return { resource, resolved };
 }
 
 async function playNext(guildId) {

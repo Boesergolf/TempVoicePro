@@ -21,31 +21,57 @@ async function playMusicInput(interaction, input) {
     return interaction.editReply("❌ Bitte gib einen Song, YouTube-Link oder Spotify-Link ein.");
   }
 
-  let track;
-
   if (isHttpUrl(value)) {
     const source = detectSource(value);
-    let title = null;
 
-    if (source === "spotify") {
-      const metadata = await getMetadataForUrl(value).catch(() => null);
-      title = metadata?.displayTitle || metadata?.title || null;
+    const metadata = await getMetadataForUrl(value).catch(err => {
+      console.log("⚠️ Link-Metadaten konnten nicht gelesen werden:", err.message);
+      return null;
+    });
+
+    const title =
+      metadata?.displayTitle ||
+      metadata?.title ||
+      null;
+
+    if (title) {
+      console.log("🔗 Link erkannt, spiele über YouTube-Suche:", title);
+
+      await addTracks(interaction, [{
+        source: "search",
+        query: title,
+        title: title,
+        originalSource: source,
+        originalUrl: value
+      }]);
+
+      return interaction.editReply(
+        "✅ Link erkannt. Ich suche **" + title + "** über YouTube und füge es zur Queue hinzu."
+      );
     }
 
-    track = {
-      source,
+    if (source === "spotify") {
+      return interaction.editReply(
+        "❌ Spotify-Link erkannt, aber ich konnte den Titel nicht lesen. Bitte gib den Songnamen direkt ein."
+      );
+    }
+
+    console.log("🔗 Link erkannt, keine Metadaten gefunden. Versuche direkten Link:", value);
+
+    await addTracks(interaction, [{
+      source: source,
       url: value,
-      title
-    };
-  } else {
-    track = {
-      source: "search",
-      query: value,
       title: value
-    };
+    }]);
+
+    return interaction.editReply("✅ Link wurde zur Queue hinzugefügt.");
   }
 
-  await addTracks(interaction, [track]);
+  await addTracks(interaction, [{
+    source: "search",
+    query: value,
+    title: value
+  }]);
 
   return interaction.editReply("✅ Track wurde zur Queue hinzugefügt.");
 }

@@ -182,7 +182,7 @@ function musicHelp() {
       {
         name: "Spotify Hinweis",
         value:
-          "Spotify wird nicht direkt gestreamt. Der Bot erkennt den Spotify-Titel und sucht ihn über YouTube."
+          "Spotify-Link erkannt: Der Bot liest Titel/Künstler aus Spotify und spielt den passenden Track über YouTube ab."
       }
     ],
     "Orange"
