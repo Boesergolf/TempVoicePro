@@ -120,9 +120,21 @@ async function sendControlPanel(guild, categoryId, voiceChannel, member) {
         .setStyle(ButtonStyle.Secondary)
     );
 
+    const row3 = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId("tv_owner")
+        .setLabel("👑 Owner")
+        .setStyle(ButtonStyle.Secondary),
+
+      new ButtonBuilder()
+        .setCustomId("tv_claim")
+        .setLabel("🙋 Claim")
+        .setStyle(ButtonStyle.Success)
+    );
+
     const panelMessage = await panelChannel.send({
       embeds: [embed],
-      components: [row1, row2]
+      components: [row1, row2, row3]
     });
 
     console.log("✅ Temporäres Panel erstellt: #" + panelChannel.name);
