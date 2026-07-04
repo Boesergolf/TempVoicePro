@@ -23,6 +23,10 @@ const {
   createLuckWheelPanelRows
 } = require("../utils/luckWheel");
 
+const {
+  createTempVoicePanelEmbed
+} = require("../utils/tempVoicePanelView");
+
 function createOverviewEmbed() {
   const seconds = Math.round(getPanelMessageDeleteMs() / 1000);
 
@@ -88,6 +92,11 @@ module.exports = {
 
     await upsertPanel(channel, botId, "TempVoicePro Panels", {
       embeds: [createOverviewEmbed()],
+      components: []
+    });
+
+    await upsertPanel(channel, botId, "TempVoice Status", {
+      embeds: [await createTempVoicePanelEmbed(interaction.guild)],
       components: []
     });
 

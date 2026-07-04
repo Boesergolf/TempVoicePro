@@ -698,3 +698,26 @@ Zum Löschen:
 
 Der neue zentrale Panel-Channel `#bot-panels` bleibt erhalten.
 
+
+## TempVoice Status Panel
+
+Der zentrale Panel-Channel enthält zusätzlich ein TempVoice Status Panel.
+
+Dieses Panel zeigt:
+
+- Creator Channel
+- TempVoice Kategorie
+- Anzahl aktiver TempVoice Channels
+- aktive Lobbys mit Owner
+
+Das Panel wird über `/panels` erstellt oder aktualisiert.
+
+Beispiel:
+
+`/panels kategorie:Bot`
+
+Hinweis:
+
+Das TempVoice Status Panel wird nicht automatisch live jede Sekunde aktualisiert.
+Es wird beim Ausführen von `/panels` neu aufgebaut.
+
