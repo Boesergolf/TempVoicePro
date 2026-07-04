@@ -11,6 +11,10 @@ const {
   setModuleEnabled
 } = require("../utils/guildModules");
 
+const {
+  updateGuildPanels
+} = require("../utils/panelAutoRefresh");
+
 function moduleChoices() {
   return Object.entries(getKnownModules()).map(([key, info]) => ({
     name: info.name,
@@ -96,6 +100,10 @@ module.exports = {
     );
 
     const modules = await getGuildModules(interaction.guild.id);
+
+    await updateGuildPanels(interaction.guild).catch(err => {
+      console.error("❌ Module Panel konnte nicht sofort aktualisiert werden:", err.message);
+    });
 
     return interaction.editReply({
       content:

@@ -1031,3 +1031,18 @@ Verwaltung:
 
 `/module disable`
 
+
+## Module Panel Sofort-Update
+
+Wenn ein Server-Modul mit `/module enable` oder `/module disable` geändert wird, aktualisiert der Bot die zentralen Panels sofort.
+
+Dadurch wird das Server Module Panel direkt aktualisiert und muss nicht auf den nächsten Auto-Refresh warten.
+
+Beispiele:
+
+`/module disable name:Music`
+
+`/module enable name:Music`
+
+Das Module Panel im zentralen Panel-Channel zeigt die Änderung sofort an.
+
