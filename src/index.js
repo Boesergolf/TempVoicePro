@@ -39,10 +39,6 @@ try {
   console.error("❌ CommandHandler Fehler:", err);
 }
 
-client.once("ready", () => {
-  console.log(`✅ Online als ${client.user.tag}`);
-});
-
 client.on("error", (err) => {
   console.error("❌ Client Fehler:", err);
 });
