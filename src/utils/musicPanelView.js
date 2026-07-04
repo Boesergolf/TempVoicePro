@@ -128,6 +128,11 @@ function createMusicPanelRows() {
     new ButtonBuilder()
       .setCustomId("mp_stop")
       .setLabel("⏹ Stop")
+      .setStyle(ButtonStyle.Danger),
+
+    new ButtonBuilder()
+      .setCustomId("mp_leave")
+      .setLabel("👋 Leave")
       .setStyle(ButtonStyle.Danger)
   );
 

@@ -382,3 +382,17 @@ Angezeigt werden:
 
 Mit dem Button `🔄 Refresh` kann die Anzeige im Music Panel manuell aktualisiert werden.
 
+
+## Music Panel Leave Button
+
+Das Music Panel enthält einen `👋 Leave` Button.
+
+Damit kann der Bot direkt aus dem Voice Channel getrennt werden.
+
+Der Button macht:
+
+- Music Player stoppen
+- Queue leeren
+- Voice Verbindung trennen
+- Music Panel aktualisieren
+
