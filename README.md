@@ -1,359 +1,369 @@
 # TempVoicePro
 
-TempVoicePro ist ein Discord TempVoice Bot, mit dem Nutzer automatisch eigene temporäre Voice Channels erstellen können.
-
-Wenn ein User den Creator-Channel betritt, erstellt der Bot automatisch einen neuen Voice Channel wie zum Beispiel `Lobby 1`, `Lobby 2`, `Lobby 3` und verschiebt den User direkt hinein. Zusätzlich erstellt der Bot einen passenden temporären Panel-Textkanal mit Buttons zur Verwaltung des Voice Channels.
-
-> Dieses Projekt wurde mit Unterstützung von ChatGPT entwickelt und Schritt für Schritt umgesetzt.
-
----
+TempVoicePro ist ein Discord Bot für temporäre Voice Channels, Music Playback, Playlists, Music Panel Controls und ChatGPT-Integration.
 
 ## Funktionen
 
-- Automatische Erstellung temporärer Voice Channels
-- Fortlaufende Channel-Namen:
-  - `Lobby 1`
-  - `Lobby 2`
-  - `Lobby 3`
-- Automatisches Verschieben des Users in den neuen Channel
-- Temporärer Panel-Textkanal pro Voice Channel
-- Automatisches Löschen leerer TempVoice Channels
-- Automatisches Löschen des zugehörigen Panel-Textkanals
-- MySQL/MariaDB Speicherung
-- Slash Commands
-- Discord Buttons zur Channel-Verwaltung
+### TempVoice System
 
----
+- `/setup` richtet das TempVoice System ein
+- erstellt automatisch einen Creator Voice Channel
+- beim Betreten des Creator Channels wird automatisch eine temporäre Lobby erstellt
+- Lobby-Namen werden automatisch hochgezählt, zum Beispiel `Lobby 1`, `Lobby 2`
+- für jede Lobby wird ein eigener temporärer Panel-Textkanal erstellt
+- leere temporäre Voice Channels werden automatisch gelöscht
+- dazugehörige Panel-Textkanäle und Datenbankeinträge werden ebenfalls gelöscht
 
-## Panel Buttons
+### TempVoice Panel Buttons
 
-Der Bot erstellt für jeden TempVoice Channel ein eigenes Control Panel.
+Im temporären Panel-Textkanal gibt es Buttons für:
 
-Aktuell unterstützt das Panel unter anderem:
+- Lock
+- Unlock
+- Hide
+- Show
+- Rename
+- Limit
+- Bitrate
+- Owner anzeigen
+- Claim
+- Close
+- Private
+- Public
+- Kick
+- Ban
+- Unban
+- Add Co-Owner
+- Remove Co-Owner
 
-- `Lock` - Channel sperren
-- `Unlock` - Channel entsperren
-- `Hide` - Channel verstecken
-- `Show` - Channel sichtbar machen
-- `Rename` - Channel umbenennen
-- `Limit` - Userlimit setzen
-- `Bitrate` - Bitrate ändern
-- `Owner` - aktuellen Owner anzeigen
-- `Claim` - Owner übernehmen, wenn der alte Owner nicht mehr im Channel ist
-- `Close` - TempVoice Channel direkt schließen
-- `Private` - Channel privat machen
-- `Public` - Channel wieder öffentlich machen
-- `Kick` - User aus dem TempVoice Channel kicken
-- `Ban` - User aus dem TempVoice Channel ausschließen
-- `Unban` - User wieder erlauben
-- `Add Co-Owner` - Co-Owner hinzufügen
-- `Remove Co-Owner` - Co-Owner entfernen
+### TempVoice Commands
 
----
+- `/setup`
+- `/stats`
+- `/lock`
+- `/unlock`
+- `/rename`
+- `/addcoowner`
+- `/removecoowner`
 
-## Slash Commands
+## Music Player
 
-Aktuelle Slash Commands:
+Der Bot kann Musik in Discord Voice Channels abspielen.
 
-- `/setup` - TempVoice System einrichten
-- `/stats` - Statistiken anzeigen
-- `/lock` - aktuellen TempVoice Channel sperren
-- `/unlock` - aktuellen TempVoice Channel entsperren
-- `/rename` - aktuellen TempVoice Channel umbenennen
-- `/addcoowner` - Co-Owner hinzufügen
-- `/removecoowner` - Co-Owner entfernen
+Unterstützt werden:
 
----
+- direkte YouTube Links
+- YouTube Shorts Links
+- YouTube Suchbegriffe
+- Spotify Links über Titel/Künstler-Erkennung
+- gespeicherte Playlists
+- Queue Verwaltung
+- Pause und Resume
+- Skip
+- Stop
+- Shuffle
+- Remove
+- Volume
 
-## Voraussetzungen
+### YouTube Links
 
-- Node.js 20 oder neuer
-- MySQL oder MariaDB
-- Discord Bot Token
-- Discord Server mit passenden Bot-Rechten
-- Linux VPS empfohlen
+Direkte YouTube Links werden direkt abgespielt.
 
-Getestet wurde das Projekt mit:
+YouTube Shorts werden intern automatisch in normale YouTube Watch-Links umgewandelt.
 
-- Node.js v22
-- discord.js v14
-- MariaDB/MySQL
-- PM2
+Beispiel:
 
----
+`https://www.youtube.com/shorts/VIDEOID`
 
-## Benötigte Discord Bot Rechte
+wird intern zu:
 
-Der Bot benötigt auf dem Discord Server mindestens folgende Rechte:
+`https://www.youtube.com/watch?v=VIDEOID`
 
-- Kanäle verwalten
-- Mitglieder verschieben
-- Kanäle ansehen
-- Verbinden
-- Sprechen
-- Nachrichten senden
-- Nachrichten verwalten
-- Embeds senden
-- Slash Commands verwenden
+### Spotify Hinweis
 
-Empfohlene Rechte für eine einfache Einrichtung:
+Spotify wird nicht direkt gestreamt.
 
-- Administrator
+Der Bot liest Titel und Künstler aus Spotify und sucht den passenden Track über YouTube.
 
-Nach erfolgreicher Einrichtung können die Rechte später eingeschränkt werden.
+Ablauf:
 
----
+`Spotify-Link erkannt → Titel/Künstler lesen → passenden Track über YouTube suchen → YouTube-Audio im Discord Voice abspielen`
+
+### yt-dlp Timeout
+
+Für langsame YouTube-Antworten kann in der `.env` dieser Wert gesetzt werden:
+
+`YTDLP_TIMEOUT_MS=60000`
+
+Das gibt `yt-dlp` bis zu 60 Sekunden Zeit, bevor der Track als Timeout gewertet wird.
+
+### Auto-Leave
+
+Wenn die Queue leer ist, kann der Bot automatisch nach kurzer Wartezeit den Voice Channel verlassen.
+
+Dadurch bleibt der Bot nicht unnötig im Voice Channel hängen.
+
+## Music Commands
+
+- `/music play`
+- `/music playlist`
+- `/music queue`
+- `/music nowplaying`
+- `/music skip`
+- `/music stop`
+- `/music pause`
+- `/music resume`
+- `/music clear`
+- `/music shuffle`
+- `/music remove`
+- `/music volume`
+
+## Music Panel
+
+Mit `/musicpanel` erstellt oder aktualisiert der Bot einen eigenen Channel:
+
+- `#music-player`
+
+Dort gibt es Buttons für:
+
+- Play
+- Playlist starten
+- Playlists anzeigen
+- Queue anzeigen
+- Now Playing
+- Pause
+- Resume
+- Skip
+- Stop
+- Clear
+- Shuffle
+- Remove
+- Volume
+- Refresh
+
+Das Panel zeigt außerdem:
+
+- aktuellen Track
+- Queue
+- Spotify Hinweis
+
+Wenn `/musicpanel` mehrfach ausgeführt wird, wird das vorhandene Panel aktualisiert und doppelte Panels werden entfernt.
+
+## Playlist System
+
+Playlists werden in MySQL gespeichert.
+
+Unterstützt werden:
+
+- User Playlists
+- globale Server Playlists
+- YouTube Links
+- Spotify Links
+- Spotify Playlist Import
+- YouTube Playlist Import
+
+Playlist Commands:
+
+- `/playlist create`
+- `/playlist list`
+- `/playlist add`
+- `/playlist show`
+- `/playlist import`
+- `/playlist remove`
+- `/playlist delete`
+
+## ChatGPT Integration
+
+Mit `/chatgpt` kann man dem Bot Fragen stellen.
+
+Benötigt:
+
+- gültigen OpenAI API Key
+- verfügbares API Guthaben
+- gesetzte `.env` Werte
+
+Command:
+
+- `/chatgpt`
+
+## Help System
+
+Der Bot enthält ein deutsches Hilfesystem:
+
+- `/help`
+- `/help kategorie:TempVoice`
+- `/help kategorie:Panel Buttons`
+- `/help kategorie:Musik`
+- `/help kategorie:Playlists`
+- `/help kategorie:ChatGPT`
+- `/help kategorie:Technik`
 
 ## Installation
 
 Repository klonen:
 
-```bash
-git clone https://github.com/Boesergolf/TempVoicePro.git
-cd TempVoicePro
-```
+`git clone https://github.com/Boesergolf/TempVoicePro.git`
 
-Abhängigkeiten installieren:
+In den Ordner wechseln:
 
-```bash
-npm install
-```
+`cd TempVoicePro`
 
----
+Pakete installieren:
 
-## .env Datei erstellen
+`npm install`
 
-Erstelle eine `.env` Datei im Projektordner:
+`.env` erstellen:
 
-```bash
-nano .env
-```
+`cp .env.example .env`
 
-Beispiel:
+`.env` bearbeiten:
 
-```env
-TOKEN=DEIN_DISCORD_BOT_TOKEN
-CLIENT_ID=DEINE_CLIENT_ID
-GUILD_ID=DEINE_SERVER_ID
+`nano .env`
 
-DB_HOST=localhost
-DB_USER=root
-DB_PASS=DEIN_MYSQL_PASSWORT
-DB_NAME=tempvoice
-```
+## Beispiel .env
+
+Diese Werte müssen lokal in der `.env` gesetzt werden:
+
+- `TOKEN`
+- `CLIENT_ID`
+- `GUILD_ID`
+- `DB_HOST`
+- `DB_USER`
+- `DB_PASS`
+- `DB_NAME`
+- `OPENAI_API_KEY`
+- `OPENAI_MODEL`
+- `OPENAI_COOLDOWN_MS`
+- `SPOTIFY_CLIENT_ID`
+- `SPOTIFY_CLIENT_SECRET`
+- `YOUTUBE_API_KEY`
+- `YTDLP_TIMEOUT_MS`
 
 Wichtig:
 
-- Die `.env` Datei darf niemals auf GitHub hochgeladen werden.
-- Der Bot Token darf niemals öffentlich geteilt werden.
-- Wenn der Token versehentlich veröffentlicht wurde, muss er im Discord Developer Portal zurückgesetzt werden.
+`.env`, Bot Token, API Keys und Passwörter niemals posten und niemals committen.
 
----
+## Datenbank
 
-## Datenbank initialisieren
+Datenbank initialisieren:
 
-TempVoicePro besitzt ein Initialisierungsscript für die Datenbank.
+`npm run db:init`
 
-Ausführen mit:
-
-```bash
-npm run db:init
-```
-
-Das Script erstellt automatisch:
-
-- Datenbank, falls sie fehlt
-- Tabellen, falls sie fehlen
-- benötigte Spalten, falls sie fehlen
-
-Es werden keine bestehenden Daten gelöscht.
-
----
+Die Tabellen werden automatisch erstellt oder erweitert.
 
 ## Slash Commands deployen
 
-Nach der Einrichtung müssen die Slash Commands an Discord übertragen werden:
+`node deploy-commands.js`
 
-```bash
-npm run deploy
-```
-
-oder:
-
-```bash
-node deploy-commands.js
-```
-
-Danach Discord einmal neu laden.
-
----
+Danach Discord mit `STRG + R` neu laden.
 
 ## Bot starten
 
 Direkt starten:
 
-```bash
-npm start
-```
+`npm start`
 
-Oder mit PM2 dauerhaft laufen lassen:
+Mit PM2 starten:
 
-```bash
-pm2 start src/index.js --name tempvoice
-pm2 save
-```
+`pm2 start src/index.js --name tempvoice`
 
-Logs anzeigen:
+PM2 speichern:
 
-```bash
-pm2 logs tempvoice
-```
+`pm2 save`
 
 Bot neustarten:
 
-```bash
-pm2 restart tempvoice --update-env
-```
+`pm2 restart tempvoice --update-env`
 
----
+Logs anzeigen:
 
-## Einrichtung im Discord Server
+`pm2 logs tempvoice --lines 80`
 
-Im Discord Server:
+Logs leeren:
 
-```text
-/setup
-```
+`pm2 flush tempvoice`
 
-Der Bot erstellt automatisch:
+## yt-dlp
 
-- eine TempVoice Kategorie
-- einen Creator Voice Channel
+Der Music Player nutzt `yt-dlp` für YouTube Audio.
 
-Wenn ein User den Creator Channel betritt, erstellt der Bot automatisch einen eigenen temporären Voice Channel.
+Version prüfen:
 
----
+`yt-dlp --version`
 
-## Projektstruktur
+Falls nötig installieren:
 
-```text
-TempVoicePro/
-├── src/
-│   ├── buttons/
-│   ├── commands/
-│   ├── database/
-│   ├── events/
-│   ├── handlers/
-│   └── utils/
-├── deploy-commands.js
-├── init-db.js
-├── package.json
-├── package-lock.json
-└── README.md
-```
+`mkdir -p /opt/yt-dlp`
 
----
+`curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /opt/yt-dlp/yt-dlp`
 
-## Wichtige Dateien
+`chmod +x /opt/yt-dlp/yt-dlp`
 
-### `src/events/voiceStateUpdate.js`
+`ln -sf /opt/yt-dlp/yt-dlp /usr/local/bin/yt-dlp`
 
-Verantwortlich für:
-
-- Erkennen, wenn ein User den Creator Channel betritt
-- Erstellen des temporären Voice Channels
-- Erstellen des temporären Panel-Textkanals
-- Owner-Übergabe
-- Löschlogik beim Verlassen
-
-### `src/utils/tempChannels.js`
-
-Verantwortlich für:
-
-- Löschen leerer TempVoice Channels
-- Löschen der zugehörigen Panel-Textkanäle
-- Entfernen der Datenbank-Einträge
-
-### `src/events/interactionCreate.js`
-
-Verantwortlich für:
-
-- Slash Commands
-- Buttons
-- Modals
-
-### `init-db.js`
-
-Verantwortlich für:
-
-- automatische Datenbankeinrichtung
-- Tabellenprüfung
-- Spaltenprüfung
-
----
-
-## Datenbanktabellen
-
-TempVoicePro nutzt folgende Tabellen:
-
-```text
-guild_settings
-temp_channels
-temp_permissions
-```
-
-Diese werden automatisch durch `npm run db:init` erstellt.
-
----
-
-## Entwicklung
+## Nützliche Wartungsbefehle
 
 Syntax prüfen:
 
-```bash
-node --check src/index.js
-node --check src/events/voiceStateUpdate.js
-node --check src/events/interactionCreate.js
-```
+`find src -name "*.js" -print0 | xargs -0 -n1 node --check`
 
-Git Status prüfen:
+Commands deployen und Bot neustarten:
 
-```bash
-git status
-```
+`node deploy-commands.js`
 
-Änderungen speichern:
+`pm2 restart tempvoice --update-env`
 
-```bash
-git add .
-git commit -m "Update TempVoicePro"
-git push origin master
-```
+Git speichern:
 
----
+`git add .`
+
+`git commit -m "Update TempVoicePro"`
+
+`git push origin master`
+
+`pm2 save`
+
+## Projektstruktur
+
+TempVoicePro
+
+- `deploy-commands.js`
+- `init-db.js`
+- `package.json`
+- `README.md`
+- `src/buttons`
+- `src/commands`
+- `src/database`
+- `src/events`
+- `src/handlers`
+- `src/utils`
 
 ## Sicherheit
 
-Bitte niemals folgende Daten veröffentlichen:
+Niemals veröffentlichen:
 
 - Discord Bot Token
-- `.env` Datei
-- Datenbankpasswort
-- private Serverdaten
+- OpenAI API Key
+- Spotify Client Secret
+- YouTube API Key
+- Datenbank Passwort
+- `.env`
 
-Die Datei `.env` sollte immer in `.gitignore` stehen.
+Die `.env` Datei gehört nicht ins Git Repository.
 
----
+## Status
 
-## Hinweis
+Aktueller Stand:
 
-TempVoicePro ist ein Lern- und Praxisprojekt. Der Bot wurde Schritt für Schritt aufgebaut, getestet und erweitert.
-
-Das Projekt wurde mit Hilfe von ChatGPT entwickelt.
-
----
-
-## Lizenz
-
-Dieses Projekt kann privat verwendet und weiterentwickelt werden.
-
+- TempVoice System aktiv
+- TempVoice Panel aktiv
+- Music Player aktiv
+- Music Panel aktiv
+- direkte YouTube Links aktiv
+- YouTube Shorts aktiv
+- Spotify-Erkennung über YouTube-Suche aktiv
+- Playlist System aktiv
+- ChatGPT Command aktiv
+- Help Command aktiv
+- MySQL Speicherung aktiv
+- PM2 Betrieb aktiv
