@@ -10,9 +10,11 @@
     "db:init": "node init-db.js"
   },
   "dependencies": {
+    "@discordjs/voice": "^0.19.2",
     "discord.js": "14.26.4",
     "dotenv": "16.4.5",
-    "mysql2": "3.11.5"
+    "mysql2": "3.11.5",
+    "play-dl": "^1.9.7"
   },
   "engines": {
     "node": ">=20"
