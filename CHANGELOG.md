@@ -18,6 +18,12 @@ Dieses Changelog wurde nachträglich aus dem bisherigen Projektverlauf erstellt 
 - Navigation zwischen Webpanel-Unterseiten ergänzt
 - Formulare leiten nach dem Speichern auf die passende Unterseite zurück
 
+### 2026-07-05 - Webpanel Navigation
+
+- Server-Dashboard in Übersicht, Module, Auto-Mod und Modlog aufgeteilt
+- Navigation zwischen Webpanel-Unterseiten ergänzt
+- Formulare leiten nach dem Speichern auf die passende Unterseite zurück
+
 ### 2026-07-05 - Webpanel Modlog Formular
 
 - Modlog kann im Webpanel aktiviert und deaktiviert werden
