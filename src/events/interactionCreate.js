@@ -213,7 +213,9 @@ const COMMAND_MODULES = {
   panelcleanup: "panels",
   panelcheck: "panels",
 
-  chatgpt: "chatgpt"
+  chatgpt: "chatgpt",
+
+  modlog: "moderation"
 };
 
 async function checkCommandModule(interaction) {

@@ -34,7 +34,8 @@ function overviewHelp() {
         "`/gluecksradpanel` - Glücksrad Panel aktualisieren",
         "`/panelcleanup` - alte Einzel-Panel-Channels finden",
         "`/panelcheck` - Panel-Rechte prüfen",
-        "`/module` - Module pro Server verwalten"
+        "`/module` - Module pro Server verwalten",
+        "`/modlog` - Moderation Log verwalten"
       ]),
       field("🎧 TempVoice", [
         "`/setup`, `/stats`, `/lock`, `/unlock`, `/rename`",
@@ -236,6 +237,12 @@ function techHelp() {
         "`/module list` - Module anzeigen",
         "`/module enable name:Music` - Modul aktivieren",
         "`/module disable name:Music` - Modul deaktivieren"
+      ]),
+      field("Moderation / Modlog", [
+        "`/module enable name:Moderation` - Moderation aktivieren",
+        "`/modlog setup channel:#mod-log` - Modlog einrichten",
+        "`/modlog status` - Status anzeigen",
+        "`/modlog disable` - Modlog deaktivieren"
       ])
     ],
     0x2f3136

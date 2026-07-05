@@ -1046,3 +1046,55 @@ Beispiele:
 
 Das Module Panel im zentralen Panel-Channel zeigt die Änderung sofort an.
 
+
+## Module Panel Berechtigung
+
+Die Admin-Steuerung im Server Module Panel ist geschützt.
+
+Module können über das Panel nur geändert werden, wenn der User die Discord-Berechtigung besitzt:
+
+`Server verwalten`
+
+Betroffen sind:
+
+- Modul-Dropdown
+- Button `✅ Aktivieren`
+- Button `❌ Deaktivieren`
+
+User ohne diese Berechtigung bekommen eine private Fehlermeldung.
+
+Die Slash Commands `/module enable` und `/module disable` sind ebenfalls auf Server-Verwaltung beschränkt.
+
+
+
+## Moderation Modlog
+
+TempVoicePro besitzt ein grundlegendes Modlog-System.
+
+Das Moderation-Modul ist standardmäßig deaktiviert und muss zuerst aktiviert werden:
+
+`/module enable name:Moderation`
+
+Danach kann der Modlog eingerichtet werden:
+
+`/modlog setup channel:#mod-log`
+
+Weitere Commands:
+
+- `/modlog status`
+- `/modlog disable`
+
+Der Modlog nutzt die MySQL-Tabelle:
+
+`guild_moderation_settings`
+
+Aktuell dient der Modlog als Grundlage für kommende Moderationsfunktionen wie:
+
+- Warns
+- Kicks
+- Bans
+- Timeouts
+- AutoMod
+- Join/Leave Logs
+- Anti-Raid Logs
+

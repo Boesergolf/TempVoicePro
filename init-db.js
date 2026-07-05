@@ -176,6 +176,18 @@ async function main() {
 
   console.log("✅ Tabelle guild_modules geprüft/erstellt.");
 
+
+  await connection.query(`
+    CREATE TABLE IF NOT EXISTS guild_moderation_settings (
+      guildId VARCHAR(32) NOT NULL PRIMARY KEY,
+      modLogChannelId VARCHAR(32) NULL,
+      enabled TINYINT(1) NOT NULL DEFAULT 0,
+      updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    )
+  `);
+
+  console.log("✅ Tabelle guild_moderation_settings geprüft/erstellt.");
+
   await connection.end();
 
   console.log("✅ Datenbank-Setup erfolgreich abgeschlossen.");
