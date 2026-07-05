@@ -142,11 +142,42 @@ async function updateModerationCaseReason(guildId, caseId, reason) {
   return getModerationCase(guildId, caseId);
 }
 
+
+async function getUserCaseStats(guildId, targetId) {
+  await ensureModerationCasesTable();
+
+  const [rows] = await db.query(
+    `
+      SELECT actionType, COUNT(*) AS count
+      FROM moderation_cases
+      WHERE guildId = ? AND targetId = ?
+      GROUP BY actionType
+    `,
+    [guildId, targetId]
+  );
+
+  const stats = {
+    total: 0,
+    byAction: {}
+  };
+
+  for (const row of rows) {
+    const actionType = row.actionType;
+    const count = Number(row.count) || 0;
+
+    stats.byAction[actionType] = count;
+    stats.total += count;
+  }
+
+  return stats;
+}
+
 module.exports = {
   ensureModerationCasesTable,
   createModerationCase,
   getModerationCase,
   getRecentCases,
   getUserCases,
+  getUserCaseStats,
   updateModerationCaseReason
 };

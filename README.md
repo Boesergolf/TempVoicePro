@@ -1262,3 +1262,30 @@ Beispiel:
 
 Die Änderung wird im Modlog dokumentiert.
 
+
+
+## Moderation User-Profil
+
+TempVoicePro kann ein Moderationsprofil pro User anzeigen.
+
+Command:
+
+- `/moduser user:@User`
+
+Das Profil zeigt:
+
+- aktive Warns
+- gesamte Anzahl der Moderation Cases
+- Warns
+- Timeouts
+- Kicks
+- Bans
+- Unbans
+- letzte Moderationsfälle
+
+Der Command gehört zum Moderation-Modul.
+
+Voraussetzung:
+
+`/module enable name:Moderation`
+
