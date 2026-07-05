@@ -1289,3 +1289,13 @@ Voraussetzung:
 
 `/module enable name:Moderation`
 
+
+
+## Changelog
+
+Wichtige Projektänderungen werden in `CHANGELOG.md` dokumentiert.
+
+Nach größeren Entwicklungsschritten kann ein neuer Eintrag automatisch ergänzt werden:
+
+    npm run changelog:add -- "Titel des Schritts" "Erster Punkt" "Zweiter Punkt"
+

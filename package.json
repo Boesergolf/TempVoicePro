@@ -8,7 +8,8 @@
     "start": "node src/index.js",
     "deploy": "node deploy-commands.js",
     "db:init": "node init-db.js",
-    "check": "node scripts/check-js.js"
+    "check": "node scripts/check-js.js",
+    "changelog:add": "node scripts/changelog-add.js"
   },
   "dependencies": {
     "@discordjs/opus": "^0.10.0",
