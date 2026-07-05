@@ -38,7 +38,9 @@ function overviewHelp() {
         "`/modlog` - Moderation Log verwalten",
         "`/warn` - User verwarnen",
         "`/warnings` - Warns anzeigen",
-        "`/clearwarnings` - Warns löschen"
+        "`/clearwarnings` - Warns löschen",
+        "`/timeout` - User timeouten",
+        "`/untimeout` - Timeout entfernen"
       ]),
       field("🎧 TempVoice", [
         "`/setup`, `/stats`, `/lock`, `/unlock`, `/rename`",
@@ -251,6 +253,11 @@ function techHelp() {
         "`/warn user:@User grund:...` - User verwarnen",
         "`/warnings user:@User` - Verwarnungen anzeigen",
         "`/clearwarnings user:@User` - aktive Warns löschen"
+      ]),
+      field("Timeout-System", [
+        "`/timeout user:@User minuten:10 grund:...` - User timeouten",
+        "`/untimeout user:@User grund:...` - Timeout entfernen",
+        "Timeouts werden im Modlog dokumentiert."
       ])
     ],
     0x2f3136

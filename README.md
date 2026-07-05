@@ -1126,3 +1126,30 @@ Tabelle:
 
 Beim Verwarnen und Löschen von Warns wird ein Eintrag in den Modlog geschrieben, sofern der Modlog eingerichtet und aktiviert ist.
 
+
+
+## Moderation Timeout-System
+
+TempVoicePro unterstützt Discord Timeouts.
+
+Voraussetzung:
+
+`/module enable name:Moderation`
+
+Optional empfohlen:
+
+`/modlog setup channel:#mod-log`
+
+Commands:
+
+- `/timeout user:@User minuten:10 grund:...`
+- `/untimeout user:@User grund:...`
+
+Der Bot benötigt dafür die Discord-Berechtigung:
+
+`Mitglieder moderieren`
+
+Außerdem muss die Bot-Rolle über der Rolle des betroffenen Users stehen.
+
+Timeouts und entfernte Timeouts werden im Modlog protokolliert, sofern der Modlog eingerichtet ist.
+
