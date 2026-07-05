@@ -644,13 +644,33 @@ function renderAutoModSettings(guildId, settings) {
 }
 
 
-function renderGuildPage(guild, data) {
-  return layout("Server", `
+function renderGuildNav(guild, active) {
+  const links = [
+    { id: "overview", label: "Übersicht", href: "/guilds/" + guild.id },
+    { id: "modules", label: "Module", href: "/guilds/" + guild.id + "/modules" },
+    { id: "automod", label: "Auto-Mod", href: "/guilds/" + guild.id + "/automod" },
+    { id: "modlog", label: "Modlog", href: "/guilds/" + guild.id + "/modlog" }
+  ];
+
+  return `
     <div class="card">
       <h1>${escapeHtml(guild.name)}</h1>
       <p class="muted">Server-ID: ${escapeHtml(guild.id)}</p>
-      <a class="button secondary" href="/dashboard">Zurück</a>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;">
+        ${links.map(link => {
+          const cls = link.id === active ? "button" : "button secondary";
+
+          return `<a class="${cls}" href="${escapeHtml(link.href)}">${escapeHtml(link.label)}</a>`;
+        }).join("")}
+        <a class="button secondary" href="/dashboard">Zurück</a>
+      </div>
     </div>
+  `;
+}
+
+function renderGuildPage(guild, data) {
+  return layout("Server", `
+    ${renderGuildNav(guild, "overview")}
 
     <div class="grid">
       <div class="card">
@@ -661,32 +681,50 @@ function renderGuildPage(guild, data) {
       </div>
 
       <div class="card">
-        <h2>🛡️ Modlog</h2>
-        ${renderModLogSettings(guild.id, data.modLog, data.textChannels)}
+        <h2>⚙️ Module</h2>
+        <p>Aktiv: ${data.modules.filter(item => item.enabled).length} / ${data.modules.length}</p>
+        <p><a class="button" href="/guilds/${escapeHtml(guild.id)}/modules">Module verwalten</a></p>
       </div>
 
       <div class="card">
-        <h2>⚙️ Module</h2>
-        <p>Aktiv: ${data.modules.filter(item => item.enabled).length} / ${data.modules.length}</p>
-        <p class="muted">Bearbeiten bauen wir im nächsten Schritt ein.</p>
+        <h2>🤖 Auto-Mod</h2>
+        <p>Status: ${data.autoMod.enabled ? "✅ Aktiv" : "❌ Inaktiv"}</p>
+        <p><a class="button" href="/guilds/${escapeHtml(guild.id)}/automod">Auto-Mod verwalten</a></p>
       </div>
-    </div>
 
-    <div class="card">
-      <h2>⚙️ Module</h2>
-      <div class="grid">
-        ${renderModuleList(guild.id, data.modules)}
+      <div class="card">
+        <h2>🛡️ Modlog</h2>
+        <p>${data.modLog.enabled && data.modLog.channelId ? "✅ Aktiv" : "❌ Nicht eingerichtet oder deaktiviert"}</p>
+        <p><a class="button" href="/guilds/${escapeHtml(guild.id)}/modlog">Modlog verwalten</a></p>
       </div>
-    </div>
-
-    <div class="card">
-      <h2>🤖 Auto-Mod</h2>
-      ${renderAutoModSettings(guild.id, data.autoMod)}
     </div>
   `);
 }
 
 
+
+async function getGuildPageData(client, guild) {
+  const discordGuild = client.guilds.cache.get(guild.id);
+
+  const [modules, autoMod, modLog] = await Promise.all([
+    getGuildModuleOverview(guild.id),
+    getAutoModSettings(guild.id),
+    getModLogOverview(guild.id)
+  ]);
+
+  return {
+    modules,
+    autoMod,
+    modLog,
+    textChannels: getGuildTextChannels(discordGuild),
+    bot: {
+      online: Boolean(client.user),
+      ping: Math.round(client.ws.ping),
+      uptime: formatUptime(client.uptime || 0),
+      guildName: discordGuild ? discordGuild.name : guild.name
+    }
+  };
+}
 
 async function getManageableGuildForRequest(client, req, guildId) {
   const guilds = await getUserGuilds(req);
@@ -696,6 +734,44 @@ async function getManageableGuildForRequest(client, req, guildId) {
     hasManageServerPermission(item) &&
     client.guilds.cache.has(item.id)
   );
+}
+
+function renderGuildModulesPage(guild, data) {
+  return layout("Module", `
+    ${renderGuildNav(guild, "modules")}
+
+    <div class="card">
+      <h2>⚙️ Module</h2>
+      <p class="muted">Aktiviere oder deaktiviere Bot-Funktionen für diesen Server.</p>
+      <div class="grid">
+        ${renderModuleList(guild.id, data.modules)}
+      </div>
+    </div>
+  `);
+}
+
+function renderGuildAutoModPage(guild, data) {
+  return layout("Auto-Mod", `
+    ${renderGuildNav(guild, "automod")}
+
+    <div class="card">
+      <h2>🤖 Auto-Mod</h2>
+      <p class="muted">Konfiguriere automatische Prüfungen für Spam, Links und Caps.</p>
+      ${renderAutoModSettings(guild.id, data.autoMod)}
+    </div>
+  `);
+}
+
+function renderGuildModLogPage(guild, data) {
+  return layout("Modlog", `
+    ${renderGuildNav(guild, "modlog")}
+
+    <div class="card">
+      <h2>🛡️ Modlog</h2>
+      <p class="muted">Lege fest, wohin Moderations- und Auto-Mod-Ereignisse geschrieben werden.</p>
+      ${renderModLogSettings(guild.id, data.modLog, data.textChannels)}
+    </div>
+  `);
 }
 
 function validateConfig(config) {
@@ -849,38 +925,15 @@ function startWebPanel(client) {
 
   app.get("/guilds/:guildId", requireLogin, async (req, res) => {
     try {
-      const guilds = await getUserGuilds(req);
-
-      const guild = guilds.find(item =>
-        item.id === req.params.guildId &&
-        hasManageServerPermission(item) &&
-        client.guilds.cache.has(item.id)
-      );
+      const guild = await getManageableGuildForRequest(client, req, req.params.guildId);
 
       if (!guild) {
         return res.status(403).send("Du darfst diesen Server nicht verwalten oder der Bot ist nicht auf diesem Server.");
       }
 
-      const discordGuild = client.guilds.cache.get(guild.id);
+      const data = await getGuildPageData(client, guild);
 
-      const [modules, autoMod, modLog] = await Promise.all([
-        getGuildModuleOverview(guild.id),
-        getAutoModSettings(guild.id),
-        getModLogOverview(guild.id)
-      ]);
-
-      return res.send(renderGuildPage(guild, {
-        modules,
-        autoMod,
-        modLog,
-        textChannels: getGuildTextChannels(discordGuild),
-        bot: {
-          online: Boolean(client.user),
-          ping: Math.round(client.ws.ping),
-          uptime: formatUptime(client.uptime || 0),
-          guildName: discordGuild ? discordGuild.name : guild.name
-        }
-      }));
+      return res.send(renderGuildPage(guild, data));
     } catch (error) {
       console.error("Webpanel Server Fehler:", error);
       return res.status(500).send("Serverseite konnte nicht geladen werden.");
@@ -905,7 +958,7 @@ function startWebPanel(client) {
 
       await setGuildModuleStatus(guild.id, moduleName, enabled);
 
-      return res.redirect("/guilds/" + guild.id);
+      return res.redirect("/guilds/" + guild.id + "/modules");
     } catch (error) {
       console.error("Webpanel Modul-Schalter Fehler:", error);
       return res.status(500).send("Modul konnte nicht geändert werden.");
@@ -939,7 +992,7 @@ function startWebPanel(client) {
         timeoutMinutes: getBodyInt(req.body, "timeoutMinutes", 10)
       });
 
-      return res.redirect("/guilds/" + guild.id);
+      return res.redirect("/guilds/" + guild.id + "/automod");
     } catch (error) {
       console.error("Webpanel Auto-Mod Formular Fehler:", error);
       return res.status(500).send("Auto-Mod Einstellungen konnten nicht gespeichert werden.");
@@ -974,10 +1027,62 @@ function startWebPanel(client) {
 
       await setModLogOverview(guild.id, enabled, channelId);
 
-      return res.redirect("/guilds/" + guild.id);
+      return res.redirect("/guilds/" + guild.id + "/modlog");
     } catch (error) {
       console.error("Webpanel Modlog Formular Fehler:", error);
       return res.status(500).send("Modlog Einstellungen konnten nicht gespeichert werden.");
+    }
+  });
+
+
+  app.get("/guilds/:guildId/modules", requireLogin, async (req, res) => {
+    try {
+      const guild = await getManageableGuildForRequest(client, req, req.params.guildId);
+
+      if (!guild) {
+        return res.status(403).send("Du darfst diesen Server nicht verwalten oder der Bot ist nicht auf diesem Server.");
+      }
+
+      const data = await getGuildPageData(client, guild);
+
+      return res.send(renderGuildModulesPage(guild, data));
+    } catch (error) {
+      console.error("Webpanel Module-Seite Fehler:", error);
+      return res.status(500).send("Module-Seite konnte nicht geladen werden.");
+    }
+  });
+
+  app.get("/guilds/:guildId/automod", requireLogin, async (req, res) => {
+    try {
+      const guild = await getManageableGuildForRequest(client, req, req.params.guildId);
+
+      if (!guild) {
+        return res.status(403).send("Du darfst diesen Server nicht verwalten oder der Bot ist nicht auf diesem Server.");
+      }
+
+      const data = await getGuildPageData(client, guild);
+
+      return res.send(renderGuildAutoModPage(guild, data));
+    } catch (error) {
+      console.error("Webpanel Auto-Mod-Seite Fehler:", error);
+      return res.status(500).send("Auto-Mod-Seite konnte nicht geladen werden.");
+    }
+  });
+
+  app.get("/guilds/:guildId/modlog", requireLogin, async (req, res) => {
+    try {
+      const guild = await getManageableGuildForRequest(client, req, req.params.guildId);
+
+      if (!guild) {
+        return res.status(403).send("Du darfst diesen Server nicht verwalten oder der Bot ist nicht auf diesem Server.");
+      }
+
+      const data = await getGuildPageData(client, guild);
+
+      return res.send(renderGuildModLogPage(guild, data));
+    } catch (error) {
+      console.error("Webpanel Modlog-Seite Fehler:", error);
+      return res.status(500).send("Modlog-Seite konnte nicht geladen werden.");
     }
   });
 
