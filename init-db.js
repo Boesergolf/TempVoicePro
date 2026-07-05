@@ -224,6 +224,27 @@ async function main() {
 
   console.log("✅ Tabelle moderation_cases geprüft/erstellt.");
 
+
+  await connection.query(`
+    CREATE TABLE IF NOT EXISTS automod_settings (
+      guildId VARCHAR(32) NOT NULL PRIMARY KEY,
+      enabled TINYINT(1) NOT NULL DEFAULT 0,
+      antiSpamEnabled TINYINT(1) NOT NULL DEFAULT 1,
+      antiLinkEnabled TINYINT(1) NOT NULL DEFAULT 0,
+      antiCapsEnabled TINYINT(1) NOT NULL DEFAULT 0,
+      spamMessageLimit INT NOT NULL DEFAULT 5,
+      spamIntervalSeconds INT NOT NULL DEFAULT 8,
+      capsMinLength INT NOT NULL DEFAULT 12,
+      capsPercent INT NOT NULL DEFAULT 70,
+      autoWarnEnabled TINYINT(1) NOT NULL DEFAULT 1,
+      timeoutEnabled TINYINT(1) NOT NULL DEFAULT 0,
+      timeoutMinutes INT NOT NULL DEFAULT 10,
+      updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    )
+  `);
+
+  console.log("✅ Tabelle automod_settings geprüft/erstellt.");
+
   await connection.end();
 
   console.log("✅ Datenbank-Setup erfolgreich abgeschlossen.");

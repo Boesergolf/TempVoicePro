@@ -225,7 +225,8 @@ const COMMAND_MODULES = {
   ban: "moderation",
   unban: "moderation",
   cases: "moderation",
-  moduser: "moderation"
+  moduser: "moderation",
+  automod: "moderation"
 };
 
 async function checkCommandModule(interaction) {

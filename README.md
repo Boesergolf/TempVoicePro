@@ -1299,3 +1299,47 @@ Nach größeren Entwicklungsschritten kann ein neuer Eintrag automatisch ergänz
 
     npm run changelog:add -- "Titel des Schritts" "Erster Punkt" "Zweiter Punkt"
 
+
+
+## Auto-Mod-System
+
+TempVoicePro besitzt ein Auto-Mod-System.
+
+Das System kann Nachrichten automatisch auf Spam, Links und zu viele Großbuchstaben prüfen.
+
+Command:
+
+- `/automod status`
+- `/automod enable`
+- `/automod disable`
+- `/automod antispam aktiv:true limit:5 sekunden:8`
+- `/automod antilink aktiv:true`
+- `/automod anticaps aktiv:true prozent:70 min_zeichen:12`
+- `/automod autowarn aktiv:true`
+- `/automod timeout aktiv:true minuten:10`
+
+Funktionen:
+
+- Anti-Spam
+- Anti-Link
+- Anti-Caps
+- automatische Warns
+- automatische Moderation Cases
+- Modlog-Einträge
+- optional automatische Timeouts
+
+Auto-Mod gehört zum Moderation-Modul.
+
+Voraussetzung:
+
+`/module enable name:Moderation`
+
+Empfohlen:
+
+`/modlog setup channel:#mod-log`
+
+Der Bot benötigt je nach Funktion folgende Discord-Berechtigungen:
+
+- Nachrichten verwalten
+- Mitglieder moderieren
+

@@ -35,7 +35,8 @@ function actionLabel(actionType) {
     untimeout: "✅ Timeout entfernt",
     kick: "👢 Kick",
     ban: "🔨 Ban",
-    unban: "✅ Unban"
+    unban: "✅ Unban",
+    automod: "🤖 Auto-Mod"
   };
 
   return labels[actionType] || actionType;

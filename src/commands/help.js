@@ -45,7 +45,8 @@ function overviewHelp() {
         "`/ban` - User bannen",
         "`/unban` - User entbannen",
         "`/cases` - Moderation Cases anzeigen",
-        "`/moduser` - Moderationsprofil eines Users anzeigen"
+        "`/moduser` - Moderationsprofil eines Users anzeigen",
+        "`/automod` - Auto-Mod konfigurieren"
       ]),
       field("🎧 TempVoice", [
         "`/setup`, `/stats`, `/lock`, `/unlock`, `/rename`",

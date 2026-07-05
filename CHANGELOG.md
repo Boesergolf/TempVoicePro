@@ -6,6 +6,19 @@ Dieses Changelog wurde nachträglich aus dem bisherigen Projektverlauf erstellt 
 
 ## [Unreleased]
 
+### 2026-07-05 - Auto-Mod System
+
+- Auto-Mod Engine fertig eingebunden
+- MessageCreate Event für Auto-Mod und Panel-Cleanup erstellt
+- Anti-Spam, Anti-Link, Anti-Caps, Auto-Warn, Cases und Modlog verbunden
+- MessageContent Intent ergänzt
+
+### 2026-07-05 - Auto-Mod Einbindung
+
+- Command /automod dem Moderation-Modul zugeordnet
+- Help und README um Auto-Mod ergänzt
+- Auto-Mod Bedienung dokumentiert
+
 ### 2026-07-05 - Auto-Mod Command
 
 - Command /automod erstellt

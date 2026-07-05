@@ -33,7 +33,8 @@ function actionLabel(actionType) {
     untimeout: "✅ Timeout entfernt",
     kick: "👢 Kick",
     ban: "🔨 Ban",
-    unban: "✅ Unban"
+    unban: "✅ Unban",
+    automod: "🤖 Auto-Mod"
   };
 
   return labels[actionType] || actionType;
@@ -139,6 +140,11 @@ module.exports = {
         {
           name: "Unbans",
           value: String(getCount(stats, "unban")),
+          inline: true
+        },
+        {
+          name: "Auto-Mod",
+          value: String(getCount(stats, "automod")),
           inline: true
         },
         {
