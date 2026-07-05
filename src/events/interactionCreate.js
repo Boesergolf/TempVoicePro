@@ -251,6 +251,29 @@ module.exports = {
   name: "interactionCreate",
 
   async execute(interaction, client) {
+    if (
+      interaction.isStringSelectMenu &&
+      interaction.isStringSelectMenu() &&
+      interaction.customId === "module_select"
+    ) {
+      try {
+        return await handleModuleSelect(interaction);
+      } catch (err) {
+        console.error("❌ module_select Direkt-Handler Fehler:", err);
+
+        if (!interaction.replied && !interaction.deferred) {
+          return interaction.reply({
+            content: "❌ Modul-Auswahl konnte nicht verarbeitet werden.",
+            flags: 64
+          });
+        }
+
+        return interaction.followUp({
+          content: "❌ Modul-Auswahl konnte nicht verarbeitet werden.",
+          flags: 64
+        }).catch(() => {});
+      }
+    }
     /**
      * SLASH COMMANDS
      */
