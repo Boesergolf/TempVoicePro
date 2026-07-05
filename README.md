@@ -1179,3 +1179,36 @@ Außerdem muss die Bot-Rolle über der Rolle des betroffenen Users stehen.
 
 Kicks werden im Modlog protokolliert, sofern der Modlog eingerichtet ist.
 
+
+
+## Moderation Ban-System
+
+TempVoicePro unterstützt Ban- und Unban-Moderation.
+
+Voraussetzung:
+
+`/module enable name:Moderation`
+
+Optional empfohlen:
+
+`/modlog setup channel:#mod-log`
+
+Commands:
+
+- `/ban user:@User grund:... nachrichten_tage:0`
+- `/unban userid:123456789 grund:...`
+
+Beim Ban kann optional festgelegt werden, wie viele Tage Nachrichten gelöscht werden sollen.
+
+Erlaubt sind:
+
+- `0` bis `7` Tage
+
+Der Bot benötigt dafür die Discord-Berechtigung:
+
+`Mitglieder bannen`
+
+Außerdem muss die Bot-Rolle über der Rolle des betroffenen Users stehen.
+
+Bans und Unbans werden im Modlog protokolliert, sofern der Modlog eingerichtet ist.
+

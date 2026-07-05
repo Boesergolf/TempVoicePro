@@ -41,7 +41,9 @@ function overviewHelp() {
         "`/clearwarnings` - Warns löschen",
         "`/timeout` - User timeouten",
         "`/untimeout` - Timeout entfernen",
-        "`/kick` - User kicken"
+        "`/kick` - User kicken",
+        "`/ban` - User bannen",
+        "`/unban` - User entbannen"
       ]),
       field("🎧 TempVoice", [
         "`/setup`, `/stats`, `/lock`, `/unlock`, `/rename`",
@@ -263,6 +265,11 @@ function techHelp() {
       field("Kick-System", [
         "`/kick user:@User grund:...` - User vom Server kicken",
         "Kicks werden im Modlog dokumentiert."
+      ]),
+      field("Ban-System", [
+        "`/ban user:@User grund:... nachrichten_tage:0` - User bannen",
+        "`/unban userid:123456789 grund:...` - User entbannen",
+        "Bans und Unbans werden im Modlog dokumentiert."
       ])
     ],
     0x2f3136

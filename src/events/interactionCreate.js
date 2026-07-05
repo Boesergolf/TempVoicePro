@@ -221,7 +221,9 @@ const COMMAND_MODULES = {
   clearwarnings: "moderation",
   timeout: "moderation",
   untimeout: "moderation",
-  kick: "moderation"
+  kick: "moderation",
+  ban: "moderation",
+  unban: "moderation"
 };
 
 async function checkCommandModule(interaction) {
