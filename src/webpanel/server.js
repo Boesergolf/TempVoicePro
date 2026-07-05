@@ -6,7 +6,8 @@ const crypto = require("crypto");
 const db = require("../database/mysql");
 
 const {
-  getAutoModSettings
+  getAutoModSettings,
+  updateAutoModSettings
 } = require("../utils/autoModSettings");
 
 const DISCORD_API = "https://discord.com/api/v10";
@@ -366,6 +367,31 @@ const DEFAULT_MODULES_WEBPANEL = [
   { name: "tickets", label: "Tickets", defaultEnabled: false }
 ];
 
+
+function getBodyValue(body, name) {
+  const value = body[name];
+
+  if (Array.isArray(value)) {
+    return value[value.length - 1];
+  }
+
+  return value;
+}
+
+function getBodyBool(body, name) {
+  return String(getBodyValue(body, name) || "false") === "true";
+}
+
+function getBodyInt(body, name, fallback) {
+  const value = Number(getBodyValue(body, name));
+
+  if (!Number.isFinite(value)) {
+    return fallback;
+  }
+
+  return value;
+}
+
 function boolPill(value) {
   return value
     ? '<span class="pill">Aktiv</span>'
@@ -455,6 +481,73 @@ async function getModLogOverview(guildId) {
   };
 }
 
+
+async function setModLogOverview(guildId, enabled, channelId) {
+  await db.query(
+    `
+      INSERT INTO guild_moderation_settings (guildId, modLogChannelId, enabled)
+      VALUES (?, ?, ?)
+      ON DUPLICATE KEY UPDATE
+        modLogChannelId = VALUES(modLogChannelId),
+        enabled = VALUES(enabled),
+        updatedAt = CURRENT_TIMESTAMP
+    `,
+    [guildId, channelId || null, enabled ? 1 : 0]
+  );
+}
+
+function getGuildTextChannels(discordGuild) {
+  if (!discordGuild) {
+    return [];
+  }
+
+  return Array.from(discordGuild.channels.cache.values())
+    .filter(channel => channel && channel.type === 0)
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map(channel => ({
+      id: channel.id,
+      name: channel.name
+    }));
+}
+
+function renderChannelOptions(channels, selectedChannelId) {
+  const emptySelected = selectedChannelId ? "" : "selected";
+
+  return [
+    `<option value="" ${emptySelected}>Kein Channel ausgewählt</option>`,
+    ...channels.map(channel => {
+      const selected = channel.id === selectedChannelId ? "selected" : "";
+
+      return `<option value="${escapeHtml(channel.id)}" ${selected}>#${escapeHtml(channel.name)}</option>`;
+    })
+  ].join("");
+}
+
+function renderModLogSettings(guildId, modLog, channels) {
+  return `
+    <form method="post" action="/guilds/${escapeHtml(guildId)}/modlog">
+      ${renderCheckbox("enabled", "Modlog aktiv", modLog.enabled)}
+
+      <label style="display:block;margin:12px 0;">
+        <span class="muted">Modlog Channel</span>
+        <select
+          name="channelId"
+          style="width:100%;box-sizing:border-box;margin-top:6px;padding:10px;border-radius:10px;border:1px solid #374151;background:#111827;color:#f3f4f6;"
+        >
+          ${renderChannelOptions(channels, modLog.channelId)}
+        </select>
+      </label>
+
+      <p class="muted">
+        Aktuell:
+        ${modLog.enabled && modLog.channelId ? "Aktiv in &lt;#" + escapeHtml(modLog.channelId) + "&gt;" : "Nicht eingerichtet oder deaktiviert"}
+      </p>
+
+      <button class="button" type="submit">Modlog speichern</button>
+    </form>
+  `;
+}
+
 function renderModuleList(guildId, modules) {
   return modules.map(module => {
     const nextEnabled = module.enabled ? "false" : "true";
@@ -476,24 +569,82 @@ function renderModuleList(guildId, modules) {
 }
 
 
-function renderAutoModSettings(settings) {
+function checked(value) {
+  return value ? "checked" : "";
+}
+
+function renderCheckbox(name, label, value) {
   return `
-    <div class="grid">
-      <div class="guild"><strong>Auto-Mod</strong><br>${boolPill(settings.enabled)}</div>
-      <div class="guild"><strong>Anti-Spam</strong><br>${boolPill(settings.antiSpamEnabled)}<br><span class="muted">${settings.spamMessageLimit} Nachrichten / ${settings.spamIntervalSeconds}s</span></div>
-      <div class="guild"><strong>Anti-Link</strong><br>${boolPill(settings.antiLinkEnabled)}</div>
-      <div class="guild"><strong>Anti-Caps</strong><br>${boolPill(settings.antiCapsEnabled)}<br><span class="muted">${settings.capsPercent}% ab ${settings.capsMinLength} Zeichen</span></div>
-      <div class="guild"><strong>Auto-Warn</strong><br>${boolPill(settings.autoWarnEnabled)}</div>
-      <div class="guild"><strong>Auto-Timeout</strong><br>${boolPill(settings.timeoutEnabled)}<br><span class="muted">${settings.timeoutMinutes} Minuten</span></div>
-    </div>
+    <label style="display:flex;gap:10px;align-items:center;margin:8px 0;">
+      <input type="hidden" name="${escapeHtml(name)}" value="false">
+      <input type="checkbox" name="${escapeHtml(name)}" value="true" ${checked(value)}>
+      <span>${escapeHtml(label)}</span>
+    </label>
   `;
 }
 
-function renderGuildPage(guild, data) {
-  const modlogText = data.modLog.enabled && data.modLog.channelId
-    ? "Aktiv in <#" + data.modLog.channelId + ">"
-    : "Nicht eingerichtet oder deaktiviert";
+function renderNumberInput(name, label, value, min, max) {
+  return `
+    <label style="display:block;margin:12px 0;">
+      <span class="muted">${escapeHtml(label)}</span>
+      <input
+        type="number"
+        name="${escapeHtml(name)}"
+        value="${escapeHtml(value)}"
+        min="${escapeHtml(min)}"
+        max="${escapeHtml(max)}"
+        style="width:100%;box-sizing:border-box;margin-top:6px;padding:10px;border-radius:10px;border:1px solid #374151;background:#111827;color:#f3f4f6;"
+      >
+    </label>
+  `;
+}
 
+function renderAutoModSettings(guildId, settings) {
+  return `
+    <form method="post" action="/guilds/${escapeHtml(guildId)}/automod">
+      <div class="grid">
+        <div class="guild">
+          <strong>Grundsystem</strong>
+          ${renderCheckbox("enabled", "Auto-Mod aktiv", settings.enabled)}
+          ${renderCheckbox("autoWarnEnabled", "Auto-Warn aktiv", settings.autoWarnEnabled)}
+        </div>
+
+        <div class="guild">
+          <strong>Anti-Spam</strong>
+          ${renderCheckbox("antiSpamEnabled", "Anti-Spam aktiv", settings.antiSpamEnabled)}
+          ${renderNumberInput("spamMessageLimit", "Nachrichtenlimit", settings.spamMessageLimit, 2, 20)}
+          ${renderNumberInput("spamIntervalSeconds", "Zeitfenster in Sekunden", settings.spamIntervalSeconds, 3, 60)}
+        </div>
+
+        <div class="guild">
+          <strong>Anti-Link</strong>
+          ${renderCheckbox("antiLinkEnabled", "Anti-Link aktiv", settings.antiLinkEnabled)}
+          <p class="muted">Erkennt http, https, www und Discord Invite Links.</p>
+        </div>
+
+        <div class="guild">
+          <strong>Anti-Caps</strong>
+          ${renderCheckbox("antiCapsEnabled", "Anti-Caps aktiv", settings.antiCapsEnabled)}
+          ${renderNumberInput("capsPercent", "Großbuchstaben-Grenze in Prozent", settings.capsPercent, 50, 100)}
+          ${renderNumberInput("capsMinLength", "Mindestlänge der Nachricht", settings.capsMinLength, 5, 200)}
+        </div>
+
+        <div class="guild">
+          <strong>Auto-Timeout</strong>
+          ${renderCheckbox("timeoutEnabled", "Auto-Timeout aktiv", settings.timeoutEnabled)}
+          ${renderNumberInput("timeoutMinutes", "Timeout-Dauer in Minuten", settings.timeoutMinutes, 1, 40320)}
+        </div>
+      </div>
+
+      <p style="margin-top:18px;">
+        <button class="button" type="submit">Auto-Mod speichern</button>
+      </p>
+    </form>
+  `;
+}
+
+
+function renderGuildPage(guild, data) {
   return layout("Server", `
     <div class="card">
       <h1>${escapeHtml(guild.name)}</h1>
@@ -511,7 +662,7 @@ function renderGuildPage(guild, data) {
 
       <div class="card">
         <h2>🛡️ Modlog</h2>
-        <p>${modlogText}</p>
+        ${renderModLogSettings(guild.id, data.modLog, data.textChannels)}
       </div>
 
       <div class="card">
@@ -530,7 +681,7 @@ function renderGuildPage(guild, data) {
 
     <div class="card">
       <h2>🤖 Auto-Mod</h2>
-      ${renderAutoModSettings(data.autoMod)}
+      ${renderAutoModSettings(guild.id, data.autoMod)}
     </div>
   `);
 }
@@ -722,6 +873,7 @@ function startWebPanel(client) {
         modules,
         autoMod,
         modLog,
+        textChannels: getGuildTextChannels(discordGuild),
         bot: {
           online: Boolean(client.user),
           ping: Math.round(client.ws.ping),
@@ -757,6 +909,75 @@ function startWebPanel(client) {
     } catch (error) {
       console.error("Webpanel Modul-Schalter Fehler:", error);
       return res.status(500).send("Modul konnte nicht geändert werden.");
+    }
+  });
+
+
+  app.post("/guilds/:guildId/automod", requireLogin, async (req, res) => {
+    try {
+      const guild = await getManageableGuildForRequest(
+        client,
+        req,
+        req.params.guildId
+      );
+
+      if (!guild) {
+        return res.status(403).send("Du darfst diesen Server nicht verwalten oder der Bot ist nicht auf diesem Server.");
+      }
+
+      await updateAutoModSettings(guild.id, {
+        enabled: getBodyBool(req.body, "enabled"),
+        antiSpamEnabled: getBodyBool(req.body, "antiSpamEnabled"),
+        antiLinkEnabled: getBodyBool(req.body, "antiLinkEnabled"),
+        antiCapsEnabled: getBodyBool(req.body, "antiCapsEnabled"),
+        autoWarnEnabled: getBodyBool(req.body, "autoWarnEnabled"),
+        timeoutEnabled: getBodyBool(req.body, "timeoutEnabled"),
+        spamMessageLimit: getBodyInt(req.body, "spamMessageLimit", 5),
+        spamIntervalSeconds: getBodyInt(req.body, "spamIntervalSeconds", 8),
+        capsMinLength: getBodyInt(req.body, "capsMinLength", 12),
+        capsPercent: getBodyInt(req.body, "capsPercent", 70),
+        timeoutMinutes: getBodyInt(req.body, "timeoutMinutes", 10)
+      });
+
+      return res.redirect("/guilds/" + guild.id);
+    } catch (error) {
+      console.error("Webpanel Auto-Mod Formular Fehler:", error);
+      return res.status(500).send("Auto-Mod Einstellungen konnten nicht gespeichert werden.");
+    }
+  });
+
+
+  app.post("/guilds/:guildId/modlog", requireLogin, async (req, res) => {
+    try {
+      const guild = await getManageableGuildForRequest(
+        client,
+        req,
+        req.params.guildId
+      );
+
+      if (!guild) {
+        return res.status(403).send("Du darfst diesen Server nicht verwalten oder der Bot ist nicht auf diesem Server.");
+      }
+
+      const discordGuild = client.guilds.cache.get(guild.id);
+      const enabled = getBodyBool(req.body, "enabled");
+      const channelId = String(getBodyValue(req.body, "channelId") || "").trim();
+
+      if (enabled) {
+        const channelExists = discordGuild &&
+          discordGuild.channels.cache.has(channelId);
+
+        if (!channelId || !channelExists) {
+          return res.status(400).send("Bitte wähle einen gültigen Modlog-Channel aus.");
+        }
+      }
+
+      await setModLogOverview(guild.id, enabled, channelId);
+
+      return res.redirect("/guilds/" + guild.id);
+    } catch (error) {
+      console.error("Webpanel Modlog Formular Fehler:", error);
+      return res.status(500).send("Modlog Einstellungen konnten nicht gespeichert werden.");
     }
   });
 

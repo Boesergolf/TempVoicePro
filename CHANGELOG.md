@@ -6,6 +6,18 @@ Dieses Changelog wurde nachträglich aus dem bisherigen Projektverlauf erstellt 
 
 ## [Unreleased]
 
+### 2026-07-05 - Webpanel Modlog Formular
+
+- Modlog kann im Webpanel aktiviert und deaktiviert werden
+- Modlog-Channel kann im Webpanel ausgewählt werden
+- Änderungen werden in guild_moderation_settings gespeichert
+
+### 2026-07-05 - Webpanel Auto-Mod Formular
+
+- Auto-Mod Einstellungen können im Webpanel bearbeitet werden
+- Anti-Spam, Anti-Link, Anti-Caps, Auto-Warn und Auto-Timeout als Formular eingebaut
+- Änderungen werden in automod_settings gespeichert
+
 ### 2026-07-05 - Webpanel Discord API Cache
 
 - Discord Guild-Liste wird im Webpanel zwischengespeichert
