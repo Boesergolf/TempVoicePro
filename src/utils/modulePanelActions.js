@@ -1,4 +1,7 @@
-const { MessageFlags } = require("discord.js");
+const {
+  MessageFlags,
+  PermissionFlagsBits
+} = require("discord.js");
 
 const {
   getKnownModules,
@@ -25,7 +28,23 @@ function getModuleLabel(moduleKey) {
   return info.name;
 }
 
+function canManageModules(interaction) {
+  return interaction.memberPermissions &&
+    interaction.memberPermissions.has(PermissionFlagsBits.ManageGuild);
+}
+
+async function denyNoPermission(interaction) {
+  return interaction.reply({
+    content: "❌ Du brauchst die Berechtigung **Server verwalten**, um Module zu ändern.",
+    flags: MessageFlags.Ephemeral
+  });
+}
+
 async function handleModuleSelect(interaction) {
+  if (!canManageModules(interaction)) {
+    return denyNoPermission(interaction);
+  }
+
   const moduleKey = interaction.values[0];
   const knownModules = getKnownModules();
 
@@ -47,6 +66,10 @@ async function handleModuleSelect(interaction) {
 }
 
 async function handleModuleButton(interaction, enabled) {
+  if (!canManageModules(interaction)) {
+    return denyNoPermission(interaction);
+  }
+
   const moduleKey = selectedModules.get(getSelectionKey(interaction));
 
   if (!moduleKey) {
