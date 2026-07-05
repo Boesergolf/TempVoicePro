@@ -188,6 +188,23 @@ async function main() {
 
   console.log("✅ Tabelle guild_moderation_settings geprüft/erstellt.");
 
+
+  await connection.query(`
+    CREATE TABLE IF NOT EXISTS moderation_warnings (
+      id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+      guildId VARCHAR(32) NOT NULL,
+      userId VARCHAR(32) NOT NULL,
+      moderatorId VARCHAR(32) NOT NULL,
+      reason TEXT NOT NULL,
+      active TINYINT(1) NOT NULL DEFAULT 1,
+      createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_guild_user (guildId, userId),
+      INDEX idx_guild_active (guildId, active)
+    )
+  `);
+
+  console.log("✅ Tabelle moderation_warnings geprüft/erstellt.");
+
   await connection.end();
 
   console.log("✅ Datenbank-Setup erfolgreich abgeschlossen.");

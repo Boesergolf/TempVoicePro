@@ -35,7 +35,10 @@ function overviewHelp() {
         "`/panelcleanup` - alte Einzel-Panel-Channels finden",
         "`/panelcheck` - Panel-Rechte prüfen",
         "`/module` - Module pro Server verwalten",
-        "`/modlog` - Moderation Log verwalten"
+        "`/modlog` - Moderation Log verwalten",
+        "`/warn` - User verwarnen",
+        "`/warnings` - Warns anzeigen",
+        "`/clearwarnings` - Warns löschen"
       ]),
       field("🎧 TempVoice", [
         "`/setup`, `/stats`, `/lock`, `/unlock`, `/rename`",
@@ -243,6 +246,11 @@ function techHelp() {
         "`/modlog setup channel:#mod-log` - Modlog einrichten",
         "`/modlog status` - Status anzeigen",
         "`/modlog disable` - Modlog deaktivieren"
+      ]),
+      field("Warn-System", [
+        "`/warn user:@User grund:...` - User verwarnen",
+        "`/warnings user:@User` - Verwarnungen anzeigen",
+        "`/clearwarnings user:@User` - aktive Warns löschen"
       ])
     ],
     0x2f3136

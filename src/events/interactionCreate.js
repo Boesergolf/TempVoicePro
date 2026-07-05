@@ -215,7 +215,10 @@ const COMMAND_MODULES = {
 
   chatgpt: "chatgpt",
 
-  modlog: "moderation"
+  modlog: "moderation",
+  warn: "moderation",
+  warnings: "moderation",
+  clearwarnings: "moderation"
 };
 
 async function checkCommandModule(interaction) {

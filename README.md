@@ -1098,3 +1098,31 @@ Aktuell dient der Modlog als Grundlage für kommende Moderationsfunktionen wie:
 - Join/Leave Logs
 - Anti-Raid Logs
 
+
+
+## Moderation Warn-System
+
+TempVoicePro besitzt ein grundlegendes Warn-System.
+
+Voraussetzung:
+
+`/module enable name:Moderation`
+
+Optional empfohlen:
+
+`/modlog setup channel:#mod-log`
+
+Commands:
+
+- `/warn user:@User grund:...`
+- `/warnings user:@User`
+- `/clearwarnings user:@User grund:...`
+
+Warns werden in MySQL gespeichert.
+
+Tabelle:
+
+`moderation_warnings`
+
+Beim Verwarnen und Löschen von Warns wird ein Eintrag in den Modlog geschrieben, sofern der Modlog eingerichtet und aktiviert ist.
+
