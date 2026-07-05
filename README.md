@@ -1232,6 +1232,7 @@ Commands:
 - `/cases recent`
 - `/cases user user:@User`
 - `/cases show id:1`
+- `/cases reason id:1 grund:Korrigierter Grund`
 
 Cases werden in MySQL gespeichert.
 
@@ -1248,4 +1249,16 @@ Aktuell werden Cases erstellt für:
 - Kick
 - Ban
 - Unban
+
+
+
+### Case-Grund nachträglich ändern
+
+Moderatoren können den Grund eines bestehenden Cases korrigieren.
+
+Beispiel:
+
+`/cases reason id:12 grund:Grund korrigiert`
+
+Die Änderung wird im Modlog dokumentiert.
 

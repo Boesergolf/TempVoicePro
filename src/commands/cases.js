@@ -8,8 +8,13 @@ const {
 const {
   getModerationCase,
   getRecentCases,
-  getUserCases
+  getUserCases,
+  updateModerationCaseReason
 } = require("../utils/moderationCases");
+
+const {
+  sendModLog
+} = require("../utils/modLog");
 
 function formatDate(value) {
   const date = new Date(value);
@@ -140,6 +145,25 @@ module.exports = {
     )
     .addSubcommand(sub =>
       sub
+        .setName("reason")
+        .setDescription("Ändert den Grund eines Moderation Cases")
+        .addIntegerOption(option =>
+          option
+            .setName("id")
+            .setDescription("Case-ID")
+            .setRequired(true)
+            .setMinValue(1)
+        )
+        .addStringOption(option =>
+          option
+            .setName("grund")
+            .setDescription("Neuer Grund")
+            .setRequired(true)
+            .setMaxLength(1000)
+        )
+    )
+    .addSubcommand(sub =>
+      sub
         .setName("show")
         .setDescription("Zeigt einen bestimmten Case")
         .addIntegerOption(option =>
@@ -174,6 +198,54 @@ module.exports = {
 
       return interaction.editReply({
         embeds: [createCasesListEmbed("📋 Cases für " + user.tag, cases)]
+      });
+    }
+
+    if (subcommand === "reason") {
+      const caseId = interaction.options.getInteger("id");
+      const newReason = interaction.options.getString("grund");
+
+      const oldCase = await getModerationCase(interaction.guild.id, caseId);
+
+      if (!oldCase) {
+        return interaction.editReply("❌ Case #" + caseId + " wurde nicht gefunden.");
+      }
+
+      const updatedCase = await updateModerationCaseReason(
+        interaction.guild.id,
+        caseId,
+        newReason
+      );
+
+      await sendModLog(interaction.guild, {
+        title: "📝 Case-Grund geändert",
+        color: 0x5865f2,
+        description: "Case #" + caseId + " wurde aktualisiert.",
+        fields: [
+          {
+            name: "Case",
+            value: "#" + caseId,
+            inline: true
+          },
+          {
+            name: "Bearbeitet von",
+            value: interaction.user.toString(),
+            inline: true
+          },
+          {
+            name: "Alter Grund",
+            value: oldCase.reason.slice(0, 1000)
+          },
+          {
+            name: "Neuer Grund",
+            value: updatedCase.reason.slice(0, 1000)
+          }
+        ]
+      });
+
+      return interaction.editReply({
+        content: "📝 Case #" + caseId + " wurde aktualisiert.",
+        embeds: [createCaseEmbed(updatedCase)]
       });
     }
 

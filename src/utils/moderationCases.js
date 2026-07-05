@@ -120,10 +120,33 @@ async function getUserCases(guildId, targetId, limit = 10) {
   return rows;
 }
 
+async function updateModerationCaseReason(guildId, caseId, reason) {
+  await ensureModerationCasesTable();
+
+  const cleanReason = cleanText(reason);
+
+  const [result] = await db.query(
+    `
+      UPDATE moderation_cases
+      SET reason = ?
+      WHERE guildId = ? AND id = ?
+      LIMIT 1
+    `,
+    [cleanReason, guildId, caseId]
+  );
+
+  if (!result.affectedRows) {
+    return null;
+  }
+
+  return getModerationCase(guildId, caseId);
+}
+
 module.exports = {
   ensureModerationCasesTable,
   createModerationCase,
   getModerationCase,
   getRecentCases,
-  getUserCases
+  getUserCases,
+  updateModerationCaseReason
 };

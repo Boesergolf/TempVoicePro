@@ -275,7 +275,8 @@ function techHelp() {
       field("Case-System", [
         "`/cases recent` - letzte Cases anzeigen",
         "`/cases user user:@User` - Cases eines Users anzeigen",
-        "`/cases show id:1` - einzelnen Case anzeigen"
+        "`/cases show id:1` - einzelnen Case anzeigen",
+        "`/cases reason id:1 grund:...` - Case-Grund ändern"
       ])
     ],
     0x2f3136
