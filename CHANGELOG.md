@@ -6,6 +6,12 @@ Dieses Changelog wurde nachträglich aus dem bisherigen Projektverlauf erstellt 
 
 ## [Unreleased]
 
+### 2026-07-05 - Webpanel Login speichern
+
+- Webpanel Sessions werden in MySQL gespeichert
+- Login bleibt nach Bot-Neustart erhalten
+- Session-Cookie Laufzeit auf 30 Tage gesetzt
+
 ### 2026-07-05 - Webpanel Navigation
 
 - Server-Dashboard in Übersicht, Module, Auto-Mod und Modlog aufgeteilt

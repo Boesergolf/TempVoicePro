@@ -1,5 +1,6 @@
 const express = require("express");
 const session = require("express-session");
+const MySQLStore = require("express-mysql-session")(session);
 const helmet = require("helmet");
 const crypto = require("crypto");
 
@@ -811,16 +812,29 @@ function startWebPanel(client) {
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
 
+  const sessionStore = new MySQLStore({
+    host: process.env.DB_HOST,
+    port: Number(process.env.DB_PORT || 3306),
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_NAME,
+    createDatabaseTable: true,
+    schema: {
+      tableName: "webpanel_sessions"
+    }
+  });
+
   app.use(session({
     name: "tempvoicepro.sid",
     secret: config.sessionSecret,
+    store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
       sameSite: "lax",
       secure: config.baseUrl.startsWith("https://"),
-      maxAge: 1000 * 60 * 60 * 24 * 7
+      maxAge: 1000 * 60 * 60 * 24 * 30
     }
   }));
 
