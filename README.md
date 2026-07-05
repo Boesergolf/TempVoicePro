@@ -1212,3 +1212,40 @@ Außerdem muss die Bot-Rolle über der Rolle des betroffenen Users stehen.
 
 Bans und Unbans werden im Modlog protokolliert, sofern der Modlog eingerichtet ist.
 
+
+
+## Moderation Case-System
+
+TempVoicePro besitzt ein Moderation Case-System.
+
+Moderationsaktionen erhalten automatisch Case-IDs.
+
+Beispiele:
+
+- `Case #1` Warn
+- `Case #2` Timeout
+- `Case #3` Kick
+- `Case #4` Ban
+
+Commands:
+
+- `/cases recent`
+- `/cases user user:@User`
+- `/cases show id:1`
+
+Cases werden in MySQL gespeichert.
+
+Tabelle:
+
+`moderation_cases`
+
+Aktuell werden Cases erstellt für:
+
+- Warn
+- Warns löschen
+- Timeout
+- Timeout entfernen
+- Kick
+- Ban
+- Unban
+

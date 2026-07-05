@@ -8,6 +8,10 @@ const {
   sendModLog
 } = require("../utils/modLog");
 
+const {
+  createModerationCase
+} = require("../utils/moderationCases");
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("untimeout")
@@ -50,11 +54,24 @@ module.exports = {
       reason + " | Moderator: " + interaction.user.tag
     );
 
+    const modCase = await createModerationCase({
+      guildId: interaction.guild.id,
+      actionType: "untimeout",
+      targetId: user.id,
+      moderatorId: interaction.user.id,
+      reason
+    });
+
     await sendModLog(interaction.guild, {
       title: "✅ Timeout entfernt",
       color: 0x2ecc71,
       description: "Timeout wurde entfernt.",
       fields: [
+        {
+          name: "Case",
+          value: "#" + modCase.id,
+          inline: true
+        },
         {
           name: "User",
           value: user.toString(),
@@ -73,7 +90,8 @@ module.exports = {
     });
 
     return interaction.editReply(
-      "✅ Timeout von " + user.toString() + " wurde entfernt."
+      "✅ Timeout von " + user.toString() + " wurde entfernt.\n" +
+      "📌 Case: **#" + modCase.id + "**"
     );
   }
 };

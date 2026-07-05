@@ -13,6 +13,10 @@ const {
   sendModLog
 } = require("../utils/modLog");
 
+const {
+  createModerationCase
+} = require("../utils/moderationCases");
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("warn")
@@ -60,6 +64,18 @@ module.exports = {
       user.id
     );
 
+    const modCase = await createModerationCase({
+      guildId: interaction.guild.id,
+      actionType: "warn",
+      targetId: user.id,
+      moderatorId: interaction.user.id,
+      reason,
+      details: {
+        warningId: warning.id,
+        activeWarnings: activeCount
+      }
+    });
+
     await sendModLog(interaction.guild, {
       title: "⚠️ User verwarnt",
       color: 0xf1c40f,
@@ -73,6 +89,11 @@ module.exports = {
         {
           name: "Moderator",
           value: interaction.user.toString(),
+          inline: true
+        },
+        {
+          name: "Case",
+          value: "#" + modCase.id,
           inline: true
         },
         {
@@ -94,6 +115,7 @@ module.exports = {
 
     return interaction.editReply(
       "✅ " + user.toString() + " wurde verwarnt.\n" +
+      "📌 Case: **#" + modCase.id + "**\n" +
       "⚠️ Aktive Warns: **" + activeCount + "**"
     );
   }

@@ -8,6 +8,10 @@ const {
   sendModLog
 } = require("../utils/modLog");
 
+const {
+  createModerationCase
+} = require("../utils/moderationCases");
+
 function daysToSeconds(days) {
   return Math.max(0, Math.min(7, Number(days || 0))) * 24 * 60 * 60;
 }
@@ -69,11 +73,27 @@ module.exports = {
       reason: reason + " | Moderator: " + interaction.user.tag
     });
 
+    const modCase = await createModerationCase({
+      guildId: interaction.guild.id,
+      actionType: "ban",
+      targetId: user.id,
+      moderatorId: interaction.user.id,
+      reason,
+      details: {
+        deleteDays
+      }
+    });
+
     await sendModLog(interaction.guild, {
       title: "🔨 User gebannt",
       color: 0xe74c3c,
       description: user.toString() + " wurde vom Server gebannt.",
       fields: [
+        {
+          name: "Case",
+          value: "#" + modCase.id,
+          inline: true
+        },
         {
           name: "User",
           value: user.toString(),
@@ -97,7 +117,8 @@ module.exports = {
     });
 
     return interaction.editReply(
-      "🔨 " + user.toString() + " wurde gebannt."
+      "🔨 " + user.toString() + " wurde gebannt.\n" +
+      "📌 Case: **#" + modCase.id + "**"
     );
   }
 };

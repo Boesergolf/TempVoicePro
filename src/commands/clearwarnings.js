@@ -12,6 +12,10 @@ const {
   sendModLog
 } = require("../utils/modLog");
 
+const {
+  createModerationCase
+} = require("../utils/moderationCases");
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("clearwarnings")
@@ -41,11 +45,27 @@ module.exports = {
 
     const cleared = await clearWarnings(interaction.guild.id, user.id);
 
+    const modCase = await createModerationCase({
+      guildId: interaction.guild.id,
+      actionType: "clearwarnings",
+      targetId: user.id,
+      moderatorId: interaction.user.id,
+      reason,
+      details: {
+        clearedWarnings: cleared
+      }
+    });
+
     await sendModLog(interaction.guild, {
       title: "🧹 Warns gelöscht",
       color: 0x3498db,
       description: "Aktive Verwarnungen wurden gelöscht.",
       fields: [
+        {
+          name: "Case",
+          value: "#" + modCase.id,
+          inline: true
+        },
         {
           name: "User",
           value: user.toString(),
@@ -69,7 +89,8 @@ module.exports = {
     });
 
     return interaction.editReply(
-      "🧹 Aktive Warns von " + user.toString() + " gelöscht: **" + cleared + "**"
+      "🧹 Aktive Warns von " + user.toString() + " gelöscht: **" + cleared + "**\n" +
+      "📌 Case: **#" + modCase.id + "**"
     );
   }
 };

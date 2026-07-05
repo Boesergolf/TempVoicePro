@@ -8,6 +8,10 @@ const {
   sendModLog
 } = require("../utils/modLog");
 
+const {
+  createModerationCase
+} = require("../utils/moderationCases");
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("kick")
@@ -55,11 +59,24 @@ module.exports = {
 
     await member.kick(reason + " | Moderator: " + interaction.user.tag);
 
+    const modCase = await createModerationCase({
+      guildId: interaction.guild.id,
+      actionType: "kick",
+      targetId: user.id,
+      moderatorId: interaction.user.id,
+      reason
+    });
+
     await sendModLog(interaction.guild, {
       title: "👢 User gekickt",
       color: 0xe67e22,
       description: user.toString() + " wurde vom Server gekickt.",
       fields: [
+        {
+          name: "Case",
+          value: "#" + modCase.id,
+          inline: true
+        },
         {
           name: "User",
           value: user.toString(),
@@ -78,7 +95,8 @@ module.exports = {
     });
 
     return interaction.editReply(
-      "👢 " + user.toString() + " wurde gekickt."
+      "👢 " + user.toString() + " wurde gekickt.\n" +
+      "📌 Case: **#" + modCase.id + "**"
     );
   }
 };

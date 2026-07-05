@@ -205,6 +205,25 @@ async function main() {
 
   console.log("✅ Tabelle moderation_warnings geprüft/erstellt.");
 
+
+  await connection.query(`
+    CREATE TABLE IF NOT EXISTS moderation_cases (
+      id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+      guildId VARCHAR(32) NOT NULL,
+      actionType VARCHAR(64) NOT NULL,
+      targetId VARCHAR(32) NOT NULL,
+      moderatorId VARCHAR(32) NOT NULL,
+      reason TEXT NOT NULL,
+      details TEXT NULL,
+      createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_guild_id (guildId, id),
+      INDEX idx_guild_target (guildId, targetId),
+      INDEX idx_guild_action (guildId, actionType)
+    )
+  `);
+
+  console.log("✅ Tabelle moderation_cases geprüft/erstellt.");
+
   await connection.end();
 
   console.log("✅ Datenbank-Setup erfolgreich abgeschlossen.");

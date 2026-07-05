@@ -8,6 +8,10 @@ const {
   sendModLog
 } = require("../utils/modLog");
 
+const {
+  createModerationCase
+} = require("../utils/moderationCases");
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("unban")
@@ -54,11 +58,24 @@ module.exports = {
       reason + " | Moderator: " + interaction.user.tag
     );
 
+    const modCase = await createModerationCase({
+      guildId: interaction.guild.id,
+      actionType: "unban",
+      targetId: userId,
+      moderatorId: interaction.user.id,
+      reason
+    });
+
     await sendModLog(interaction.guild, {
       title: "✅ User entbannt",
       color: 0x2ecc71,
       description: "<@" + userId + "> wurde entbannt.",
       fields: [
+        {
+          name: "Case",
+          value: "#" + modCase.id,
+          inline: true
+        },
         {
           name: "User-ID",
           value: "`" + userId + "`",
@@ -77,7 +94,8 @@ module.exports = {
     });
 
     return interaction.editReply(
-      "✅ User mit ID `" + userId + "` wurde entbannt."
+      "✅ User mit ID `" + userId + "` wurde entbannt.\n" +
+      "📌 Case: **#" + modCase.id + "**"
     );
   }
 };

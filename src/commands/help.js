@@ -43,7 +43,8 @@ function overviewHelp() {
         "`/untimeout` - Timeout entfernen",
         "`/kick` - User kicken",
         "`/ban` - User bannen",
-        "`/unban` - User entbannen"
+        "`/unban` - User entbannen",
+        "`/cases` - Moderation Cases anzeigen"
       ]),
       field("🎧 TempVoice", [
         "`/setup`, `/stats`, `/lock`, `/unlock`, `/rename`",
@@ -270,6 +271,11 @@ function techHelp() {
         "`/ban user:@User grund:... nachrichten_tage:0` - User bannen",
         "`/unban userid:123456789 grund:...` - User entbannen",
         "Bans und Unbans werden im Modlog dokumentiert."
+      ]),
+      field("Case-System", [
+        "`/cases recent` - letzte Cases anzeigen",
+        "`/cases user user:@User` - Cases eines Users anzeigen",
+        "`/cases show id:1` - einzelnen Case anzeigen"
       ])
     ],
     0x2f3136

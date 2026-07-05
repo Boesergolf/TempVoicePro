@@ -8,6 +8,10 @@ const {
   sendModLog
 } = require("../utils/modLog");
 
+const {
+  createModerationCase
+} = require("../utils/moderationCases");
+
 function minutesToMs(minutes) {
   return minutes * 60 * 1000;
 }
@@ -71,11 +75,27 @@ module.exports = {
       reason + " | Moderator: " + interaction.user.tag
     );
 
+    const modCase = await createModerationCase({
+      guildId: interaction.guild.id,
+      actionType: "timeout",
+      targetId: user.id,
+      moderatorId: interaction.user.id,
+      reason,
+      details: {
+        minutes
+      }
+    });
+
     await sendModLog(interaction.guild, {
       title: "⏳ Timeout gesetzt",
       color: 0xe67e22,
       description: user.toString() + " wurde in Timeout gesetzt.",
       fields: [
+        {
+          name: "Case",
+          value: "#" + modCase.id,
+          inline: true
+        },
         {
           name: "User",
           value: user.toString(),
@@ -99,7 +119,8 @@ module.exports = {
     });
 
     return interaction.editReply(
-      "⏳ " + user.toString() + " wurde für **" + minutes + " Minuten** in Timeout gesetzt."
+      "⏳ " + user.toString() + " wurde für **" + minutes + " Minuten** in Timeout gesetzt.\n" +
+      "📌 Case: **#" + modCase.id + "**"
     );
   }
 };

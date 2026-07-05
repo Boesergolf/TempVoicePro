@@ -223,7 +223,8 @@ const COMMAND_MODULES = {
   untimeout: "moderation",
   kick: "moderation",
   ban: "moderation",
-  unban: "moderation"
+  unban: "moderation",
+  cases: "moderation"
 };
 
 async function checkCommandModule(interaction) {
