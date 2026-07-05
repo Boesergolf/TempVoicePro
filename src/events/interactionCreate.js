@@ -220,7 +220,8 @@ const COMMAND_MODULES = {
   warnings: "moderation",
   clearwarnings: "moderation",
   timeout: "moderation",
-  untimeout: "moderation"
+  untimeout: "moderation",
+  kick: "moderation"
 };
 
 async function checkCommandModule(interaction) {

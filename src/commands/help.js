@@ -40,7 +40,8 @@ function overviewHelp() {
         "`/warnings` - Warns anzeigen",
         "`/clearwarnings` - Warns löschen",
         "`/timeout` - User timeouten",
-        "`/untimeout` - Timeout entfernen"
+        "`/untimeout` - Timeout entfernen",
+        "`/kick` - User kicken"
       ]),
       field("🎧 TempVoice", [
         "`/setup`, `/stats`, `/lock`, `/unlock`, `/rename`",
@@ -258,6 +259,10 @@ function techHelp() {
         "`/timeout user:@User minuten:10 grund:...` - User timeouten",
         "`/untimeout user:@User grund:...` - Timeout entfernen",
         "Timeouts werden im Modlog dokumentiert."
+      ]),
+      field("Kick-System", [
+        "`/kick user:@User grund:...` - User vom Server kicken",
+        "Kicks werden im Modlog dokumentiert."
       ])
     ],
     0x2f3136

@@ -1153,3 +1153,29 @@ Außerdem muss die Bot-Rolle über der Rolle des betroffenen Users stehen.
 
 Timeouts und entfernte Timeouts werden im Modlog protokolliert, sofern der Modlog eingerichtet ist.
 
+
+
+## Moderation Kick-System
+
+TempVoicePro unterstützt Kick-Moderation.
+
+Voraussetzung:
+
+`/module enable name:Moderation`
+
+Optional empfohlen:
+
+`/modlog setup channel:#mod-log`
+
+Command:
+
+`/kick user:@User grund:...`
+
+Der Bot benötigt dafür die Discord-Berechtigung:
+
+`Mitglieder kicken`
+
+Außerdem muss die Bot-Rolle über der Rolle des betroffenen Users stehen.
+
+Kicks werden im Modlog protokolliert, sofern der Modlog eingerichtet ist.
+
