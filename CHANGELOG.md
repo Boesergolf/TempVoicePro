@@ -6,6 +6,24 @@ Dieses Changelog wurde nachträglich aus dem bisherigen Projektverlauf erstellt 
 
 ## [Unreleased]
 
+### 2026-07-05 - Webpanel Discord API Cache
+
+- Discord Guild-Liste wird im Webpanel zwischengespeichert
+- 429 Rate-Limit Fehler beim Server-Dashboard reduziert
+- Logout löscht Webpanel-Cookies sauber
+
+### 2026-07-05 - Webpanel Server Dashboard
+
+- Serverseite um Bot Status, Module, Modlog und Auto-Mod erweitert
+- Webpanel zeigt erste echte Serverdaten aus MySQL und Bot-Cache
+
+### 2026-07-05 - Webpanel Grundgerüst
+
+- Express Webpanel erstellt
+- Discord OAuth2 Login vorbereitet
+- Dashboard und Serverauswahl eingebaut
+- Webpanel in Bot-Prozess eingebunden
+
 ### 2026-07-05 - Auto-Mod System
 
 - Auto-Mod Engine fertig eingebunden

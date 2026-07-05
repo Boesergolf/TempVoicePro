@@ -1,3 +1,9 @@
+require("dotenv").config();
+
+const {
+  startWebPanel
+} = require("./webpanel/server");
+
 const path = require("path");
 const dotenv = require("dotenv");
 
@@ -50,5 +56,7 @@ process.on("unhandledRejection", (err) => {
 process.on("uncaughtException", (err) => {
   console.error("❌ Uncaught Exception:", err);
 });
+
+startWebPanel(client);
 
 client.login(process.env.TOKEN);

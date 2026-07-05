@@ -1343,3 +1343,36 @@ Der Bot benötigt je nach Funktion folgende Discord-Berechtigungen:
 - Nachrichten verwalten
 - Mitglieder moderieren
 
+
+
+## Webpanel
+
+TempVoicePro besitzt ein Webpanel-Grundgerüst mit Discord OAuth2 Login.
+
+Aktuelle Funktionen:
+
+- Discord Login
+- Logout
+- Dashboard
+- Serverauswahl
+- Anzeige nur für Server, auf denen der Bot ist
+- Anzeige nur für User mit `Server verwalten` oder `Administrator`
+
+ENV-Werte:
+
+    WEB_PANEL_ENABLED=true
+    WEB_PANEL_PORT=3000
+    WEB_PANEL_BASE_URL=http://DEINE-IP:3000
+    DISCORD_CLIENT_ID=deine_discord_application_client_id
+    DISCORD_CLIENT_SECRET=dein_discord_oauth_client_secret
+    DISCORD_REDIRECT_URI=http://DEINE-IP:3000/auth/callback
+    SESSION_SECRET=ein_langer_zufallswert
+
+Discord Developer Portal:
+
+Die Redirect URL muss exakt eingetragen werden:
+
+    http://DEINE-IP:3000/auth/callback
+
+Später kann das Webpanel über Nginx, Domain und HTTPS öffentlich sauber erreichbar gemacht werden.
+
