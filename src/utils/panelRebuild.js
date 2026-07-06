@@ -7,13 +7,23 @@ function sleep(ms) {
 }
 
 function getPanelRebuildMaxMessages() {
-  const value = Number(process.env.PANEL_REBUILD_MAX_MESSAGES || 200);
+  const value = Number(process.env.PANEL_REBUILD_MAX_MESSAGES || 300);
 
   if (!Number.isFinite(value)) {
-    return 200;
+    return 300;
   }
 
   return Math.max(25, Math.min(Math.floor(value), 500));
+}
+
+function isBotMessage(message, client) {
+  return Boolean(
+    message &&
+    message.author &&
+    client &&
+    client.user &&
+    message.author.id === client.user.id
+  );
 }
 
 function shouldDeleteMessage(message, client, includeUserMessages) {
@@ -21,15 +31,49 @@ function shouldDeleteMessage(message, client, includeUserMessages) {
     return false;
   }
 
-  if (message.author && message.author.id === client.user.id) {
+  if (isBotMessage(message, client)) {
     return true;
   }
 
-  if (includeUserMessages && !message.pinned) {
+  if (includeUserMessages) {
     return true;
   }
 
   return false;
+}
+
+async function safeUnpin(message) {
+  if (!message || !message.pinned) {
+    return;
+  }
+
+  await message.unpin().catch(error => {
+    console.warn(
+      "⚠️ PanelRebuild konnte Nachricht nicht entpinnen:",
+      message.id,
+      error.message
+    );
+  });
+}
+
+async function safeDelete(message) {
+  if (!message) {
+    return false;
+  }
+
+  await safeUnpin(message);
+
+  return message.delete()
+    .then(() => true)
+    .catch(error => {
+      console.warn(
+        "⚠️ PanelRebuild konnte Nachricht nicht löschen:",
+        message.id,
+        error.message
+      );
+
+      return false;
+    });
 }
 
 async function cleanupPanelChannel(channel, client, options = {}) {
@@ -69,15 +113,11 @@ async function cleanupPanelChannel(channel, client, options = {}) {
         continue;
       }
 
-      await message.delete().then(() => {
+      const wasDeleted = await safeDelete(message);
+
+      if (wasDeleted) {
         deleted++;
-      }).catch(error => {
-        console.warn(
-          "⚠️ PanelRebuild konnte Nachricht nicht löschen:",
-          message.id,
-          error.message
-        );
-      });
+      }
 
       await sleep(250);
     }
@@ -95,6 +135,10 @@ async function cleanupPanelChannel(channel, client, options = {}) {
 
 async function sendRebuiltPanelLayout(channel) {
   const hubMessage = await channel.send(createPanelHubMessage());
+
+  await hubMessage.pin().catch(error => {
+    console.warn("⚠️ Zentralpanel konnte nicht gepinnt werden:", error.message);
+  });
 
   return [hubMessage];
 }

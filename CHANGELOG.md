@@ -6,6 +6,12 @@ Dieses Changelog wurde nachträglich aus dem bisherigen Projektverlauf erstellt 
 
 ## [Unreleased]
 
+### 2026-07-06 - Panel Rebuild Cleanup verbessert
+
+- Alte Bot-Panels werden zuverlässiger entfernt
+- Gepinnte alte Bot-Panels werden vor dem Löschen entpinnt
+- Neues Zentralpanel wird automatisch gepinnt
+
 ### 2026-07-06 - Globaler Auto-Delete Fix
 
 - Fehlerhaften Export für temporäre Interaction-Antworten repariert
