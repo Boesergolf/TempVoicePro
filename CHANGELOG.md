@@ -6,6 +6,12 @@ Dieses Changelog wurde nachträglich aus dem bisherigen Projektverlauf erstellt 
 
 ## [Unreleased]
 
+### 2026-07-06 - Module im Zentralpanel
+
+- Module können im Zentralpanel per Dropdown ausgewählt werden
+- Module können direkt per Button aktiviert und deaktiviert werden
+- Zentralpanel ersetzt weitere einzelne Modul-Panels
+
 ### 2026-07-06 - Panel Commands auf Zentralpanel umgebaut
 
 - Music-, Playlist-, Glücksrad- und Panels-Commands schalten nun das Zentralpanel um

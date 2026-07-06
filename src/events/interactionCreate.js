@@ -14,6 +14,10 @@ const { addTracks, setVolume, removeTrack } = require("../utils/musicPlayer");
 const { detectSource, getMetadataForUrl } = require("../utils/musicMetadata");
 const { refreshLatestMusicPanel } = require("../utils/musicPanelView");
 const {
+  handlePanelHubModuleSelect,
+  handlePanelHubModuleButton
+} = require("../utils/panelHubModuleActions");
+const {
   handlePlaylistPanelModal,
   handlePlaylistPanelSelect,
   handlePlaylistSelectedButton
@@ -299,6 +303,22 @@ module.exports = {
     if (
       interaction.isStringSelectMenu &&
       interaction.isStringSelectMenu() &&
+      interaction.customId === "panel_hub_module_select"
+    ) {
+      try {
+        return await handlePanelHubModuleSelect(interaction);
+      } catch (error) {
+        console.error("❌ PanelHub Module Select Fehler:", error);
+        return interaction.reply({
+          content: "❌ Modul-Auswahl Fehler. Details stehen im Bot-Log.",
+          flags: 64
+        }).catch(() => null);
+      }
+    }
+
+    if (
+      interaction.isStringSelectMenu &&
+      interaction.isStringSelectMenu() &&
       interaction.customId === "playlist_panel_select"
     ) {
       try {
@@ -307,6 +327,23 @@ module.exports = {
         console.error("❌ Playlist Panel Select Fehler:", error);
         return interaction.reply({
           content: "❌ Playlist-Auswahl Fehler. Details stehen im Bot-Log.",
+          flags: 64
+        }).catch(() => null);
+      }
+    }
+
+    if (
+      interaction.isButton &&
+      interaction.isButton() &&
+      interaction.customId &&
+      interaction.customId.startsWith("panel_hub_module_")
+    ) {
+      try {
+        return await handlePanelHubModuleButton(interaction);
+      } catch (error) {
+        console.error("❌ PanelHub Module Button Fehler:", error);
+        return interaction.reply({
+          content: "❌ Modul-Aktion Fehler. Details stehen im Bot-Log.",
           flags: 64
         }).catch(() => null);
       }

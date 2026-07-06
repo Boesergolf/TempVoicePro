@@ -263,22 +263,79 @@ function createModulesHubMessage() {
     .setTitle("🧩 Module")
     .setDescription(
       [
-        "Module verwaltest du aktuell über:",
+        "Module direkt im Zentralpanel verwalten.",
         "",
-        "`/module list`",
-        "`/module enable`",
-        "`/module disable`",
+        "Wähle ein Modul im Dropdown aus.",
+        "Danach kannst du es aktivieren oder deaktivieren.",
         "",
-        "Der nächste sinnvolle Ausbau wäre ein Modul-Dropdown direkt in diesem Zentralpanel."
+        "**Hinweis:**",
+        "Deaktivierte Module blockieren die zugehörigen Slash-Commands."
       ].join("\n")
     )
     .setColor(0x5865f2)
     .setFooter({ text: "TempVoicePro Module" })
     .setTimestamp();
 
+  const moduleSelect = {
+    type: 1,
+    components: [
+      {
+        type: 3,
+        custom_id: "panel_hub_module_select",
+        placeholder: "Modul auswählen...",
+        min_values: 1,
+        max_values: 1,
+        options: [
+          {
+            label: "TempVoice",
+            value: "tempvoice",
+            description: "Temporäre Voice Channels",
+            emoji: { name: "🎙️" }
+          },
+          {
+            label: "Music",
+            value: "music",
+            description: "Musiksystem",
+            emoji: { name: "🎵" }
+          },
+          {
+            label: "Playlist",
+            value: "playlist",
+            description: "Playlist-Verwaltung",
+            emoji: { name: "🎚️" }
+          },
+          {
+            label: "Glücksrad",
+            value: "gluecksrad",
+            description: "Glücksrad und Team-Auswahl",
+            emoji: { name: "🎡" }
+          },
+          {
+            label: "Panels",
+            value: "panels",
+            description: "Panel-System",
+            emoji: { name: "🧭" }
+          },
+          {
+            label: "ChatGPT",
+            value: "chatgpt",
+            description: "ChatGPT Command",
+            emoji: { name: "🤖" }
+          },
+          {
+            label: "Moderation",
+            value: "moderation",
+            description: "Warns, Timeout, Ban, Auto-Mod",
+            emoji: { name: "🛡️" }
+          }
+        ]
+      }
+    ]
+  };
+
   return {
     embeds: [embed],
-    components: [backRow()]
+    components: [moduleSelect, backRow()]
   };
 }
 
