@@ -6,6 +6,12 @@ Dieses Changelog wurde nachträglich aus dem bisherigen Projektverlauf erstellt 
 
 ## [Unreleased]
 
+### 2026-07-06 - Music Panel Playlist Buttons
+
+- Alte Music-Panel Playlist-Buttons an neue Playlist-Verwaltung angebunden
+- Playlists-Button zeigt gespeicherte Playlists an
+- Playlist-Button startet Playlists über Modal
+
 ### 2026-07-06 - Panel Channel Cleanup Fix
 
 - Normale Nachrichten im Panel-Channel werden wieder automatisch gelöscht

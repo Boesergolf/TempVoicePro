@@ -13,6 +13,7 @@ const luckWheel = require("../utils/luckWheel");
 const { addTracks, setVolume, removeTrack } = require("../utils/musicPlayer");
 const { detectSource, getMetadataForUrl } = require("../utils/musicMetadata");
 const { refreshLatestMusicPanel } = require("../utils/musicPanelView");
+const { handlePlaylistPanelModal } = require("../utils/playlistPanelActions");
 
 
 function isHttpUrl(value) {
@@ -264,6 +265,31 @@ module.exports = {
   name: "interactionCreate",
 
   async execute(interaction, client) {
+    if (
+      interaction.isModalSubmit &&
+      interaction.isModalSubmit() &&
+      interaction.customId &&
+      interaction.customId.startsWith("playlist_panel_")
+    ) {
+      try {
+        console.log("🎵 Playlist Panel Modal erkannt:", interaction.customId);
+        return await handlePlaylistPanelModal(interaction);
+      } catch (error) {
+        console.error("❌ Playlist Panel Modal Fehler:", error);
+
+        const message = {
+          content: "❌ Playlist-Panel Fehler. Details stehen im Bot-Log.",
+          flags: 64
+        };
+
+        if (interaction.deferred || interaction.replied) {
+          return interaction.editReply(message).catch(() => null);
+        }
+
+        return interaction.reply(message).catch(() => null);
+      }
+    }
+
     if (
       interaction.isStringSelectMenu &&
       interaction.isStringSelectMenu() &&

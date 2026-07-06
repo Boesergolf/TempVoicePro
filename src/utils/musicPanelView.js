@@ -104,12 +104,12 @@ function createMusicPanelRows() {
 
     new ButtonBuilder()
       .setCustomId("mp_playlist")
-      .setLabel("📂 Playlist")
+      .setLabel("Playlist starten")
       .setStyle(ButtonStyle.Primary),
 
     new ButtonBuilder()
       .setCustomId("mp_playlists")
-      .setLabel("📋 Playlists")
+      .setLabel("Playlists")
       .setStyle(ButtonStyle.Primary),
 
     new ButtonBuilder()
