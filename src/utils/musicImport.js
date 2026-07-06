@@ -7,6 +7,15 @@ function cleanText(value) {
     .slice(0, 200);
 }
 
+class PlaylistImportError extends Error {
+  constructor(message, code) {
+    super(message);
+    this.name = "PlaylistImportError";
+    this.code = code;
+    this.isUserFacing = true;
+  }
+}
+
 function parseSpotifyPlaylistId(url) {
   if (url.startsWith("spotify:playlist:")) {
     return url.replace("spotify:playlist:", "").split("?")[0];
@@ -53,7 +62,10 @@ async function fetchJson(url, options = {}) {
 
     if (!response.ok) {
       const text = await response.text().catch(() => "");
-      throw new Error("HTTP " + response.status + " " + text.slice(0, 200));
+      const error = new Error("HTTP " + response.status + " " + text.slice(0, 200));
+      error.status = response.status;
+      error.body = text;
+      throw error;
     }
 
     return await response.json();
@@ -74,14 +86,27 @@ async function getSpotifyAccessToken() {
     .from(clientId + ":" + clientSecret)
     .toString("base64");
 
-  const data = await fetchJson("https://accounts.spotify.com/api/token", {
-    method: "POST",
-    headers: {
-      "Authorization": "Basic " + auth,
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    body: "grant_type=client_credentials"
-  });
+  let data;
+
+  try {
+    data = await fetchJson("https://accounts.spotify.com/api/token", {
+      method: "POST",
+      headers: {
+        "Authorization": "Basic " + auth,
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: "grant_type=client_credentials"
+    });
+  } catch (error) {
+    if (error.status === 400 || error.status === 401) {
+      throw new PlaylistImportError(
+        "❌ Spotify Login fehlgeschlagen. Bitte prüfe `SPOTIFY_CLIENT_ID` und `SPOTIFY_CLIENT_SECRET` in der `.env`.",
+        "SPOTIFY_AUTH_FAILED"
+      );
+    }
+
+    throw error;
+  }
 
   if (!data.access_token) {
     throw new Error("Spotify Access Token konnte nicht erstellt werden.");
@@ -106,11 +131,31 @@ async function importSpotifyPlaylist(url, maxItems) {
     "/tracks?limit=50&fields=items(track(name,artists(name),external_urls(spotify))),next";
 
   while (nextUrl && items.length < maxItems) {
-    const data = await fetchJson(nextUrl, {
-      headers: {
-        "Authorization": "Bearer " + token
+    let data;
+
+    try {
+      data = await fetchJson(nextUrl, {
+        headers: {
+          "Authorization": "Bearer " + token
+        }
+      });
+    } catch (error) {
+      if (error.status === 403) {
+        throw new PlaylistImportError(
+          "❌ Spotify verweigert den Zugriff auf diese Playlist. Sie ist wahrscheinlich privat, nicht öffentlich erreichbar oder für die Spotify API nicht freigegeben. Bitte teste eine öffentliche Spotify-Playlist oder nutze vorerst YouTube-Playlist-Links.",
+          "SPOTIFY_PLAYLIST_FORBIDDEN"
+        );
       }
-    });
+
+      if (error.status === 404) {
+        throw new PlaylistImportError(
+          "❌ Diese Spotify-Playlist wurde nicht gefunden. Bitte prüfe den Link.",
+          "SPOTIFY_PLAYLIST_NOT_FOUND"
+        );
+      }
+
+      throw error;
+    }
 
     for (const entry of data.items || []) {
       if (items.length >= maxItems) break;

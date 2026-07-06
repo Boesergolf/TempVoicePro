@@ -6,6 +6,12 @@ Dieses Changelog wurde nachträglich aus dem bisherigen Projektverlauf erstellt 
 
 ## [Unreleased]
 
+### 2026-07-06 - Spotify Playlist Fehlerbehandlung
+
+- Spotify 403 Fehler werden freundlich erklärt
+- Private oder gesperrte Spotify-Playlists erzeugen keinen Stacktrace mehr
+- Playlist Import zeigt verständliche Hinweise im Discord Command
+
 ### 2026-07-06 - Webpanel Case-Grund bearbeiten
 
 - Case-Gründe können direkt im Webpanel geändert werden

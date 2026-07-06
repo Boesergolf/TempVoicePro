@@ -496,7 +496,17 @@ module.exports = {
           "⏳ Import läuft... Bitte kurz warten."
         );
 
-        const importedItems = await importPlaylistFromUrl(url, limit);
+        let importedItems;
+
+        try {
+          importedItems = await importPlaylistFromUrl(url, limit);
+        } catch (error) {
+          if (error && error.isUserFacing) {
+            return interaction.editReply(error.message);
+          }
+
+          throw error;
+        }
 
         if (!importedItems.length) {
           return interaction.editReply(
