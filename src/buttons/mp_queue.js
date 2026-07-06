@@ -1,12 +1,13 @@
-const { getQueueText } = require("../utils/musicPlayer");
+const {
+  createMusicQueueCentralMessage
+} = require("../utils/panelHubMusic");
 
 module.exports = {
   customId: "mp_queue",
 
   async execute(interaction) {
-    return interaction.reply({
-      content: getQueueText(interaction.guild.id),
-      flags: 64
-    });
+    return interaction.update(
+      createMusicQueueCentralMessage(interaction.guild.id)
+    );
   }
 };

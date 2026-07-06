@@ -27,6 +27,40 @@ const { detectSource, getMetadataForUrl } = require("./musicMetadata");
 const queues = new Map();
 const leaveTimers = new Map();
 
+function getMusicPublicMessagesEnabled() {
+  return process.env.MUSIC_PUBLIC_MESSAGES === "true";
+}
+
+function getPanelChannelNameForMusic() {
+  return process.env.PANEL_CHANNEL_NAME || "bot-panels";
+}
+
+function isPanelChannelForMusicMessages(channel) {
+  return Boolean(
+    channel &&
+    channel.name &&
+    channel.name === getPanelChannelNameForMusic()
+  );
+}
+
+async function sendMusicNotice(queue, payload) {
+  if (!queue || !queue.textChannel) {
+    return null;
+  }
+
+  if (isPanelChannelForMusicMessages(queue.textChannel)) {
+    return null;
+  }
+
+  if (!getMusicPublicMessagesEnabled()) {
+    return null;
+  }
+
+  return sendMusicNotice(queue, payload).catch(() => null);
+}
+
+
+
 function getYtDlpPath() {
   if (process.env.YTDLP_PATH) {
     return process.env.YTDLP_PATH;
@@ -221,8 +255,7 @@ function getOrCreateQueue(guildId) {
     console.error("❌ Music Player Fehler:", err);
 
     if (queue.textChannel) {
-      queue.textChannel
-        .send("❌ Fehler beim Abspielen. Überspringe Track.")
+      sendMusicNotice(queue, "❌ Fehler beim Abspielen. Überspringe Track.")
         .catch(() => {});
     }
 
@@ -654,8 +687,7 @@ async function playNext(guildId) {
     queue.playing = false;
 
     if (queue.textChannel) {
-      queue.textChannel
-        .send("✅ Queue ist leer.")
+      sendMusicNotice(queue, "✅ Queue ist leer.")
         .catch(() => {});
     }
 
@@ -688,16 +720,14 @@ async function playNext(guildId) {
     queue.player.play(data.resource);
 
     if (queue.textChannel) {
-      queue.textChannel
-        .send("▶️ Spiele jetzt: **" + data.resolved.title + "**")
+      sendMusicNotice(queue, "▶️ Spiele jetzt: **" + data.resolved.title + "**")
         .catch(() => {});
     }
   } catch (err) {
     console.error("❌ Track Fehler:", err);
 
     if (queue.textChannel) {
-      queue.textChannel
-        .send("❌ Konnte Track nicht abspielen: " + err.message)
+      sendMusicNotice(queue, "❌ Konnte Track nicht abspielen: " + err.message)
         .catch(() => {});
     }
 
@@ -728,8 +758,7 @@ async function addTracks(interaction, tracks) {
       console.error("❌ Music Start Fehler:", err);
 
       if (queue.textChannel) {
-        queue.textChannel
-          .send("❌ Musik konnte nicht gestartet werden: " + err.message)
+        sendMusicNotice(queue, "❌ Musik konnte nicht gestartet werden: " + err.message)
           .catch(() => {});
       }
     });

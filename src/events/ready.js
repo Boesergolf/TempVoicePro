@@ -1,4 +1,8 @@
 const {
+  startCentralPanelAutoRefresh
+} = require("../utils/centralPanelAutoRefresh");
+
+const {
   startPanelAutoRefresh
 } = require("../utils/panelAutoRefresh");
 
@@ -10,6 +14,7 @@ module.exports = {
 
   execute(client) {
     startPanelAutoRefresh(client);
+    startCentralPanelAutoRefresh(client);
     console.log(`✅ Eingeloggt als ${client.user.tag}`);
   }
 };

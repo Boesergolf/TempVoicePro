@@ -14,6 +14,9 @@ const { addTracks, setVolume, removeTrack } = require("../utils/musicPlayer");
 const { detectSource, getMetadataForUrl } = require("../utils/musicMetadata");
 const { refreshLatestMusicPanel } = require("../utils/musicPanelView");
 const {
+  createMusicCentralMessage
+} = require("../utils/panelHubMusic");
+const {
   installTemporaryInteractionReplyCleanup
 } = require("../utils/temporaryInteractionReply");
 const {
@@ -113,9 +116,25 @@ async function playMusicInput(interaction, input) {
     title: value
   }]);
 
-  await refreshLatestMusicPanel(interaction);
+  await refreshLatestMusicPanel(interaction).catch(() => null);
 
-  return interaction.editReply("✅ Track wurde zur Queue hinzugefügt.");
+  if (
+    interaction.message &&
+    interaction.message.edit &&
+    interaction.customId === "mp_play_modal"
+  ) {
+    await interaction.message.edit(
+      createMusicCentralMessage(interaction.guild.id)
+    ).catch(() => null);
+  }
+
+  await interaction.editReply("✅ Track wurde zur Queue hinzugefügt.").catch(() => null);
+
+  setTimeout(() => {
+    interaction.deleteReply().catch(() => null);
+  }, Number(process.env.EPHEMERAL_REPLY_DELETE_MS || 5000));
+
+  return;
 }
 
 

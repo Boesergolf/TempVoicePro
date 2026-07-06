@@ -1,12 +1,13 @@
-const { getNowPlayingText } = require("../utils/musicPlayer");
+const {
+  createMusicNowCentralMessage
+} = require("../utils/panelHubMusic");
 
 module.exports = {
   customId: "mp_now",
 
   async execute(interaction) {
-    return interaction.reply({
-      content: getNowPlayingText(interaction.guild.id),
-      flags: 64
-    });
+    return interaction.update(
+      createMusicNowCentralMessage(interaction.guild.id)
+    );
   }
 };

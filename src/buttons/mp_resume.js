@@ -1,19 +1,16 @@
 const { resumeMusic } = require("../utils/musicPlayer");
-const { refreshMusicPanelMessage } = require("../utils/musicPanelView");
+const { createMusicCentralMessage } = require("../utils/panelHubMusic");
 
 module.exports = {
   customId: "mp_resume",
 
   async execute(interaction) {
-    const resumed = resumeMusic(interaction.guild.id);
+    await interaction.deferUpdate().catch(() => null);
 
-    await refreshMusicPanelMessage(interaction);
+    resumeMusic(interaction.guild.id);
 
-    return interaction.reply({
-      content: resumed
-        ? "▶️ Musik läuft weiter."
-        : "❌ Es läuft aktuell keine pausierte Musik.",
-      flags: 64
-    });
+    await interaction.message.edit(
+      createMusicCentralMessage(interaction.guild.id)
+    ).catch(() => null);
   }
 };

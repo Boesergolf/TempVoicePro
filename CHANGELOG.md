@@ -6,6 +6,13 @@ Dieses Changelog wurde nachträglich aus dem bisherigen Projektverlauf erstellt 
 
 ## [Unreleased]
 
+### 2026-07-06 - Zentralpanel Musik Auto-Refresh
+
+- Zentralpanel aktualisiert Musik-, Queue- und Now-Ansicht automatisch.
+- Musikstatus zeigt laufenden Song ohne manuelles Aktualisieren.
+- Auto-Refresh erkennt das zentrale Panel über Embed und Button-IDs.
+- Debug-Logging für Auto-Refresh abschaltbar gemacht.
+
 ### 2026-07-06 - Panel Rebuild Cleanup verbessert
 
 - Alte Bot-Panels werden zuverlässiger entfernt

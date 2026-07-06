@@ -6,6 +6,10 @@ const {
 } = require("discord.js");
 
 const musicPlayer = require("./musicPlayer");
+const {
+  createMusicCentralMessage,
+  isCentralMusicPanelMessage
+} = require("./panelHubMusic");
 
 function cleanText(text, max = 1000) {
   const value = String(text || "Keine Daten.").trim();
@@ -203,6 +207,18 @@ function createMusicPanelRows() {
 }
 
 async function refreshMusicPanelMessage(interaction) {
+  if (
+    interaction &&
+    interaction.message &&
+    isCentralMusicPanelMessage(interaction.message)
+  ) {
+    await interaction.message.edit(
+      createMusicCentralMessage(interaction.guild.id)
+    ).catch(() => null);
+
+    return;
+  }
+
   try {
     if (!interaction.message || !interaction.message.edit) {
       return false;
