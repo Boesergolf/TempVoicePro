@@ -6,6 +6,23 @@ Dieses Changelog wurde nachträglich aus dem bisherigen Projektverlauf erstellt 
 
 ## [Unreleased]
 
+### 2026-07-06 - Webpanel Case-Grund bearbeiten
+
+- Case-Gründe können direkt im Webpanel geändert werden
+- Cases-Seite enthält Bearbeitungsformular pro Case
+- Speichern leitet direkt zum bearbeiteten Case zurück
+
+### 2026-07-05 - Webpanel Cases Usernamen
+
+- Cases-Seite zeigt Usernamen statt Discord-Mentions
+- User- und Moderator-IDs bleiben zusätzlich sichtbar
+
+### 2026-07-05 - Webpanel Moderation Cases
+
+- Cases-Seite im Webpanel ergänzt
+- Letzte Cases, User-Cases und einzelne Case-ID können angezeigt werden
+- Moderation Cases sind nun ohne Discord Command einsehbar
+
 ### 2026-07-05 - Webpanel Login speichern
 
 - Webpanel Sessions werden in MySQL gespeichert

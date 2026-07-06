@@ -650,7 +650,8 @@ function renderGuildNav(guild, active) {
     { id: "overview", label: "Übersicht", href: "/guilds/" + guild.id },
     { id: "modules", label: "Module", href: "/guilds/" + guild.id + "/modules" },
     { id: "automod", label: "Auto-Mod", href: "/guilds/" + guild.id + "/automod" },
-    { id: "modlog", label: "Modlog", href: "/guilds/" + guild.id + "/modlog" }
+    { id: "modlog", label: "Modlog", href: "/guilds/" + guild.id + "/modlog" },
+    { id: "cases", label: "Cases", href: "/guilds/" + guild.id + "/cases" }
   ];
 
   return `
@@ -698,6 +699,12 @@ function renderGuildPage(guild, data) {
         <p>${data.modLog.enabled && data.modLog.channelId ? "✅ Aktiv" : "❌ Nicht eingerichtet oder deaktiviert"}</p>
         <p><a class="button" href="/guilds/${escapeHtml(guild.id)}/modlog">Modlog verwalten</a></p>
       </div>
+
+      <div class="card">
+        <h2>📌 Cases</h2>
+        <p>Moderation Cases anzeigen und prüfen.</p>
+        <p><a class="button" href="/guilds/${escapeHtml(guild.id)}/cases">Cases öffnen</a></p>
+      </div>
     </div>
   `);
 }
@@ -735,6 +742,216 @@ async function getManageableGuildForRequest(client, req, guildId) {
     hasManageServerPermission(item) &&
     client.guilds.cache.has(item.id)
   );
+}
+
+
+function webpanelActionLabel(actionType) {
+  const labels = {
+    warn: "⚠️ Warn",
+    clearwarnings: "🧹 Warns gelöscht",
+    timeout: "⏳ Timeout",
+    untimeout: "✅ Timeout entfernt",
+    kick: "👢 Kick",
+    ban: "🔨 Ban",
+    unban: "✅ Unban",
+    automod: "🤖 Auto-Mod"
+  };
+
+  return labels[actionType] || actionType;
+}
+
+function webpanelDate(value) {
+  const date = new Date(value);
+  const timestamp = Math.floor(date.getTime() / 1000);
+
+  if (!Number.isFinite(timestamp)) {
+    return "Unbekannt";
+  }
+
+  return new Intl.DateTimeFormat("de-DE", {
+    dateStyle: "short",
+    timeStyle: "short"
+  }).format(date);
+}
+
+async function getWebpanelCases(guildId, options = {}) {
+  const limit = Math.max(1, Math.min(50, Number(options.limit) || 15));
+  const userId = String(options.userId || "").trim();
+  const caseId = Number(options.caseId || 0);
+
+  if (caseId > 0) {
+    const [rows] = await db.query(
+      `
+        SELECT id, actionType, targetId, moderatorId, reason, details, createdAt
+        FROM moderation_cases
+        WHERE guildId = ? AND id = ?
+        LIMIT 1
+      `,
+      [guildId, caseId]
+    );
+
+    return rows;
+  }
+
+  if (/^\d{15,25}$/.test(userId)) {
+    const [rows] = await db.query(
+      `
+        SELECT id, actionType, targetId, moderatorId, reason, details, createdAt
+        FROM moderation_cases
+        WHERE guildId = ? AND targetId = ?
+        ORDER BY id DESC
+        LIMIT ?
+      `,
+      [guildId, userId, limit]
+    );
+
+    return rows;
+  }
+
+  const [rows] = await db.query(
+    `
+      SELECT id, actionType, targetId, moderatorId, reason, details, createdAt
+      FROM moderation_cases
+      WHERE guildId = ?
+      ORDER BY id DESC
+      LIMIT ?
+    `,
+    [guildId, limit]
+  );
+
+  return rows;
+}
+
+
+async function hydrateCaseUsers(client, cases) {
+  const cache = new Map();
+
+  async function getUserLabel(userId) {
+    if (!userId) {
+      return "Unbekannt";
+    }
+
+    if (cache.has(userId)) {
+      return cache.get(userId);
+    }
+
+    const user = await client.users.fetch(userId).catch(() => null);
+    const label = user ? user.tag : "Unbekannter User";
+
+    cache.set(userId, label);
+    return label;
+  }
+
+  return Promise.all(
+    cases.map(async item => ({
+      ...item,
+      targetLabel: await getUserLabel(item.targetId),
+      moderatorLabel: await getUserLabel(item.moderatorId)
+    }))
+  );
+}
+
+function renderUserCell(label, userId) {
+  return `
+    <strong>${escapeHtml(label || "Unbekannter User")}</strong>
+    <br>
+    <span class="muted">${escapeHtml(userId)}</span>
+  `;
+}
+
+function renderCaseRows(cases) {
+  if (!cases || cases.length === 0) {
+    return `
+      <tr>
+        <td colspan="6" class="muted">Keine Cases gefunden.</td>
+      </tr>
+    `;
+  }
+
+  return cases.map(item => `
+    <tr>
+      <td style="padding:10px;border-bottom:1px solid #374151;">#${escapeHtml(item.id)}</td>
+      <td style="padding:10px;border-bottom:1px solid #374151;">${escapeHtml(webpanelActionLabel(item.actionType))}</td>
+      <td style="padding:10px;border-bottom:1px solid #374151;">${renderUserCell(item.targetLabel, item.targetId)}</td>
+      <td style="padding:10px;border-bottom:1px solid #374151;">${renderUserCell(item.moderatorLabel, item.moderatorId)}</td>
+      <td style="padding:10px;border-bottom:1px solid #374151;">${escapeHtml(item.reason)}</td>
+      <td style="padding:10px;border-bottom:1px solid #374151;">${escapeHtml(webpanelDate(item.createdAt))}</td>
+    </tr>
+  `).join("");
+}
+
+function renderGuildCasesPage(guild, data) {
+  return layout("Cases", `
+    ${renderGuildNav(guild, "cases")}
+
+    <div class="card">
+      <h2>📌 Moderation Cases</h2>
+      <p class="muted">Zeigt die letzten Cases, Cases eines Users oder einen einzelnen Case.</p>
+
+      <form method="get" action="/guilds/${escapeHtml(guild.id)}/cases" class="grid">
+        <label style="display:block;">
+          <span class="muted">User-ID filtern</span>
+          <input
+            type="text"
+            name="userId"
+            value="${escapeHtml(data.filters.userId)}"
+            placeholder="Discord User-ID"
+            style="width:100%;box-sizing:border-box;margin-top:6px;padding:10px;border-radius:10px;border:1px solid #374151;background:#111827;color:#f3f4f6;"
+          >
+        </label>
+
+        <label style="display:block;">
+          <span class="muted">Case-ID anzeigen</span>
+          <input
+            type="number"
+            name="caseId"
+            value="${escapeHtml(data.filters.caseId)}"
+            min="1"
+            placeholder="z. B. 12"
+            style="width:100%;box-sizing:border-box;margin-top:6px;padding:10px;border-radius:10px;border:1px solid #374151;background:#111827;color:#f3f4f6;"
+          >
+        </label>
+
+        <label style="display:block;">
+          <span class="muted">Limit</span>
+          <input
+            type="number"
+            name="limit"
+            value="${escapeHtml(data.filters.limit)}"
+            min="1"
+            max="50"
+            style="width:100%;box-sizing:border-box;margin-top:6px;padding:10px;border-radius:10px;border:1px solid #374151;background:#111827;color:#f3f4f6;"
+          >
+        </label>
+
+        <div style="display:flex;align-items:end;gap:10px;">
+          <button class="button" type="submit">Suchen</button>
+          <a class="button secondary" href="/guilds/${escapeHtml(guild.id)}/cases">Zurücksetzen</a>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Ergebnisse</h2>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th style="text-align:left;padding:10px;border-bottom:1px solid #374151;">Case</th>
+              <th style="text-align:left;padding:10px;border-bottom:1px solid #374151;">Aktion</th>
+              <th style="text-align:left;padding:10px;border-bottom:1px solid #374151;">User</th>
+              <th style="text-align:left;padding:10px;border-bottom:1px solid #374151;">Moderator</th>
+              <th style="text-align:left;padding:10px;border-bottom:1px solid #374151;">Grund</th>
+              <th style="text-align:left;padding:10px;border-bottom:1px solid #374151;">Datum</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${renderCaseRows(data.cases)}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `);
 }
 
 function renderGuildModulesPage(guild, data) {
@@ -1097,6 +1314,34 @@ function startWebPanel(client) {
     } catch (error) {
       console.error("Webpanel Modlog-Seite Fehler:", error);
       return res.status(500).send("Modlog-Seite konnte nicht geladen werden.");
+    }
+  });
+
+
+  app.get("/guilds/:guildId/cases", requireLogin, async (req, res) => {
+    try {
+      const guild = await getManageableGuildForRequest(client, req, req.params.guildId);
+
+      if (!guild) {
+        return res.status(403).send("Du darfst diesen Server nicht verwalten oder der Bot ist nicht auf diesem Server.");
+      }
+
+      const filters = {
+        userId: String(req.query.userId || "").trim(),
+        caseId: String(req.query.caseId || "").trim(),
+        limit: String(req.query.limit || "15").trim()
+      };
+
+      const rawCases = await getWebpanelCases(guild.id, filters);
+      const cases = await hydrateCaseUsers(client, rawCases);
+
+      return res.send(renderGuildCasesPage(guild, {
+        filters,
+        cases
+      }));
+    } catch (error) {
+      console.error("Webpanel Cases-Seite Fehler:", error);
+      return res.status(500).send("Cases-Seite konnte nicht geladen werden.");
     }
   });
 
