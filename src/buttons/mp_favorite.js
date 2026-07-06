@@ -1,5 +1,12 @@
 const db = require("../database/mysql");
-const { getQueue } = require("../utils/musicPlayer");
+
+const {
+  getQueue
+} = require("../utils/musicPlayer");
+
+const {
+  createMusicCentralMessage
+} = require("../utils/panelHubMusic");
 
 async function getOrCreateFavoritesPlaylist(interaction) {
   const guildId = interaction.guild.id;
@@ -17,7 +24,7 @@ async function getOrCreateFavoritesPlaylist(interaction) {
   }
 
   const [result] = await db.execute(
-    "INSERT INTO music_playlists (guildId, ownerKey, scope, name) VALUES (?, ?, ?, ?)",
+    "INSERT INTO music_playlists (guildId, ownerKey, scope, name, createdAt) VALUES (?, ?, ?, ?, NOW())",
     [guildId, ownerKey, scope, name]
   );
 
@@ -52,13 +59,14 @@ module.exports = {
   customId: "mp_favorite",
 
   async execute(interaction) {
+    await interaction.deferUpdate().catch(() => null);
+
     const queue = getQueue(interaction.guild.id);
 
     if (!queue || !queue.current) {
-      return interaction.reply({
-        content: "❌ Es läuft aktuell kein Track, den ich speichern kann.",
-        flags: 64
-      });
+      return interaction.message.edit(
+        createMusicCentralMessage(interaction.guild.id)
+      ).catch(() => null);
     }
 
     const current = queue.current;
@@ -75,44 +83,32 @@ module.exports = {
       null;
 
     if (!url) {
-      return interaction.reply({
-        content: "❌ Dieser Track hat keinen speicherbaren Link.",
-        flags: 64
-      });
+      return interaction.message.edit(
+        createMusicCentralMessage(interaction.guild.id)
+      ).catch(() => null);
     }
 
     const playlist = await getOrCreateFavoritesPlaylist(interaction);
-
     const exists = await isAlreadyFavorite(playlist.id, url, title);
 
-    if (exists) {
-      return interaction.reply({
-        content:
-          "⭐ Dieser Track ist bereits in deiner Playlist **Favorites**:\n" +
-          "**" + title + "**",
-        flags: 64
-      });
+    if (!exists) {
+      const position = await getNextPosition(playlist.id);
+
+      await db.execute(
+        "INSERT INTO music_playlist_items (playlistId, source, title, url, addedBy, position, createdAt) VALUES (?, ?, ?, ?, ?, ?, NOW())",
+        [
+          playlist.id,
+          current.originalSource || current.source || "youtube",
+          title,
+          url,
+          interaction.user.id,
+          position
+        ]
+      );
     }
 
-    const position = await getNextPosition(playlist.id);
-
-    await db.execute(
-      "INSERT INTO music_playlist_items (playlistId, source, title, url, addedBy, position) VALUES (?, ?, ?, ?, ?, ?)",
-      [
-        playlist.id,
-        current.originalSource || current.source || "youtube",
-        title,
-        url,
-        interaction.user.id,
-        position
-      ]
-    );
-
-    return interaction.reply({
-      content:
-        "⭐ Gespeichert in deiner Playlist **Favorites**:\n" +
-        "**" + title + "**",
-      flags: 64
-    });
+    return interaction.message.edit(
+      createMusicCentralMessage(interaction.guild.id)
+    ).catch(() => null);
   }
 };

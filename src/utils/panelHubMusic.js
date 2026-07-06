@@ -285,6 +285,25 @@ function createMusicQueueCentralMessage(guildId) {
   };
 }
 
+
+function createMusicHistoryCentralMessage(guildId) {
+  const historyText = musicPlayer.getHistoryText
+    ? musicPlayer.getHistoryText(guildId)
+    : "📭 Noch kein Verlauf vorhanden.";
+
+  const embed = new EmbedBuilder()
+    .setTitle("🕘 Musik Verlauf")
+    .setDescription(String(historyText || "📭 Noch kein Verlauf vorhanden.").slice(0, 4000))
+    .setColor(0x5865f2)
+    .setFooter({ text: "TempVoicePro Musik History" })
+    .setTimestamp();
+
+  return {
+    embeds: [embed],
+    components: createMusicBackRows()
+  };
+}
+
 function createMusicNowCentralMessage(guildId) {
   const queue = getQueueSafe(guildId);
 
@@ -325,5 +344,6 @@ module.exports = {
   createMusicCentralMessage,
   createMusicQueueCentralMessage,
   createMusicNowCentralMessage,
+  createMusicHistoryCentralMessage,
   isCentralMusicPanelMessage
 };

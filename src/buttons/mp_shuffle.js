@@ -1,19 +1,21 @@
-const { shuffleQueue } = require("../utils/musicPlayer");
-const { refreshMusicPanelMessage } = require("../utils/musicPanelView");
+const {
+  shuffleQueue
+} = require("../utils/musicPlayer");
+
+const {
+  createMusicCentralMessage
+} = require("../utils/panelHubMusic");
 
 module.exports = {
   customId: "mp_shuffle",
 
   async execute(interaction) {
-    const shuffled = shuffleQueue(interaction.guild.id);
+    await interaction.deferUpdate().catch(() => null);
 
-    await refreshMusicPanelMessage(interaction);
+    await shuffleQueue(interaction.guild.id).catch(() => null);
 
-    return interaction.reply({
-      content: shuffled
-        ? "🔀 Queue wurde gemischt."
-        : "❌ Es sind nicht genug Tracks in der Queue.",
-      flags: 64
-    });
+    return interaction.message.edit(
+      createMusicCentralMessage(interaction.guild.id)
+    ).catch(() => null);
   }
 };

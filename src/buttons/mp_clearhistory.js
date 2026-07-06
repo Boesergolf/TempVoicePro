@@ -1,19 +1,21 @@
-const { clearHistory } = require("../utils/musicPlayer");
-const { refreshMusicPanelMessage } = require("../utils/musicPanelView");
+const {
+  clearHistory
+} = require("../utils/musicPlayer");
+
+const {
+  createMusicCentralMessage
+} = require("../utils/panelHubMusic");
 
 module.exports = {
   customId: "mp_clearhistory",
 
   async execute(interaction) {
-    const count = clearHistory(interaction.guild.id);
+    await interaction.deferUpdate().catch(() => null);
 
-    await refreshMusicPanelMessage(interaction);
+    await clearHistory(interaction.guild.id).catch(() => null);
 
-    return interaction.reply({
-      content: count > 0
-        ? "🗑 History geleert. Entfernte Einträge: **" + count + "**"
-        : "📜 Die History ist bereits leer.",
-      flags: 64
-    });
+    return interaction.message.edit(
+      createMusicCentralMessage(interaction.guild.id)
+    ).catch(() => null);
   }
 };

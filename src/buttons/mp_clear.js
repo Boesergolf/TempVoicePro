@@ -1,19 +1,21 @@
-const { clearQueue } = require("../utils/musicPlayer");
-const { refreshMusicPanelMessage } = require("../utils/musicPanelView");
+const {
+  clearQueue
+} = require("../utils/musicPlayer");
+
+const {
+  createMusicCentralMessage
+} = require("../utils/panelHubMusic");
 
 module.exports = {
   customId: "mp_clear",
 
   async execute(interaction) {
-    const count = clearQueue(interaction.guild.id);
+    await interaction.deferUpdate().catch(() => null);
 
-    await refreshMusicPanelMessage(interaction);
+    await clearQueue(interaction.guild.id).catch(() => null);
 
-    return interaction.reply({
-      content: count > 0
-        ? "🧹 Queue geleert. Entfernte Tracks: **" + count + "**"
-        : "❌ Die Queue ist bereits leer.",
-      flags: 64
-    });
+    return interaction.message.edit(
+      createMusicCentralMessage(interaction.guild.id)
+    ).catch(() => null);
   }
 };

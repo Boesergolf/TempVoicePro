@@ -1,12 +1,13 @@
-const { getHistoryText } = require("../utils/musicPlayer");
+const {
+  createMusicHistoryCentralMessage
+} = require("../utils/panelHubMusic");
 
 module.exports = {
   customId: "mp_history",
 
   async execute(interaction) {
-    return interaction.reply({
-      content: getHistoryText(interaction.guild.id),
-      flags: 64
-    });
+    return interaction.update(
+      createMusicHistoryCentralMessage(interaction.guild.id)
+    );
   }
 };

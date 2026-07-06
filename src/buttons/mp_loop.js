@@ -1,30 +1,21 @@
-const { toggleLoop } = require("../utils/musicPlayer");
-const { refreshMusicPanelMessage } = require("../utils/musicPanelView");
+const {
+  toggleLoop
+} = require("../utils/musicPlayer");
 
-function label(mode) {
-  if (mode === "track") return "🔂 Aktueller Track wird wiederholt.";
-  if (mode === "queue") return "🔁 Ganze Queue wird wiederholt.";
-  return "➡️ Loop ist ausgeschaltet.";
-}
+const {
+  createMusicCentralMessage
+} = require("../utils/panelHubMusic");
 
 module.exports = {
   customId: "mp_loop",
 
   async execute(interaction) {
-    const mode = toggleLoop(interaction.guild.id);
+    await interaction.deferUpdate().catch(() => null);
 
-    await refreshMusicPanelMessage(interaction);
+    await toggleLoop(interaction.guild.id).catch(() => null);
 
-    if (!mode) {
-      return interaction.reply({
-        content: "❌ Es läuft aktuell keine Musik.",
-        flags: 64
-      });
-    }
-
-    return interaction.reply({
-      content: label(mode),
-      flags: 64
-    });
+    return interaction.message.edit(
+      createMusicCentralMessage(interaction.guild.id)
+    ).catch(() => null);
   }
 };
