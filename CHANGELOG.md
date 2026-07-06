@@ -6,6 +6,12 @@ Dieses Changelog wurde nachträglich aus dem bisherigen Projektverlauf erstellt 
 
 ## [Unreleased]
 
+### 2026-07-06 - Zentralpanel Ein-Panel-Modus
+
+- Panel-Hub schaltet Ansichten in einer einzigen Nachricht um
+- Panel-Hub aktualisiert vorhandenes Kontrollzentrum statt Duplikate zu erzeugen
+- Panel-Rebuild erstellt nur noch ein zentrales Panel
+
 ### 2026-07-06 - Panel Hub und Rebuild
 
 - Zentrales Panel-Kontrollzentrum hinzugefügt

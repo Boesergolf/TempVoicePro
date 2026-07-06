@@ -13,6 +13,7 @@ function createPlaylistPanelEmbed() {
         "Verwalte Playlists direkt über dieses Discord-Panel.",
         "",
         "**Funktionen:**",
+        "🎚️ Playlist auswählen, ohne Namen einzutippen",
         "➕ Playlist erstellen",
         "📥 Song oder Link hinzufügen",
         "📋 Playlists anzeigen",
@@ -32,6 +33,12 @@ function createPlaylistPanelEmbed() {
 
 function createPlaylistPanelComponents() {
   const row1 = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId("playlist_panel_select")
+      .setLabel("Playlist auswählen")
+      .setEmoji("🎚️")
+      .setStyle(ButtonStyle.Secondary),
+
     new ButtonBuilder()
       .setCustomId("playlist_panel_create")
       .setLabel("Playlist erstellen")
@@ -91,7 +98,15 @@ function createPlaylistPanelComponents() {
       .setStyle(ButtonStyle.Secondary)
   );
 
-  return [row1, row2, row3];
+  const row4 = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId("panel_hub_home")
+      .setLabel("Zurück zum Kontrollzentrum")
+      .setEmoji("⬅️")
+      .setStyle(ButtonStyle.Secondary)
+  );
+
+  return [row1, row2, row3, row4];
 }
 
 function createPlaylistPanelMessage() {
