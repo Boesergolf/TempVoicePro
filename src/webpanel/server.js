@@ -382,7 +382,9 @@ function renderDashboard(user, guilds, spotifyConnection = null) {
         <h2>🎵 Spotify</h2>
         <p>Status: <span class="pill" style="background:#7f1d1d;color:#fecaca;">Nicht verbunden</span></p>
         <p class="muted">Private Spotify-Playlists brauchen später Spotify-Login. Für öffentliche Nutzung über deine aktuelle HTTP-IP ist HTTPS empfohlen bzw. bei Spotify praktisch nötig.</p>
-        <a class="button secondary" href="/spotify/login">Spotify verbinden testen</a>
+        <button class="button secondary" type="button" disabled style="opacity:0.65;cursor:not-allowed;">
+          Spotify Login später mit HTTPS
+        </button>
       </div>
     `;
 

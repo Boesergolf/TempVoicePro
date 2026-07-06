@@ -6,6 +6,12 @@ Dieses Changelog wurde nachträglich aus dem bisherigen Projektverlauf erstellt 
 
 ## [Unreleased]
 
+### 2026-07-06 - Spotify Webpanel Status
+
+- Spotify-Verbindungsstatus im Dashboard ergänzt
+- Spotify Login für spätere HTTPS-Nutzung vorbereitet
+- Spotify-Verbindungsbutton im HTTP-Betrieb entschärft
+
 ### 2026-07-06 - Webpanel Spotify Status
 
 - Spotify-Verbindungsstatus im Dashboard ergänzt
