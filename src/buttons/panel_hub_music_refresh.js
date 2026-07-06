@@ -3,7 +3,7 @@ const {
 } = require("../utils/panelHubMusic");
 
 module.exports = {
-  customId: "panel_hub_music",
+  customId: "panel_hub_music_refresh",
 
   async execute(interaction) {
     return interaction.update(

@@ -4,8 +4,8 @@ const {
 } = require("discord.js");
 
 const {
-  createMusicHubMessage
-} = require("../utils/panelHub");
+  createMusicCentralMessage
+} = require("../utils/panelHubMusic");
 
 const {
   replyWithCentralPanelView
@@ -20,7 +20,7 @@ module.exports = {
   async execute(interaction) {
     return replyWithCentralPanelView(
       interaction,
-      createMusicHubMessage(),
+      createMusicCentralMessage(interaction.guild.id),
       "Musiksteuerung"
     );
   }
