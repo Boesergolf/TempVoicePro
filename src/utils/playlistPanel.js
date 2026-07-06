@@ -16,6 +16,8 @@ function createPlaylistPanelEmbed() {
         "➕ Playlist erstellen",
         "📥 Song oder Link hinzufügen",
         "📋 Playlists anzeigen",
+        "🧾 Songs einer Playlist anzeigen",
+        "❌ Einzelnen Song entfernen",
         "🔁 YouTube/Spotify Playlist importieren",
         "▶ Playlist abspielen",
         "🧹 Playlist löschen",
@@ -44,18 +46,32 @@ function createPlaylistPanelComponents() {
 
     new ButtonBuilder()
       .setCustomId("playlist_panel_list")
-      .setLabel("Anzeigen")
+      .setLabel("Playlists anzeigen")
       .setEmoji("📋")
       .setStyle(ButtonStyle.Secondary)
   );
 
   const row2 = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
+      .setCustomId("playlist_panel_show")
+      .setLabel("Songs anzeigen")
+      .setEmoji("🧾")
+      .setStyle(ButtonStyle.Secondary),
+
+    new ButtonBuilder()
+      .setCustomId("playlist_panel_remove")
+      .setLabel("Song entfernen")
+      .setEmoji("❌")
+      .setStyle(ButtonStyle.Danger),
+
+    new ButtonBuilder()
       .setCustomId("playlist_panel_import")
       .setLabel("Importieren")
       .setEmoji("🔁")
-      .setStyle(ButtonStyle.Primary),
+      .setStyle(ButtonStyle.Primary)
+  );
 
+  const row3 = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId("playlist_panel_play")
       .setLabel("Abspielen")
@@ -64,12 +80,10 @@ function createPlaylistPanelComponents() {
 
     new ButtonBuilder()
       .setCustomId("playlist_panel_delete")
-      .setLabel("Löschen")
+      .setLabel("Playlist löschen")
       .setEmoji("🧹")
-      .setStyle(ButtonStyle.Danger)
-  );
+      .setStyle(ButtonStyle.Danger),
 
-  const row3 = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId("playlist_panel_refresh")
       .setLabel("Aktualisieren")

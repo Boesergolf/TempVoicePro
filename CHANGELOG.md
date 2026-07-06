@@ -6,6 +6,13 @@ Dieses Changelog wurde nachträglich aus dem bisherigen Projektverlauf erstellt 
 
 ## [Unreleased]
 
+### 2026-07-06 - Playlist Panel Verbesserungen
+
+- Discord-Playlistpanel um Songs anzeigen und Song entfernen erweitert
+- Playlist-Modals im Interaction-Handler korrekt angebunden
+- Playlist-Erstellung setzt createdAt korrekt
+- Music-Panel Playlist-Buttons an neue Playlist-Verwaltung angebunden
+
 ### 2026-07-06 - Music Panel Playlist Buttons
 
 - Alte Music-Panel Playlist-Buttons an neue Playlist-Verwaltung angebunden

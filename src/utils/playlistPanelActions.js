@@ -221,6 +221,26 @@ async function showPlayModal(interaction) {
   return interaction.showModal(modal);
 }
 
+
+async function showShowModal(interaction) {
+  const modal = buildModal("playlist_panel_show_modal", "Songs anzeigen");
+
+  addTextInput(modal, "playlist", "Playlist-Name", TextInputStyle.Short, true, "z.B. Party", "");
+  addTextInput(modal, "scope", "Scope: user oder global", TextInputStyle.Short, false, "user", "user");
+
+  return interaction.showModal(modal);
+}
+
+async function showRemoveModal(interaction) {
+  const modal = buildModal("playlist_panel_remove_modal", "Song entfernen");
+
+  addTextInput(modal, "playlist", "Playlist-Name", TextInputStyle.Short, true, "z.B. Party", "");
+  addTextInput(modal, "position", "Position des Songs", TextInputStyle.Short, true, "z.B. 3", "");
+  addTextInput(modal, "scope", "Scope: user oder global", TextInputStyle.Short, false, "user", "user");
+
+  return interaction.showModal(modal);
+}
+
 async function showDeleteModal(interaction) {
   const modal = buildModal("playlist_panel_delete_modal", "Playlist löschen");
 
@@ -470,6 +490,127 @@ async function handlePlayModal(interaction) {
   );
 }
 
+
+async function handleShowModal(interaction) {
+  await interaction.deferReply({ ephemeral: true });
+
+  const name = normalizeName(interaction.fields.getTextInputValue("playlist"));
+  const scope = normalizeScope(interaction.fields.getTextInputValue("scope"));
+
+  if (!name) {
+    return interaction.editReply("❌ Bitte gib einen Playlist-Namen ein.");
+  }
+
+  const playlist = await findPlaylist(interaction.guild.id, interaction.user.id, scope, name);
+
+  if (!playlist) {
+    return interaction.editReply("❌ Playlist wurde nicht gefunden.");
+  }
+
+  const [items] = await db.execute(
+    `SELECT *
+     FROM music_playlist_items
+     WHERE playlistId = ?
+     ORDER BY position ASC
+     LIMIT 50`,
+    [playlist.id]
+  );
+
+  if (items.length === 0) {
+    return interaction.editReply("📭 Diese Playlist ist leer.");
+  }
+
+  const lines = items.map(item => {
+    const title = item.title || item.url;
+    return "**" + item.position + ".** " + title;
+  });
+
+  const embed = new EmbedBuilder()
+    .setTitle("🧾 Songs in " + playlist.name)
+    .setDescription(lines.join("\\n").slice(0, 4000))
+    .setColor(0x5865f2)
+    .setFooter({ text: "Scope: " + scope + " • Maximal 50 Einträge" })
+    .setTimestamp();
+
+  return interaction.editReply({ embeds: [embed] });
+}
+
+async function compactPlaylistPositions(playlistId) {
+  const [items] = await db.execute(
+    `SELECT id
+     FROM music_playlist_items
+     WHERE playlistId = ?
+     ORDER BY position ASC, id ASC`,
+    [playlistId]
+  );
+
+  let position = 1;
+
+  for (const item of items) {
+    await db.execute(
+      "UPDATE music_playlist_items SET position = ? WHERE id = ?",
+      [position, item.id]
+    );
+
+    position++;
+  }
+}
+
+async function handleRemoveModal(interaction) {
+  await interaction.deferReply({ ephemeral: true });
+
+  const name = normalizeName(interaction.fields.getTextInputValue("playlist"));
+  const positionRaw = Number(interaction.fields.getTextInputValue("position"));
+  const position = Number.isFinite(positionRaw) ? Math.floor(positionRaw) : 0;
+  const scope = normalizeScope(interaction.fields.getTextInputValue("scope"));
+
+  if (!name) {
+    return interaction.editReply("❌ Bitte gib einen Playlist-Namen ein.");
+  }
+
+  if (position < 1) {
+    return interaction.editReply("❌ Bitte gib eine gültige Position an.");
+  }
+
+  if (scope === "global" && !canManageGlobal(interaction)) {
+    return interaction.editReply("❌ Globale Playlists darfst du nur mit `Server verwalten` bearbeiten.");
+  }
+
+  const playlist = await findPlaylist(interaction.guild.id, interaction.user.id, scope, name);
+
+  if (!playlist) {
+    return interaction.editReply("❌ Playlist wurde nicht gefunden.");
+  }
+
+  const [items] = await db.execute(
+    `SELECT *
+     FROM music_playlist_items
+     WHERE playlistId = ?
+       AND position = ?
+     LIMIT 1`,
+    [playlist.id, position]
+  );
+
+  const item = items[0];
+
+  if (!item) {
+    return interaction.editReply("❌ An dieser Position wurde kein Song gefunden.");
+  }
+
+  await db.execute(
+    "DELETE FROM music_playlist_items WHERE id = ?",
+    [item.id]
+  );
+
+  await compactPlaylistPositions(playlist.id);
+
+  return interaction.editReply(
+    "✅ Song wurde entfernt.\\n" +
+    "Playlist: **" + playlist.name + "**\\n" +
+    "Entfernt: **" + (item.title || item.url) + "**"
+  );
+}
+
 async function handleDeleteModal(interaction) {
   await interaction.deferReply({ ephemeral: true });
 
@@ -521,6 +662,14 @@ async function handlePlaylistPanelModal(interaction) {
     return handlePlayModal(interaction);
   }
 
+  if (interaction.customId === "playlist_panel_show_modal") {
+    return handleShowModal(interaction);
+  }
+
+  if (interaction.customId === "playlist_panel_remove_modal") {
+    return handleRemoveModal(interaction);
+  }
+
   if (interaction.customId === "playlist_panel_delete_modal") {
     return handleDeleteModal(interaction);
   }
@@ -533,6 +682,8 @@ module.exports = {
   showAddModal,
   showImportModal,
   showPlayModal,
+  showShowModal,
+  showRemoveModal,
   showDeleteModal,
   handleList,
   handleRefresh,
