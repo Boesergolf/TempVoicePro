@@ -6,6 +6,12 @@ Dieses Changelog wurde nachträglich aus dem bisherigen Projektverlauf erstellt 
 
 ## [Unreleased]
 
+### 2026-07-06 - Globaler Auto-Delete Fix
+
+- Fehlerhaften Export für temporäre Interaction-Antworten repariert
+- Ephemere Antworten werden global automatisch gelöscht
+- Panel-Channel Cleanup und Zentralpanel bleiben sauber
+
 ### 2026-07-06 - Panel Cleanup und temporäre Antworten
 
 - Normale Nachrichten im Panel-Channel werden wieder automatisch gelöscht

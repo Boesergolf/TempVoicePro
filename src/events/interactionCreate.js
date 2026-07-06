@@ -14,6 +14,9 @@ const { addTracks, setVolume, removeTrack } = require("../utils/musicPlayer");
 const { detectSource, getMetadataForUrl } = require("../utils/musicMetadata");
 const { refreshLatestMusicPanel } = require("../utils/musicPanelView");
 const {
+  installTemporaryInteractionReplyCleanup
+} = require("../utils/temporaryInteractionReply");
+const {
   handlePanelHubModuleSelect,
   handlePanelHubModuleButton
 } = require("../utils/panelHubModuleActions");
@@ -275,6 +278,8 @@ module.exports = {
   name: "interactionCreate",
 
   async execute(interaction, client) {
+    installTemporaryInteractionReplyCleanup(interaction);
+
     if (
       interaction.isModalSubmit &&
       interaction.isModalSubmit() &&
