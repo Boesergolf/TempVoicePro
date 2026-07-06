@@ -203,14 +203,9 @@ function createTempVoiceHubMessage() {
     .setTitle("🎙️ TempVoice")
     .setDescription(
       [
-        "TempVoice wird über `/setup` eingerichtet.",
+        "Die TempVoice-Ansicht wird dynamisch über `panelHubTempVoice.js` geladen.",
         "",
-        "Die Steuerung einzelner temporärer Räume läuft weiterhin über die jeweiligen Raum-Panels.",
-        "",
-        "**Sinnvoll im Zentralpanel:**",
-        "• Status anzeigen",
-        "• Setup-Hinweis",
-        "• später globale TempVoice-Einstellungen"
+        "Nutze im Kontrollzentrum den Button **🎙️ TempVoice**."
       ].join("\n")
     )
     .setColor(0x5865f2)
@@ -228,17 +223,24 @@ function createGluecksradHubMessage() {
     .setTitle("🎡 Glücksrad")
     .setDescription(
       [
-        "Glücksrad-Funktionen im Zentralpanel.",
+        "Glücksrad-Funktionen direkt im Zentralpanel.",
         "",
-        "Für spezielle Team-/Listen-Auswahl bleibt das Glücksrad-Panel aktuell noch separat möglich.",
-        "Als nächster Schritt können wir auch das komplett hier integrieren."
+        "**Möglichkeiten:**",
+        "❔ Hilfe anzeigen",
+        "📋 Eigene Liste eingeben",
+        "🎲 Glücksrad per Command starten",
+        "",
+        "Für komplexe Team-Auswahl kann der bestehende Glücksrad-Command weiter genutzt werden.",
+        "",
+        "**Command:**",
+        "`/gluecksrad`"
       ].join("\n")
     )
     .setColor(0x5865f2)
     .setFooter({ text: "TempVoicePro Glücksrad" })
     .setTimestamp();
 
-  const row = new ActionRowBuilder().addComponents(
+  const row1 = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId("gr_help")
       .setLabel("Hilfe")
@@ -247,14 +249,22 @@ function createGluecksradHubMessage() {
 
     new ButtonBuilder()
       .setCustomId("gr_list")
-      .setLabel("Listen")
+      .setLabel("Eigene Liste")
       .setEmoji("📋")
+      .setStyle(ButtonStyle.Primary)
+  );
+
+  const row2 = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId("panel_hub_gluecksrad_command")
+      .setLabel("/gluecksrad Hinweis")
+      .setEmoji("🎲")
       .setStyle(ButtonStyle.Secondary)
   );
 
   return {
     embeds: [embed],
-    components: [row, backRow()]
+    components: [row1, row2, backRow()]
   };
 }
 

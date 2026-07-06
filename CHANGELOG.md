@@ -6,6 +6,12 @@ Dieses Changelog wurde nachträglich aus dem bisherigen Projektverlauf erstellt 
 
 ## [Unreleased]
 
+### 2026-07-06 - TempVoice im Zentralpanel
+
+- TempVoice-Status wird direkt im Zentralpanel angezeigt
+- Aktive TempVoice-Räume werden mit Owner und Mitgliederzahl angezeigt
+- TempVoice-Refresh aktualisiert dieselbe zentrale Panel-Nachricht
+
 ### 2026-07-06 - Module im Zentralpanel
 
 - Module können im Zentralpanel per Dropdown ausgewählt werden
