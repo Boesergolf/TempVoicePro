@@ -1,3 +1,7 @@
+const {
+  scheduleEphemeralReplyDelete
+} = require("./temporaryInteractionReply");
+
 function getComponentIds(message) {
   const ids = [];
 
@@ -94,12 +98,16 @@ async function replyWithCentralPanelView(interaction, viewMessage, label) {
 
   const result = await updateOrCreateCentralPanel(interaction, viewMessage);
 
-  return interaction.editReply({
+  const reply = await interaction.editReply({
     content:
       result.created
         ? "✅ Zentralpanel wurde erstellt: **" + label + "**"
         : "✅ Zentralpanel wurde umgeschaltet auf: **" + label + "**"
   });
+
+  scheduleEphemeralReplyDelete(interaction);
+
+  return reply;
 }
 
 module.exports = {

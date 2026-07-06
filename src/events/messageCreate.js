@@ -12,10 +12,10 @@ const {
 } = require("../utils/panelChannel");
 
 function getPanelDeleteDelayMs() {
-  const value = Number(process.env.PANEL_MESSAGE_DELETE_MS || 60000);
+  const value = Number(process.env.PANEL_MESSAGE_DELETE_MS || 30000);
 
   if (!Number.isFinite(value)) {
-    return 60000;
+    return 30000;
   }
 
   return Math.max(5000, Math.min(value, 24 * 60 * 60 * 1000));
@@ -96,7 +96,7 @@ function schedulePanelCleanupDelete(message) {
 
       if (!hasDeletePermission(freshMessage)) {
         console.warn(
-          "⚠️ Bot hat im Panel-Channel keine Berechtigung 'Nachrichten verwalten': #" +
+          "⚠️ Bot hat keine Berechtigung 'Nachrichten verwalten' im Panel-Channel #" +
           freshMessage.channel.name
         );
         return;
@@ -104,7 +104,7 @@ function schedulePanelCleanupDelete(message) {
 
       if (!freshMessage.deletable) {
         console.warn(
-          "⚠️ Panel Nachricht ist laut Discord.js nicht löschbar: " +
+          "⚠️ Panel-Nachricht ist laut Discord.js nicht löschbar: " +
           freshMessage.id
         );
         return;
@@ -123,14 +123,6 @@ async function handlePanelChannelCleanup(message) {
   }
 
   if (shouldKeepPanelMessage(message)) {
-    return;
-  }
-
-  if (!hasDeletePermission(message)) {
-    console.warn(
-      "⚠️ Bot hat keine Berechtigung 'Nachrichten verwalten' im Channel #" +
-      message.channel.name
-    );
     return;
   }
 

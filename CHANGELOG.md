@@ -6,6 +6,12 @@ Dieses Changelog wurde nachträglich aus dem bisherigen Projektverlauf erstellt 
 
 ## [Unreleased]
 
+### 2026-07-06 - Panel Cleanup und temporäre Antworten
+
+- Normale Nachrichten im Panel-Channel werden wieder automatisch gelöscht
+- Ephemere Bot-Antworten werden automatisch nach kurzer Zeit entfernt
+- Playlist-Panel Antworten, Panel-Rebuild Antworten und Hinweise räumen sich selbst auf
+
 ### 2026-07-06 - TempVoice im Zentralpanel
 
 - TempVoice-Status wird direkt im Zentralpanel angezeigt

@@ -7,6 +7,10 @@ const {
   rebuildPanelChannel
 } = require("../utils/panelRebuild");
 
+const {
+  scheduleEphemeralReplyDelete
+} = require("../utils/temporaryInteractionReply");
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("panelrebuild")
@@ -53,12 +57,15 @@ module.exports = {
         }
       );
 
-      return interaction.editReply(
+      await interaction.editReply(
         "✅ Panel-Channel wurde neu aufgebaut.\n\n" +
         "Gelöschte Nachrichten: **" + result.cleanup.deleted + "**\n" +
         "Geprüfte Nachrichten: **" + result.cleanup.scanned + "**\n" +
         "Neue Panel-Nachrichten: **" + result.created + "**"
       );
+
+      scheduleEphemeralReplyDelete(interaction);
+      return;
     } catch (error) {
       console.error("❌ PanelRebuild Fehler:", error);
 
