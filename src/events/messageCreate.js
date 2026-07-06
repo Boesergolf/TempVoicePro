@@ -1,27 +1,140 @@
 const {
+  PermissionFlagsBits
+} = require("discord.js");
+
+const {
   handleAutoModMessage
 } = require("../utils/autoMod");
 
 const {
   PANEL_CHANNEL_NAME,
-  isProtectedPanelMessage,
-  schedulePanelMessageDelete
+  isProtectedPanelMessage
 } = require("../utils/panelChannel");
 
-async function handlePanelChannelCleanup(message) {
+function getPanelDeleteDelayMs() {
+  const value = Number(process.env.PANEL_MESSAGE_DELETE_MS || 60000);
+
+  if (!Number.isFinite(value)) {
+    return 60000;
+  }
+
+  return Math.max(5000, Math.min(value, 24 * 60 * 60 * 1000));
+}
+
+function getPanelChannelName() {
+  return process.env.PANEL_CHANNEL_NAME || PANEL_CHANNEL_NAME || "bot-panels";
+}
+
+function isPanelChannelMessage(message) {
   if (!message.guild || !message.channel) {
+    return false;
+  }
+
+  return message.channel.name === getPanelChannelName();
+}
+
+function hasDeletePermission(message) {
+  const me = message.guild.members.me;
+
+  if (!me) {
+    return false;
+  }
+
+  const permissions = message.channel.permissionsFor(me);
+
+  if (!permissions) {
+    return false;
+  }
+
+  return permissions.has(PermissionFlagsBits.ManageMessages);
+}
+
+function shouldKeepPanelMessage(message) {
+  if (message.pinned) {
+    return true;
+  }
+
+  try {
+    if (isProtectedPanelMessage(message)) {
+      return true;
+    }
+  } catch (error) {
+    console.error("Panel Protected Check Fehler:", error);
+  }
+
+  if (
+    message.author &&
+    message.client &&
+    message.author.id === message.client.user.id &&
+    (
+      message.embeds.length > 0 ||
+      message.components.length > 0
+    )
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+function schedulePanelCleanupDelete(message) {
+  const delayMs = getPanelDeleteDelayMs();
+
+  setTimeout(async () => {
+    try {
+      const freshMessage = await message.channel.messages
+        .fetch(message.id)
+        .catch(() => null);
+
+      if (!freshMessage) {
+        return;
+      }
+
+      if (shouldKeepPanelMessage(freshMessage)) {
+        return;
+      }
+
+      if (!hasDeletePermission(freshMessage)) {
+        console.warn(
+          "⚠️ Bot hat im Panel-Channel keine Berechtigung 'Nachrichten verwalten': #" +
+          freshMessage.channel.name
+        );
+        return;
+      }
+
+      if (!freshMessage.deletable) {
+        console.warn(
+          "⚠️ Panel Nachricht ist laut Discord.js nicht löschbar: " +
+          freshMessage.id
+        );
+        return;
+      }
+
+      await freshMessage.delete();
+    } catch (error) {
+      console.error("Panel Message Delete Fehler:", error);
+    }
+  }, delayMs);
+}
+
+async function handlePanelChannelCleanup(message) {
+  if (!isPanelChannelMessage(message)) {
     return;
   }
 
-  if (message.channel.name !== PANEL_CHANNEL_NAME) {
+  if (shouldKeepPanelMessage(message)) {
     return;
   }
 
-  if (isProtectedPanelMessage(message)) {
+  if (!hasDeletePermission(message)) {
+    console.warn(
+      "⚠️ Bot hat keine Berechtigung 'Nachrichten verwalten' im Channel #" +
+      message.channel.name
+    );
     return;
   }
 
-  schedulePanelMessageDelete(message);
+  schedulePanelCleanupDelete(message);
 }
 
 module.exports = {

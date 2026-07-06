@@ -6,6 +6,12 @@ Dieses Changelog wurde nachträglich aus dem bisherigen Projektverlauf erstellt 
 
 ## [Unreleased]
 
+### 2026-07-06 - Panel Channel Cleanup Fix
+
+- Normale Nachrichten im Panel-Channel werden wieder automatisch gelöscht
+- GuildMessages und MessageContent Intents ergänzt
+- Panel-Embeds und gepinnte Nachrichten bleiben geschützt
+
 ### 2026-07-06 - Spotify Webpanel Status
 
 - Spotify-Verbindungsstatus im Dashboard ergänzt
