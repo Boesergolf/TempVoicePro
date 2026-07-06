@@ -13,7 +13,11 @@ const luckWheel = require("../utils/luckWheel");
 const { addTracks, setVolume, removeTrack } = require("../utils/musicPlayer");
 const { detectSource, getMetadataForUrl } = require("../utils/musicMetadata");
 const { refreshLatestMusicPanel } = require("../utils/musicPanelView");
-const { handlePlaylistPanelModal } = require("../utils/playlistPanelActions");
+const {
+  handlePlaylistPanelModal,
+  handlePlaylistPanelSelect,
+  handlePlaylistSelectedButton
+} = require("../utils/playlistPanelActions");
 
 
 function isHttpUrl(value) {
@@ -210,6 +214,8 @@ const COMMAND_MODULES = {
   gluecksradpanel: "gluecksrad",
 
   panels: "panels",
+  panelhub: "panels",
+  panelrebuild: "panels",
   musicpanel: "panels",
   panelcleanup: "panels",
   panelcheck: "panels",
@@ -287,6 +293,39 @@ module.exports = {
         }
 
         return interaction.reply(message).catch(() => null);
+      }
+    }
+
+    if (
+      interaction.isStringSelectMenu &&
+      interaction.isStringSelectMenu() &&
+      interaction.customId === "playlist_panel_select"
+    ) {
+      try {
+        return await handlePlaylistPanelSelect(interaction);
+      } catch (error) {
+        console.error("❌ Playlist Panel Select Fehler:", error);
+        return interaction.reply({
+          content: "❌ Playlist-Auswahl Fehler. Details stehen im Bot-Log.",
+          flags: 64
+        }).catch(() => null);
+      }
+    }
+
+    if (
+      interaction.isButton &&
+      interaction.isButton() &&
+      interaction.customId &&
+      interaction.customId.startsWith("playlist_selected_")
+    ) {
+      try {
+        return await handlePlaylistSelectedButton(interaction);
+      } catch (error) {
+        console.error("❌ Playlist Auswahlbutton Fehler:", error);
+        return interaction.reply({
+          content: "❌ Playlist-Aktionsfehler. Details stehen im Bot-Log.",
+          flags: 64
+        }).catch(() => null);
       }
     }
 

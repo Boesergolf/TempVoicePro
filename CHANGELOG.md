@@ -6,6 +6,13 @@ Dieses Changelog wurde nachträglich aus dem bisherigen Projektverlauf erstellt 
 
 ## [Unreleased]
 
+### 2026-07-06 - Panel Hub und Rebuild
+
+- Zentrales Panel-Kontrollzentrum hinzugefügt
+- Panel-Channel kann per /panelrebuild automatisch aufgeräumt werden
+- Playlist-Panel wird beim Rebuild sauber neu erstellt
+- Alte Bot-Panel-Nachrichten können automatisch entfernt werden
+
 ### 2026-07-06 - Playlist Panel Verbesserungen
 
 - Discord-Playlistpanel um Songs anzeigen und Song entfernen erweitert
