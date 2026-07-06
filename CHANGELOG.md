@@ -6,6 +6,12 @@ Dieses Changelog wurde nachträglich aus dem bisherigen Projektverlauf erstellt 
 
 ## [Unreleased]
 
+### 2026-07-06 - Panel Commands auf Zentralpanel umgebaut
+
+- Music-, Playlist-, Glücksrad- und Panels-Commands schalten nun das Zentralpanel um
+- Alte Einzelpanel-Commands erzeugen keine neuen Panel-Nachrichten mehr
+- Zentralpanel-Helper zum Finden und Aktualisieren bestehender Panels ergänzt
+
 ### 2026-07-06 - Zentralpanel Ein-Panel-Modus
 
 - Panel-Hub schaltet Ansichten in einer einzigen Nachricht um

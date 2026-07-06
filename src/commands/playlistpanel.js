@@ -7,22 +7,21 @@ const {
   createPlaylistPanelMessage
 } = require("../utils/playlistPanel");
 
+const {
+  replyWithCentralPanelView
+} = require("../utils/panelHubController");
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("playlistpanel")
-    .setDescription("Erstellt das Playlist-Verwaltungs-Panel.")
+    .setDescription("Schaltet das Zentralpanel auf Playlist-Verwaltung.")
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 
   async execute(interaction) {
-    await interaction.reply({
-      content: "🎵 Playlist-Panel wird erstellt...",
-      ephemeral: true
-    });
-
-    await interaction.channel.send(createPlaylistPanelMessage());
-
-    await interaction.editReply({
-      content: "✅ Playlist-Panel wurde erstellt."
-    });
+    return replyWithCentralPanelView(
+      interaction,
+      createPlaylistPanelMessage(),
+      "Playlist-Verwaltung"
+    );
   }
 };
