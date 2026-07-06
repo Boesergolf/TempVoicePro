@@ -6,6 +6,12 @@ Dieses Changelog wurde nachträglich aus dem bisherigen Projektverlauf erstellt 
 
 ## [Unreleased]
 
+### 2026-07-06 - Webpanel Spotify Status
+
+- Spotify-Verbindungsstatus im Dashboard ergänzt
+- Spotify verbinden/trennen im Webpanel vorbereitet
+- Hinweis auf HTTPS für Spotify User-Login ergänzt
+
 ### 2026-07-06 - Spotify Playlist Fehlerbehandlung
 
 - Spotify 403 Fehler werden freundlich erklärt

@@ -1376,3 +1376,29 @@ Die Redirect URL muss exakt eingetragen werden:
 
 Später kann das Webpanel über Nginx, Domain und HTTPS öffentlich sauber erreichbar gemacht werden.
 
+
+
+## Spotify Webpanel Login
+
+TempVoicePro kann Spotify-Accounts über das Webpanel verbinden.
+
+Ziel:
+
+- private Spotify-Playlists später importieren
+- Spotify-User-Token sicher in MySQL speichern
+- Playlist-Import mit User-Berechtigung ermöglichen
+
+Zusätzlicher ENV-Wert:
+
+    SPOTIFY_REDIRECT_URI=http://DEINE-IP:3000/spotify/callback
+
+Im Spotify Developer Dashboard muss diese Redirect URI exakt eingetragen werden.
+
+Tabelle:
+
+    spotify_user_tokens
+
+Hinweis:
+
+Solange das Webpanel ohne HTTPS läuft, sollte der Spotify-Login nur intern/testweise verwendet werden. Für öffentliche Nutzung wird später HTTPS empfohlen.
+

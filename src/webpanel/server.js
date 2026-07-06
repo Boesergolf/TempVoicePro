@@ -11,6 +11,15 @@ const {
   updateAutoModSettings
 } = require("../utils/autoModSettings");
 
+const {
+  getSpotifyConfig,
+  exchangeSpotifyCode,
+  getSpotifyProfile,
+  saveSpotifyUserToken,
+  getSpotifyConnection,
+  deleteSpotifyConnection
+} = require("../utils/spotifyUserAuth");
+
 const DISCORD_API = "https://discord.com/api/v10";
 
 const PERMISSION_ADMINISTRATOR = 1n << 3n;
@@ -294,6 +303,21 @@ async function exchangeCodeForToken(config, code) {
   return response.json();
 }
 
+
+function createSpotifyOAuthUrl(state) {
+  const spotifyConfig = getSpotifyConfig();
+
+  const params = new URLSearchParams({
+    client_id: spotifyConfig.clientId,
+    response_type: "code",
+    redirect_uri: spotifyConfig.redirectUri,
+    scope: "playlist-read-private playlist-read-collaborative",
+    state
+  });
+
+  return "https://accounts.spotify.com/authorize?" + params.toString();
+}
+
 function createOAuthUrl(config, state) {
   const params = new URLSearchParams({
     client_id: config.clientId,
@@ -326,7 +350,7 @@ function renderHome(user) {
   `);
 }
 
-function renderDashboard(user, guilds) {
+function renderDashboard(user, guilds, spotifyConnection = null) {
   const guildCards = guilds.length
     ? guilds.map(guild => `
       <a class="guild" href="/guilds/${escapeHtml(guild.id)}">
@@ -342,11 +366,33 @@ function renderDashboard(user, guilds) {
         <p class="muted">Der Bot muss auf dem Server sein und du brauchst die Berechtigung Server verwalten oder Administrator.</p>
       </div>`;
 
+  const spotifyCard = spotifyConnection
+    ? `
+      <div class="card">
+        <h2>🎵 Spotify</h2>
+        <p>Status: <span class="pill">Verbunden</span></p>
+        <p class="muted">Account: ${escapeHtml(spotifyConnection.displayName || spotifyConnection.spotifyUserId || "Spotify")}</p>
+        <form method="post" action="/spotify/disconnect">
+          <button class="button secondary" type="submit">Spotify trennen</button>
+        </form>
+      </div>
+    `
+    : `
+      <div class="card">
+        <h2>🎵 Spotify</h2>
+        <p>Status: <span class="pill" style="background:#7f1d1d;color:#fecaca;">Nicht verbunden</span></p>
+        <p class="muted">Private Spotify-Playlists brauchen später Spotify-Login. Für öffentliche Nutzung über deine aktuelle HTTP-IP ist HTTPS empfohlen bzw. bei Spotify praktisch nötig.</p>
+        <a class="button secondary" href="/spotify/login">Spotify verbinden testen</a>
+      </div>
+    `;
+
   return layout("Dashboard", `
     <div class="card">
       <h1>Dashboard</h1>
       <p class="muted">Eingeloggt als ${escapeHtml(user.username)}.</p>
     </div>
+
+    ${spotifyCard}
 
     <h2>Deine Server</h2>
     <div class="grid">
@@ -1147,7 +1193,13 @@ function startWebPanel(client) {
         .filter(hasManageServerPermission)
         .filter(guild => client.guilds.cache.has(guild.id));
 
-      return res.send(renderDashboard(req.session.user, manageableGuilds));
+      const spotifyConnection = await getSpotifyConnection(req.session.user.id);
+
+      return res.send(renderDashboard(
+        req.session.user,
+        manageableGuilds,
+        spotifyConnection
+      ));
     } catch (error) {
       console.error("Webpanel Dashboard Fehler:", error);
       return res.status(500).send("Dashboard konnte nicht geladen werden.");
@@ -1342,6 +1394,123 @@ function startWebPanel(client) {
     } catch (error) {
       console.error("Webpanel Cases-Seite Fehler:", error);
       return res.status(500).send("Cases-Seite konnte nicht geladen werden.");
+    }
+  });
+
+
+  app.get("/spotify/login", requireLogin, (req, res) => {
+    try {
+      const spotifyConfig = getSpotifyConfig();
+
+      if (!spotifyConfig.clientId || !spotifyConfig.clientSecret || !spotifyConfig.redirectUri) {
+        return res.status(500).send(
+          "Spotify Login ist nicht vollständig eingerichtet. Bitte SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET und SPOTIFY_REDIRECT_URI prüfen."
+        );
+      }
+
+      const state = crypto.randomBytes(16).toString("hex");
+      req.session.spotifyOAuthState = state;
+
+      res.cookie("tempvoicepro_spotify_state", state, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: config.baseUrl.startsWith("https://"),
+        maxAge: 1000 * 60 * 10
+      });
+
+      req.session.save(error => {
+        if (error) {
+          console.error("Spotify Session Save Fehler:", error);
+          return res.status(500).send("Spotify Session konnte nicht gespeichert werden.");
+        }
+
+        return res.redirect(createSpotifyOAuthUrl(state));
+      });
+    } catch (error) {
+      console.error("Spotify Login Start Fehler:", error);
+      return res.status(500).send("Spotify Login konnte nicht gestartet werden.");
+    }
+  });
+
+  app.get("/spotify/callback", async (req, res) => {
+    try {
+      if (!req.session || !req.session.user) {
+        return res.status(401).send("Bitte zuerst im Webpanel mit Discord einloggen.");
+      }
+
+      const code = String(req.query.code || "");
+      const state = String(req.query.state || "");
+      const cookieState = getCookie(req, "tempvoicepro_spotify_state");
+
+      const validSessionState = state && req.session.spotifyOAuthState && state === req.session.spotifyOAuthState;
+      const validCookieState = state && cookieState && state === cookieState;
+
+      if (!code || !state || (!validSessionState && !validCookieState)) {
+        console.warn("Spotify OAuth State ungültig:", {
+          hasCode: Boolean(code),
+          hasState: Boolean(state),
+          hasSessionState: Boolean(req.session.spotifyOAuthState),
+          hasCookieState: Boolean(cookieState)
+        });
+
+        return res.status(400).send(
+          "Ungültiger Spotify OAuth State. Bitte zurück zum Webpanel und erneut verbinden."
+        );
+      }
+
+      res.clearCookie("tempvoicepro_spotify_state");
+
+      const tokenData = await exchangeSpotifyCode(code);
+      const profile = await getSpotifyProfile(tokenData.access_token);
+
+      await saveSpotifyUserToken(
+        req.session.user.id,
+        tokenData,
+        profile
+      );
+
+      delete req.session.spotifyOAuthState;
+
+      return req.session.save(error => {
+        if (error) {
+          console.error("Spotify Session Save Fehler nach Login:", error);
+          return res.status(500).send("Spotify Login-Session konnte nicht gespeichert werden.");
+        }
+
+        return res.redirect("/dashboard");
+      });
+    } catch (error) {
+      console.error("Spotify OAuth Callback Fehler:", error);
+      return res.status(500).send("Spotify Login fehlgeschlagen.");
+    }
+  });
+
+  app.post("/spotify/disconnect", requireLogin, async (req, res) => {
+    try {
+      await deleteSpotifyConnection(req.session.user.id);
+
+      return res.redirect("/dashboard");
+    } catch (error) {
+      console.error("Spotify Disconnect Fehler:", error);
+      return res.status(500).send("Spotify Verbindung konnte nicht getrennt werden.");
+    }
+  });
+
+  app.get("/spotify/status", requireLogin, async (req, res) => {
+    try {
+      const connection = await getSpotifyConnection(req.session.user.id);
+
+      return res.json({
+        connected: Boolean(connection),
+        displayName: connection ? connection.displayName : null,
+        spotifyUserId: connection ? connection.spotifyUserId : null
+      });
+    } catch (error) {
+      console.error("Spotify Status Fehler:", error);
+      return res.status(500).json({
+        connected: false,
+        error: "Spotify Status konnte nicht geladen werden."
+      });
     }
   });
 
