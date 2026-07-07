@@ -631,6 +631,14 @@ module.exports = {
 
         await channel.setName(newName);
 
+        const {
+          updateTempVoicePanelMessage
+        } = require("../utils/tempVoicePanelMessage");
+
+        await updateTempVoicePanelMessage(channel).catch(error => {
+          console.error("❌ TempVoice Panel Rename Update Fehler:", error);
+        });
+
         return safeReply(interaction, {
           content: `✏️ Kanal umbenannt zu **${newName}**.`,
           flags: 64

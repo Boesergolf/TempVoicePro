@@ -42,24 +42,31 @@ async function getNextLobbyName(guild, categoryId) {
   return "Lobby " + number;
 }
 
-function makePanelChannelName(voiceChannelName) {
-  const cleanName = voiceChannelName
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 80);
-
-  return "panel-" + (cleanName || "tempvoice");
+function makePanelChannelName() {
+  return process.env.TEMPVOICE_PANEL_CHANNEL_NAME || "tempvoice-panels";
 }
 
-async function createPanelChannel(guild, categoryId, voiceChannel) {
-  const panelName = makePanelChannelName(voiceChannel.name);
+async function createPanelChannel(guild, categoryId) {
+  const panelName = makePanelChannelName();
+
+  await guild.channels.fetch().catch(() => null);
+
+  const existing = guild.channels.cache.find(channel =>
+    channel &&
+    channel.name === panelName &&
+    typeof channel.isTextBased === "function" &&
+    channel.isTextBased()
+  );
+
+  if (existing) {
+    return existing;
+  }
 
   return guild.channels.create({
     name: panelName,
     type: ChannelType.GuildText,
     parent: categoryId || null,
-    topic: "Temporäres Control Panel für " + voiceChannel.name
+    topic: "Gemeinsamer TempVoice Control Panel Channel"
   });
 }
 
@@ -82,7 +89,7 @@ async function sendControlPanel(guild, categoryId, voiceChannel, member) {
       .setDescription(
         "🎙 Channel: " + voiceChannel.toString() + "\n" +
         "👑 Owner: " + member.toString() + "\n\n" +
-        "Dieser Textkanal wird automatisch gelöscht, wenn der Voice Channel leer ist."
+        "Diese Panel-Nachricht wird automatisch gelöscht, wenn der Voice Channel gelöscht wird."
       );
 
     const row1 = new ActionRowBuilder().addComponents(
@@ -170,7 +177,7 @@ async function sendControlPanel(guild, categoryId, voiceChannel, member) {
       components: [row1, row2, row3, row4, row5]
     });
 
-    console.log("✅ Temporäres Panel erstellt: #" + panelChannel.name);
+    console.log("✅ TempVoice Panel-Nachricht erstellt in #" + panelChannel.name);
 
     return {
       panelChannelId: panelChannel.id,
