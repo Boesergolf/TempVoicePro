@@ -194,14 +194,15 @@ async function insertPlaylistItem(playlistId, item) {
 
   await db.execute(
     `INSERT INTO music_playlist_items
-       (playlistId, position, source, title, url, createdAt)
-     VALUES (?, ?, ?, ?, ?, NOW())`,
+       (playlistId, position, source, title, url, addedBy, createdAt)
+     VALUES (?, ?, ?, ?, ?, ?, NOW())`,
     [
       playlistId,
       position,
       item.source || "url",
       item.title || item.url,
-      item.url
+      item.url,
+      item.addedBy || item.addedById || "system"
     ]
   );
 
@@ -615,22 +616,73 @@ async function handleCreateModal(interaction) {
   );
 }
 
+
+function isSupportedPlaylistImportUrl(url) {
+  const lower = String(url || "").toLowerCase();
+
+  return (
+    lower.includes("spotify.com/playlist") ||
+    lower.startsWith("spotify:playlist:") ||
+    (
+      (
+        lower.includes("youtube.com") ||
+        lower.includes("youtu.be") ||
+        lower.includes("music.youtube.com")
+      ) &&
+      lower.includes("list=")
+    )
+  );
+}
+
+function getAddModalImportLimit() {
+  const value = Number(process.env.PLAYLIST_PANEL_ADD_IMPORT_LIMIT || 50);
+
+  if (!Number.isFinite(value)) {
+    return 50;
+  }
+
+  return Math.max(1, Math.min(value, 100));
+}
+
 async function addUrlToPlaylist(interaction, playlist, url, customTitle) {
-  if (!validateUrl(url)) {
+  const rawUrl = String(url || "").trim();
+
+  if (!validateUrl(rawUrl) && !rawUrl.toLowerCase().startsWith("spotify:playlist:")) {
     return {
       ok: false,
       message: "❌ Bitte gib einen gültigen Link ein."
     };
   }
 
-  const metadata = await getMetadataForUrl(url).catch(() => null);
-  const title = customTitle || metadata?.displayTitle || metadata?.title || url;
-  const source = detectSource(url);
+  if (isSupportedPlaylistImportUrl(rawUrl)) {
+    const limit = getAddModalImportLimit();
+    const imported = await importIntoPlaylist(interaction, playlist, rawUrl, limit);
+
+    if (!imported.ok) {
+      return imported;
+    }
+
+    return {
+      ok: true,
+      imported: true,
+      count: imported.count || 0,
+      title: "Playlist-Import",
+      position: null,
+      message:
+        "✅ Playlist wurde in **" + playlist.name + "** importiert.\n" +
+        "Importiert: **" + (imported.count || 0) + "** Song(s)."
+    };
+  }
+
+  const metadata = await getMetadataForUrl(rawUrl).catch(() => null);
+  const title = customTitle || metadata?.displayTitle || metadata?.title || rawUrl;
+  const source = detectSource(rawUrl);
 
   const position = await insertPlaylistItem(playlist.id, {
     source,
     title,
-    url
+    url: rawUrl,
+    addedBy: interaction.user.id
   });
 
   return {
@@ -663,6 +715,13 @@ async function handleAddModal(interaction) {
     return interaction.editReply(added.message);
   }
 
+  if (added.imported) {
+    return interaction.editReply(
+      added.message +
+      (result.created ? "\n\nℹ️ Die Playlist wurde automatisch neu erstellt." : "")
+    );
+  }
+
   return interaction.editReply(
     "✅ Song wurde zu **" + name + "** hinzugefügt.\n" +
     "Position: **" + added.position + "**\n" +
@@ -690,6 +749,10 @@ async function handleAddSelectedModal(interaction, playlistId) {
   const added = await addUrlToPlaylist(interaction, playlist, url, customTitle);
 
   if (!added.ok) {
+    return interaction.editReply(added.message);
+  }
+
+  if (added.imported) {
     return interaction.editReply(added.message);
   }
 
