@@ -6,8 +6,19 @@ module.exports = {
   customId: "mp_queue",
 
   async execute(interaction) {
-    return interaction.update(
-      createMusicQueueCentralMessage(interaction.guild.id)
-    );
+    const payload = createMusicQueueCentralMessage(interaction.guild.id);
+
+    await interaction.deferUpdate();
+
+    await interaction.message.suppressEmbeds(false).catch(() => null);
+
+    return interaction.message.edit({
+      content: payload.content || "",
+      embeds: payload.embeds || [],
+      components: payload.components || [],
+      allowedMentions: {
+        parse: []
+      }
+    });
   }
 };
