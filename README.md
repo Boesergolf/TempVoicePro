@@ -46,6 +46,12 @@ Im temporären Panel-Textkanal gibt es Buttons für:
 - `/addcoowner`
 - `/removecoowner`
 
+### Admin Commands
+
+- `/botstatus` zeigt einen Admin-Systemcheck
+- prüft TempVoice, Musik/Playlists, Spotify, Webpanel und Systemstatus
+- nur für Administratoren oder Mitglieder mit `ManageGuild`
+
 ## Music Player
 
 Der Bot kann Musik in Discord Voice Channels abspielen.
@@ -1401,4 +1407,3 @@ Tabelle:
 Hinweis:
 
 Solange das Webpanel ohne HTTPS läuft, sollte der Spotify-Login nur intern/testweise verwendet werden. Für öffentliche Nutzung wird später HTTPS empfohlen.
-
