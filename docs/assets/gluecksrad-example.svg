@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="680" viewBox="0 0 1200 680" role="img" aria-labelledby="title desc">
+  <title id="title">Gluecksrad Beispiel</title>
+  <desc id="desc">Beispielgrafik fuer das Gluecksrad mit Listen- und Voice-Auswahl.</desc>
+  <rect width="1200" height="680" fill="#f8fafc"/>
+  <rect x="50" y="40" width="1100" height="600" rx="18" fill="#ffffff" stroke="#d7dce8"/>
+  <text x="90" y="98" fill="#1f2937" font-family="Arial, sans-serif" font-size="34" font-weight="700">Gluecksrad</text>
+  <text x="90" y="134" fill="#64748b" font-family="Arial, sans-serif" font-size="18">Zufaellige Auswahl fuer Maps, Teams oder Voice-Mitglieder.</text>
+
+  <circle cx="365" cy="380" r="170" fill="#fde68a" stroke="#f59e0b" stroke-width="8"/>
+  <path d="M365 380 L365 210 A170 170 0 0 1 512 295 Z" fill="#bfdbfe"/>
+  <path d="M365 380 L512 295 A170 170 0 0 1 512 465 Z" fill="#bbf7d0"/>
+  <path d="M365 380 L512 465 A170 170 0 0 1 365 550 Z" fill="#fecdd3"/>
+  <path d="M365 380 L365 550 A170 170 0 0 1 218 465 Z" fill="#ddd6fe"/>
+  <path d="M365 380 L218 465 A170 170 0 0 1 218 295 Z" fill="#fed7aa"/>
+  <path d="M365 380 L218 295 A170 170 0 0 1 365 210 Z" fill="#fef08a"/>
+  <circle cx="365" cy="380" r="42" fill="#ffffff" stroke="#334155" stroke-width="4"/>
+  <path d="M540 365 l60 15 -60 15 z" fill="#ef4444"/>
+
+  <g font-family="Arial, sans-serif">
+    <rect x="680" y="210" width="360" height="110" rx="14" fill="#eff6ff" stroke="#93c5fd"/>
+    <text x="710" y="250" fill="#0f172a" font-size="22" font-weight="700">/gluecksrad liste</text>
+    <text x="710" y="283" fill="#334155" font-size="17">Eintraege: Mirage, Inferno, Nuke</text>
+
+    <rect x="680" y="360" width="360" height="110" rx="14" fill="#f0fdf4" stroke="#86efac"/>
+    <text x="710" y="400" fill="#0f172a" font-size="22" font-weight="700">/gluecksrad voice</text>
+    <text x="710" y="433" fill="#334155" font-size="17">Waehlt Nutzer aus deinem Voice</text>
+
+    <rect x="680" y="510" width="360" height="80" rx="14" fill="#fff7ed" stroke="#fdba74"/>
+    <text x="710" y="558" fill="#0f172a" font-size="22" font-weight="700">Panel: Dropdown + Buttons</text>
+  </g>
+</svg>

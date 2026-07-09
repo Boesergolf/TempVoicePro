@@ -10,6 +10,9 @@ TempVoicePro ist ein Discord Bot auf Node.js mit discord.js v14.
 - Niemals `.env`, Tokens, Secrets oder Passwörter committen.
 - Nach Codeänderungen immer ausführen:
   npm run check
+- Nach neuen Slash-Commands oder nutzer sichtbaren Funktionen:
+  npm run docs:update
+  BENUTZERHANDBUCH.md fachlich prüfen/ergänzen
 - Bei Slash-Command-Änderungen:
   node deploy-commands.js
 - Bot läuft über PM2 als:

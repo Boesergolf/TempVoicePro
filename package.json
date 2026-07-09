@@ -9,6 +9,7 @@
     "deploy": "node deploy-commands.js",
     "db:init": "node init-db.js",
     "check": "node scripts/check-js.js",
+    "docs:update": "node scripts/update-user-guide.js",
     "changelog:add": "node scripts/changelog-add.js"
   },
   "dependencies": {

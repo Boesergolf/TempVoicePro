@@ -26,6 +26,7 @@ function walk(dir) {
 }
 
 walk("src");
+walk("scripts");
 
 for (const file of ["deploy-commands.js", "init-db.js"]) {
   if (fs.existsSync(file)) {

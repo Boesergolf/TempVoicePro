@@ -2,6 +2,10 @@
 
 TempVoicePro ist ein Discord Bot für temporäre Voice Channels, Music Playback, Playlists, Music Panel Controls und ChatGPT-Integration.
 
+Benutzerhandbuch für Admins, Moderatoren und normale Nutzer:
+
+- [BENUTZERHANDBUCH.md](BENUTZERHANDBUCH.md)
+
 ## Funktionen
 
 ### TempVoice System
