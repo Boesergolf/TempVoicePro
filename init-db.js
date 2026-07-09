@@ -118,6 +118,13 @@ async function main() {
     "VARCHAR(20) NULL"
   );
 
+  await addColumnIfMissing(
+    connection,
+    "temp_channels",
+    "isPermanent",
+    "TINYINT(1) NOT NULL DEFAULT 0"
+  );
+
   await connection.query(`
     CREATE TABLE IF NOT EXISTS music_playlists (
       id INT AUTO_INCREMENT PRIMARY KEY,

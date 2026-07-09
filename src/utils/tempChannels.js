@@ -1,5 +1,9 @@
 const db = require("../database/mysql");
 
+const {
+  ensureTempChannelsPermanentColumn
+} = require("./tempVoiceSchema");
+
 const deleteTimers = new Map();
 
 function getSharedPanelChannelName() {
@@ -10,6 +14,8 @@ async function isPermanentChannel(channelId) {
   if (!channelId) {
     return false;
   }
+
+  await ensureTempChannelsPermanentColumn();
 
   const [rows] = await db.execute(
     "SELECT isPermanent FROM temp_channels WHERE channelId = ? LIMIT 1",
@@ -72,7 +78,13 @@ async function deleteTempChannel(channel) {
     cancelDelete(channel.id);
 
     await deletePanelChannel(channel);
-    await channel.delete().catch(() => {});
+
+    try {
+      await channel.delete();
+    } catch (err) {
+      console.error("❌ TempVoice Channel konnte nicht gelöscht werden:", err.message);
+      return;
+    }
 
     await db.execute(
       "DELETE FROM temp_channels WHERE channelId = ?",

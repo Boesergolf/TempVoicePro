@@ -88,7 +88,9 @@ async function sendControlPanel(guild, categoryId, voiceChannel, member) {
       .setColor("Blue")
       .setDescription(
         "🎙 Channel: " + voiceChannel.toString() + "\n" +
-        "👑 Owner: " + member.toString() + "\n\n" +
+        "🏷 Name: **" + voiceChannel.name + "**\n" +
+        "👑 Owner: " + member.toString() + "\n" +
+        "📌 Modus: **Temporär**\n\n" +
         "Diese Panel-Nachricht wird automatisch gelöscht, wenn der Voice Channel gelöscht wird."
       );
 
@@ -106,6 +108,11 @@ async function sendControlPanel(guild, categoryId, voiceChannel, member) {
       new ButtonBuilder()
         .setCustomId("tv_rename")
         .setLabel("✏️ Rename")
+        .setStyle(ButtonStyle.Primary),
+
+      new ButtonBuilder()
+        .setCustomId("tv_randomname")
+        .setLabel("🎲 Zufallsname")
         .setStyle(ButtonStyle.Primary)
     );
 
@@ -157,6 +164,16 @@ async function sendControlPanel(guild, categoryId, voiceChannel, member) {
       new ButtonBuilder()
         .setCustomId("tv_public")
         .setLabel("🌐 Public")
+        .setStyle(ButtonStyle.Success),
+
+      new ButtonBuilder()
+        .setCustomId("tv_permanent")
+        .setLabel("📌 Permanent")
+        .setStyle(ButtonStyle.Secondary),
+
+      new ButtonBuilder()
+        .setCustomId("tv_temporary")
+        .setLabel("⏱ Temporär")
         .setStyle(ButtonStyle.Success)
     );
 

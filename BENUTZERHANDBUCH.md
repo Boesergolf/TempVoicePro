@@ -121,10 +121,13 @@ Wichtige Aktionen:
 - `Hide`: Der Raum wird versteckt.
 - `Show`: Der Raum wird wieder sichtbar.
 - `Rename`: Der Raum bekommt einen neuen Namen.
+- `Zufallsname`: Der Bot setzt einen lustigen zufaelligen Namen.
 - `Limit`: Maximale Nutzerzahl setzen.
 - `Bitrate`: Sprachqualitaet anpassen.
 - `Private`: Raum privat stellen.
 - `Public`: Raum oeffentlich stellen.
+- `Permanent`: Raum bleibt leer bestehen.
+- `Temporaer`: Raum wird wieder automatisch geloescht, wenn er leer ist.
 - `Claim`: Raum uebernehmen, wenn der Owner nicht mehr da ist.
 - `Close`: Raum schliessen.
 
@@ -137,6 +140,7 @@ Wichtig:
 - Der gemeinsame Panelchannel heisst standardmaessig `#tempvoice-panels`.
 - Der Bot braucht Rechte zum Erstellen, Verschieben und Loeschen von Channels.
 - Permanente TempVoice-Raeume werden nicht automatisch geloescht, wenn sie leer sind.
+- Nicht-permanente TempVoice-Raeume werden nach kurzer Leerzeit automatisch geloescht.
 
 ## Zentralpanel
 

@@ -4,6 +4,10 @@ const {
 
 const db = require("../database/mysql");
 
+const {
+  ensureTempChannelsPermanentColumn
+} = require("./tempVoiceSchema");
+
 function buildTempVoicePanelEmbed(channel, data) {
   const ownerId = data.ownerId || data.tempOwnerId || null;
   const ownerText = ownerId ? "<@" + ownerId + ">" : "Unbekannt";
@@ -23,6 +27,8 @@ function buildTempVoicePanelEmbed(channel, data) {
 }
 
 async function getTempVoicePanelData(channelId) {
+  await ensureTempChannelsPermanentColumn();
+
   const [rows] = await db.execute(
     `
       SELECT

@@ -8,6 +8,10 @@ const {
   cancelDelete
 } = require("../utils/tempChannels");
 
+const {
+  ensureTempChannelsPermanentColumn
+} = require("../utils/tempVoiceSchema");
+
 async function resolveTempChannel(interaction) {
   const voiceChannel = interaction.member?.voice?.channel || null;
 
@@ -50,6 +54,8 @@ module.exports = {
   customId: "tv_permanent",
 
   async execute(interaction) {
+    await ensureTempChannelsPermanentColumn();
+
     const resolved = await resolveTempChannel(interaction);
 
     if (!resolved || !resolved.channel) {
