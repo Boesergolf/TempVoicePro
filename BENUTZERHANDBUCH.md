@@ -467,6 +467,10 @@ Er prueft:
 
 Die Buttons im Setup-Assistenten loeschen nichts automatisch. Sie erklaeren bestehende Commands, oeffnen den Botstatus oder aktualisieren die Ansicht.
 
+Der Button `Zentralpanel rebuild` zeigt zuerst eine Sicherheitsabfrage. Erst nach `Ja, Zentralpanel neu aufbauen` wird die bestehende Rebuild-Logik ausgefuehrt. Mit `Abbrechen` kommst du zurueck zum Setup-Assistenten.
+
+Der Button `Botstatus oeffnen` zeigt den echten Botstatus-Check als Embed an.
+
 ## Botstatus
 
 `/botstatus` zeigt einen Admin-Systemcheck.

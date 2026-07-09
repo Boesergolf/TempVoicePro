@@ -93,6 +93,7 @@ async function readPanelStatus(guild) {
   const centralPanel = findTextChannel(guild, PANEL_CHANNEL_NAME);
 
   return {
+    panelReady: Boolean(centralPanel),
     lines: [
       centralPanel
         ? ok("Zentralpanel #" + PANEL_CHANNEL_NAME + " gefunden")
@@ -114,6 +115,7 @@ async function readMusicStatus() {
   const missing = states.filter(state => !state.exists).map(state => state.table);
 
   return {
+    ready: missing.length === 0,
     lines: [
       missing.length === 0
         ? ok("Musik/Playlist Tabellen vorhanden")
@@ -162,6 +164,22 @@ async function readIntegrationStatus(guild) {
   lines.push(modlogLine);
 
   return { lines };
+}
+
+function buildRecommendedStep(tempVoiceStatus, panelStatus, musicStatus) {
+  if (!tempVoiceStatus.setupReady) {
+    return "⚠️ Als nächstes `/setup` ausführen oder bestehende TempVoice-Kanäle prüfen.";
+  }
+
+  if (!panelStatus.panelReady) {
+    return "⚠️ Als nächstes Zentralpanel rebuild oder `/panels` im gewünschten Panel-Channel ausführen.";
+  }
+
+  if (!musicStatus.ready) {
+    return "⚠️ Als nächstes Datenbanktabellen mit `npm run db:init` prüfen.";
+  }
+
+  return "✅ Grundsetup sieht gut aus.";
 }
 
 function buildNextSteps(tempVoiceStatus) {
@@ -220,6 +238,41 @@ function createComponents(tempVoiceStatus) {
   ];
 }
 
+function createPanelRebuildConfirmMessage(targetChannelName) {
+  const embed = new EmbedBuilder()
+    .setTitle("Zentralpanel neu aufbauen?")
+    .setColor(0xf59e0b)
+    .setDescription(
+      "Möchtest du das Zentralpanel wirklich neu aufbauen?\n\n" +
+      "Ziel-Channel: **#" + targetChannelName + "**\n\n" +
+      "Dabei wird die bestehende Panel-Rebuild-Logik genutzt. " +
+      "Normale User-Nachrichten werden nicht gelöscht."
+    )
+    .setFooter({
+      text: "Keine Aktion ohne Bestätigung."
+    })
+    .setTimestamp();
+
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId("setupwizard_panelrebuild_confirm")
+      .setLabel("Ja, Zentralpanel neu aufbauen")
+      .setEmoji("✅")
+      .setStyle(ButtonStyle.Danger),
+
+    new ButtonBuilder()
+      .setCustomId("setupwizard_panelrebuild_cancel")
+      .setLabel("Abbrechen")
+      .setEmoji("↩️")
+      .setStyle(ButtonStyle.Secondary)
+  );
+
+  return {
+    embeds: [embed],
+    components: [row]
+  };
+}
+
 async function createSetupWizardMessage(guild) {
   const tempVoiceStatus = await readTempVoiceStatus(guild);
   const panelStatus = await readPanelStatus(guild);
@@ -234,6 +287,10 @@ async function createSetupWizardMessage(guild) {
       "Der Assistent prüft nur und löscht oder baut nichts ungefragt um."
     )
     .addFields(
+      {
+        name: "Nächster empfohlener Schritt",
+        value: buildRecommendedStep(tempVoiceStatus, panelStatus, musicStatus)
+      },
       {
         name: "TempVoice",
         value: tempVoiceStatus.lines.join("\n")
@@ -267,5 +324,6 @@ async function createSetupWizardMessage(guild) {
 }
 
 module.exports = {
-  createSetupWizardMessage
+  createSetupWizardMessage,
+  createPanelRebuildConfirmMessage
 };

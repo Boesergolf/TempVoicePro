@@ -4,8 +4,8 @@ const {
 } = require("discord.js");
 
 const {
-  createBotStatusEmbed
-} = require("../utils/botStatusCheckView");
+  createSetupWizardMessage
+} = require("../utils/setupWizardView");
 
 function hasAdminAccess(interaction) {
   return interaction.memberPermissions &&
@@ -16,7 +16,7 @@ function hasAdminAccess(interaction) {
 }
 
 module.exports = {
-  customId: "setupwizard_botstatus",
+  customId: "setupwizard_panelrebuild_cancel",
 
   async execute(interaction) {
     if (!hasAdminAccess(interaction)) {
@@ -26,12 +26,8 @@ module.exports = {
       });
     }
 
-    await interaction.deferReply({
-      flags: MessageFlags.Ephemeral
-    });
-
-    return interaction.editReply({
-      embeds: [await createBotStatusEmbed(interaction)]
-    });
+    return interaction.update(
+      await createSetupWizardMessage(interaction.guild)
+    );
   }
 };

@@ -3,6 +3,12 @@ const {
   MessageFlags
 } = require("discord.js");
 
+const {
+  createPanelRebuildConfirmMessage
+} = require("../utils/setupWizardView");
+
+const { PANEL_CHANNEL_NAME } = require("../utils/panelChannel");
+
 function hasAdminAccess(interaction) {
   return interaction.memberPermissions &&
     (
@@ -22,13 +28,15 @@ module.exports = {
       });
     }
 
+    const targetChannel = interaction.guild.channels.cache.find(channel =>
+      channel &&
+      channel.name === PANEL_CHANNEL_NAME &&
+      channel.isTextBased &&
+      channel.isTextBased()
+    ) || interaction.channel;
+
     return interaction.reply({
-      content:
-        "🧭 **Zentralpanel rebuild**\n\n" +
-        "Dieser Button löscht nichts automatisch.\n\n" +
-        "Für einen bewussten Neuaufbau nutze den bestehenden Command:\n" +
-        "`/panelrebuild confirm:True`\n\n" +
-        "Der Command räumt den aktuellen Panel-Channel auf und baut das Zentralpanel neu auf.",
+      ...createPanelRebuildConfirmMessage(targetChannel.name),
       flags: MessageFlags.Ephemeral
     });
   }
