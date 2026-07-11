@@ -20,6 +20,12 @@ const {
   installTemporaryInteractionReplyCleanup
 } = require("../utils/temporaryInteractionReply");
 const {
+  deferEphemeral,
+  editOrReplyEphemeral,
+  replyEphemeral,
+  safeReplyEphemeral
+} = require("../utils/interactionReplies");
+const {
   handlePanelHubModuleSelect,
   handlePanelHubModuleButton
 } = require("../utils/panelHubModuleActions");
@@ -192,18 +198,6 @@ async function playMusicPlaylistFromPanel(interaction, playlistName, scopeRaw) {
   );
 }
 
-async function safeReply(interaction, options) {
-  try {
-    if (interaction.replied || interaction.deferred) {
-      return interaction.followUp(options);
-    }
-
-    return interaction.reply(options);
-  } catch (err) {
-    console.error("❌ Reply Fehler:", err.message);
-  }
-}
-
 async function hasTempVoiceAccess(userId, channelId) {
   const [rows] = await db.execute(
     "SELECT * FROM temp_permissions WHERE channelId = ?",
@@ -276,13 +270,12 @@ async function checkCommandModule(interaction) {
       return true;
     }
 
-    await interaction.reply({
+    await replyEphemeral(interaction, {
       content:
         "❌ Dieses Modul ist auf diesem Server deaktiviert.\n\n" +
         "Modul: `" + moduleName + "`\n" +
         "Aktivieren mit:\n" +
-        "`/module enable name:" + moduleName + "`",
-      flags: 64
+        "`/module enable name:" + moduleName + "`"
     });
 
     return false;
@@ -311,16 +304,10 @@ module.exports = {
       } catch (error) {
         console.error("❌ Playlist Panel Modal Fehler:", error);
 
-        const message = {
-          content: "❌ Playlist-Panel Fehler. Details stehen im Bot-Log.",
-          flags: 64
-        };
-
-        if (interaction.deferred || interaction.replied) {
-          return interaction.editReply(message).catch(() => null);
-        }
-
-        return interaction.reply(message).catch(() => null);
+        return editOrReplyEphemeral(
+          interaction,
+          "❌ Playlist-Panel Fehler. Details stehen im Bot-Log."
+        ).catch(() => null);
       }
     }
 
@@ -333,10 +320,10 @@ module.exports = {
         return await handlePanelHubModuleSelect(interaction);
       } catch (error) {
         console.error("❌ PanelHub Module Select Fehler:", error);
-        return interaction.reply({
-          content: "❌ Modul-Auswahl Fehler. Details stehen im Bot-Log.",
-          flags: 64
-        }).catch(() => null);
+        return replyEphemeral(
+          interaction,
+          "❌ Modul-Auswahl Fehler. Details stehen im Bot-Log."
+        ).catch(() => null);
       }
     }
 
@@ -349,10 +336,10 @@ module.exports = {
         return await handlePlaylistPanelSelect(interaction);
       } catch (error) {
         console.error("❌ Playlist Panel Select Fehler:", error);
-        return interaction.reply({
-          content: "❌ Playlist-Auswahl Fehler. Details stehen im Bot-Log.",
-          flags: 64
-        }).catch(() => null);
+        return replyEphemeral(
+          interaction,
+          "❌ Playlist-Auswahl Fehler. Details stehen im Bot-Log."
+        ).catch(() => null);
       }
     }
 
@@ -366,10 +353,10 @@ module.exports = {
         return await handlePanelHubModuleButton(interaction);
       } catch (error) {
         console.error("❌ PanelHub Module Button Fehler:", error);
-        return interaction.reply({
-          content: "❌ Modul-Aktion Fehler. Details stehen im Bot-Log.",
-          flags: 64
-        }).catch(() => null);
+        return replyEphemeral(
+          interaction,
+          "❌ Modul-Aktion Fehler. Details stehen im Bot-Log."
+        ).catch(() => null);
       }
     }
 
@@ -383,10 +370,10 @@ module.exports = {
         return await handlePlaylistSelectedButton(interaction);
       } catch (error) {
         console.error("❌ Playlist Auswahlbutton Fehler:", error);
-        return interaction.reply({
-          content: "❌ Playlist-Aktionsfehler. Details stehen im Bot-Log.",
-          flags: 64
-        }).catch(() => null);
+        return replyEphemeral(
+          interaction,
+          "❌ Playlist-Aktionsfehler. Details stehen im Bot-Log."
+        ).catch(() => null);
       }
     }
 
@@ -400,17 +387,10 @@ module.exports = {
       } catch (err) {
         console.error("❌ module_select Direkt-Handler Fehler:", err);
 
-        if (!interaction.replied && !interaction.deferred) {
-          return interaction.reply({
-            content: "❌ Modul-Auswahl konnte nicht verarbeitet werden.",
-            flags: 64
-          });
-        }
-
-        return interaction.followUp({
-          content: "❌ Modul-Auswahl konnte nicht verarbeitet werden.",
-          flags: 64
-        }).catch(() => {});
+        return replyEphemeral(
+          interaction,
+          "❌ Modul-Auswahl konnte nicht verarbeitet werden."
+        ).catch(() => {});
       }
     }
     /**
@@ -420,9 +400,8 @@ module.exports = {
       const command = client.commands.get(interaction.commandName);
 
       if (!command) {
-        return safeReply(interaction, {
-          content: "❌ Dieser Command wurde nicht gefunden.",
-          flags: 64
+        return safeReplyEphemeral(interaction, {
+          content: "❌ Dieser Command wurde nicht gefunden."
         });
       }
 
@@ -437,9 +416,8 @@ module.exports = {
       } catch (err) {
         console.error(`❌ Command Fehler /${interaction.commandName}:`, err);
 
-        return safeReply(interaction, {
-          content: "❌ Fehler beim Ausführen des Commands.",
-          flags: 64
+        return safeReplyEphemeral(interaction, {
+          content: "❌ Fehler beim Ausführen des Commands."
         });
       }
     }
@@ -453,9 +431,8 @@ module.exports = {
       if (!fs.existsSync(buttonPath)) {
         console.error("❌ Button-Ordner nicht gefunden:", buttonPath);
 
-        return safeReply(interaction, {
-          content: "❌ Button-System ist nicht eingerichtet.",
-          flags: 64
+        return safeReplyEphemeral(interaction, {
+          content: "❌ Button-System ist nicht eingerichtet."
         });
       }
 
@@ -480,9 +457,8 @@ module.exports = {
         }
       }
 
-      return safeReply(interaction, {
-        content: "❌ Unbekannter Button.",
-        flags: 64
+      return safeReplyEphemeral(interaction, {
+        content: "❌ Unbekannter Button."
       });
     }
 
@@ -505,7 +481,7 @@ module.exports = {
 
 
       if (interaction.customId === "mp_play_modal") {
-        await interaction.deferReply({ flags: 64 });
+        await deferEphemeral(interaction);
 
         const input = interaction.fields.getTextInputValue("input");
 
@@ -519,7 +495,7 @@ module.exports = {
 
 
       if (interaction.customId === "mp_volume_modal") {
-        await interaction.deferReply({ flags: 64 });
+        await deferEphemeral(interaction);
 
         const raw = interaction.fields.getTextInputValue("percent");
         const percent = Number.parseInt(raw, 10);
@@ -539,7 +515,7 @@ module.exports = {
       }
 
       if (interaction.customId === "mp_remove_modal") {
-        await interaction.deferReply({ flags: 64 });
+        await deferEphemeral(interaction);
 
         const raw = interaction.fields.getTextInputValue("position");
         const position = Number.parseInt(raw, 10);
@@ -561,7 +537,7 @@ module.exports = {
 
 
       if (interaction.customId === "mp_playlist_modal") {
-        await interaction.deferReply({ flags: 64 });
+        await deferEphemeral(interaction);
 
         const playlist = interaction.fields.getTextInputValue("playlist");
         const scope = interaction.fields.getTextInputValue("scope") || "user";
@@ -577,18 +553,16 @@ module.exports = {
       const channel = interaction.member?.voice?.channel;
 
       if (!channel) {
-        return safeReply(interaction, {
-          content: "❌ Du bist in keinem Voice Channel.",
-          flags: 64
+        return safeReplyEphemeral(interaction, {
+          content: "❌ Du bist in keinem Voice Channel."
         });
       }
 
       const allowed = await hasTempVoiceAccess(interaction.user.id, channel.id);
 
       if (!allowed) {
-        return safeReply(interaction, {
-          content: "❌ Nur Owner oder Co-Owner dürfen das nutzen.",
-          flags: 64
+        return safeReplyEphemeral(interaction, {
+          content: "❌ Nur Owner oder Co-Owner dürfen das nutzen."
         });
       }
 
@@ -600,17 +574,15 @@ module.exports = {
         const limit = Number.parseInt(rawLimit, 10);
 
         if (Number.isNaN(limit) || limit < 0 || limit > 99) {
-          return safeReply(interaction, {
-            content: "❌ Bitte gib ein gültiges Limit zwischen 0 und 99 ein.",
-            flags: 64
+          return safeReplyEphemeral(interaction, {
+            content: "❌ Bitte gib ein gültiges Limit zwischen 0 und 99 ein."
           });
         }
 
         await channel.setUserLimit(limit);
 
-        return safeReply(interaction, {
-          content: `🔢 Limit gesetzt auf **${limit}**.`,
-          flags: 64
+        return safeReplyEphemeral(interaction, {
+          content: `🔢 Limit gesetzt auf **${limit}**.`
         });
       }
 
@@ -623,9 +595,8 @@ module.exports = {
           .trim();
 
         if (!newName || newName.length < 1 || newName.length > 100) {
-          return safeReply(interaction, {
-            content: "❌ Der Channelname muss zwischen 1 und 100 Zeichen lang sein.",
-            flags: 64
+          return safeReplyEphemeral(interaction, {
+            content: "❌ Der Channelname muss zwischen 1 und 100 Zeichen lang sein."
           });
         }
 
@@ -639,9 +610,8 @@ module.exports = {
           console.error("❌ TempVoice Panel Rename Update Fehler:", error);
         });
 
-        return safeReply(interaction, {
-          content: `✏️ Kanal umbenannt zu **${newName}**.`,
-          flags: 64
+        return safeReplyEphemeral(interaction, {
+          content: `✏️ Kanal umbenannt zu **${newName}**.`
         });
       }
 
@@ -653,9 +623,8 @@ module.exports = {
         const userId = rawUser.replace(/[<@!>]/g, "");
 
         if (!/^\d{17,20}$/.test(userId)) {
-          return safeReply(interaction, {
-            content: "❌ Bitte gib eine gültige User-ID oder @Mention ein.",
-            flags: 64
+          return safeReplyEphemeral(interaction, {
+            content: "❌ Bitte gib eine gültige User-ID oder @Mention ein."
           });
         }
 
@@ -667,16 +636,14 @@ module.exports = {
         const data = rows[0];
 
         if (!data || data.ownerId !== interaction.user.id) {
-          return safeReply(interaction, {
-            content: "❌ Nur der Owner darf Co-Owner hinzufügen.",
-            flags: 64
+          return safeReplyEphemeral(interaction, {
+            content: "❌ Nur der Owner darf Co-Owner hinzufügen."
           });
         }
 
         if (userId === data.ownerId) {
-          return safeReply(interaction, {
-            content: "❌ Der Owner ist bereits Owner und muss kein Co-Owner sein.",
-            flags: 64
+          return safeReplyEphemeral(interaction, {
+            content: "❌ Der Owner ist bereits Owner und muss kein Co-Owner sein."
           });
         }
 
@@ -685,9 +652,8 @@ module.exports = {
           .catch(() => null);
 
         if (!targetMember) {
-          return safeReply(interaction, {
-            content: "❌ User wurde auf diesem Server nicht gefunden.",
-            flags: 64
+          return safeReplyEphemeral(interaction, {
+            content: "❌ User wurde auf diesem Server nicht gefunden."
           });
         }
 
@@ -700,9 +666,8 @@ module.exports = {
         }
 
         if (coOwners.includes(userId)) {
-          return safeReply(interaction, {
-            content: "❌ <@" + userId + "> ist bereits Co-Owner.",
-            flags: 64
+          return safeReplyEphemeral(interaction, {
+            content: "❌ <@" + userId + "> ist bereits Co-Owner."
           });
         }
 
@@ -713,9 +678,8 @@ module.exports = {
           [JSON.stringify(coOwners), channel.id]
         );
 
-        return safeReply(interaction, {
-          content: "🤝 <@" + userId + "> ist jetzt Co-Owner.",
-          flags: 64
+        return safeReplyEphemeral(interaction, {
+          content: "🤝 <@" + userId + "> ist jetzt Co-Owner."
         });
       }
 
@@ -727,9 +691,8 @@ module.exports = {
         const userId = rawUser.replace(/[<@!>]/g, "");
 
         if (!/^\d{17,20}$/.test(userId)) {
-          return safeReply(interaction, {
-            content: "❌ Bitte gib eine gültige User-ID oder @Mention ein.",
-            flags: 64
+          return safeReplyEphemeral(interaction, {
+            content: "❌ Bitte gib eine gültige User-ID oder @Mention ein."
           });
         }
 
@@ -741,9 +704,8 @@ module.exports = {
         const data = rows[0];
 
         if (!data || data.ownerId !== interaction.user.id) {
-          return safeReply(interaction, {
-            content: "❌ Nur der Owner darf Co-Owner entfernen.",
-            flags: 64
+          return safeReplyEphemeral(interaction, {
+            content: "❌ Nur der Owner darf Co-Owner entfernen."
           });
         }
 
@@ -756,9 +718,8 @@ module.exports = {
         }
 
         if (!coOwners.includes(userId)) {
-          return safeReply(interaction, {
-            content: "❌ <@" + userId + "> ist kein Co-Owner.",
-            flags: 64
+          return safeReplyEphemeral(interaction, {
+            content: "❌ <@" + userId + "> ist kein Co-Owner."
           });
         }
 
@@ -769,15 +730,13 @@ module.exports = {
           [JSON.stringify(coOwners), channel.id]
         );
 
-        return safeReply(interaction, {
-          content: "❌ <@" + userId + "> ist kein Co-Owner mehr.",
-          flags: 64
+        return safeReplyEphemeral(interaction, {
+          content: "❌ <@" + userId + "> ist kein Co-Owner mehr."
         });
       }
 
-      return safeReply(interaction, {
-        content: "❌ Unbekanntes Modal.",
-        flags: 64
+      return safeReplyEphemeral(interaction, {
+        content: "❌ Unbekanntes Modal."
       });
     }
   }

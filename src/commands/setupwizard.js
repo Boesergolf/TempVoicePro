@@ -1,12 +1,16 @@
 const {
   SlashCommandBuilder,
-  PermissionFlagsBits,
-  MessageFlags
+  PermissionFlagsBits
 } = require("discord.js");
 
 const {
   createSetupWizardMessage
 } = require("../utils/setupWizardView");
+const {
+  deferEphemeral,
+  replyEphemeral
+} = require("../utils/interactionReplies");
+const { statusLine } = require("../utils/ui");
 
 function hasSetupWizardAccess(interaction) {
   return interaction.memberPermissions &&
@@ -25,22 +29,14 @@ module.exports = {
 
   async execute(interaction) {
     if (!interaction.guild) {
-      return interaction.reply({
-        content: "❌ Dieser Command funktioniert nur auf Servern.",
-        flags: MessageFlags.Ephemeral
-      });
+      return replyEphemeral(interaction, statusLine("fail", "Dieser Command funktioniert nur auf Servern."));
     }
 
     if (!hasSetupWizardAccess(interaction)) {
-      return interaction.reply({
-        content: "❌ Du brauchst **Server verwalten** oder **Administrator**.",
-        flags: MessageFlags.Ephemeral
-      });
+      return replyEphemeral(interaction, statusLine("fail", "Du brauchst **Server verwalten** oder **Administrator**."));
     }
 
-    await interaction.deferReply({
-      flags: MessageFlags.Ephemeral
-    });
+    await deferEphemeral(interaction);
 
     return interaction.editReply(
       await createSetupWizardMessage(interaction.guild)

@@ -8,6 +8,11 @@ const {
 
 const db = require("../database/mysql");
 const { PANEL_CHANNEL_NAME } = require("./panelChannel");
+const {
+  UI_COLORS,
+  UI_FOOTERS,
+  statusLine
+} = require("./ui");
 
 const TEMPVOICE_PANEL_CHANNEL_NAME =
   process.env.TEMPVOICE_PANEL_CHANNEL_NAME || "tempvoice-panels";
@@ -19,15 +24,15 @@ const MUSIC_TABLES = [
 ];
 
 function ok(text) {
-  return "✅ " + text;
+  return statusLine("ok", text);
 }
 
 function warn(text) {
-  return "⚠️ " + text;
+  return statusLine("warn", text);
 }
 
 function fail(text) {
-  return "❌ " + text;
+  return statusLine("fail", text);
 }
 
 async function tableExists(tableName) {
@@ -241,7 +246,7 @@ function createComponents(tempVoiceStatus) {
 function createPanelRebuildConfirmMessage(targetChannelName) {
   const embed = new EmbedBuilder()
     .setTitle("Zentralpanel neu aufbauen?")
-    .setColor(0xf59e0b)
+    .setColor(UI_COLORS.warning)
     .setDescription(
       "Möchtest du das Zentralpanel wirklich neu aufbauen?\n\n" +
       "Ziel-Channel: **#" + targetChannelName + "**\n\n" +
@@ -249,7 +254,7 @@ function createPanelRebuildConfirmMessage(targetChannelName) {
       "Normale User-Nachrichten werden nicht gelöscht."
     )
     .setFooter({
-      text: "Keine Aktion ohne Bestätigung."
+      text: UI_FOOTERS.noActionWithoutConfirm
     })
     .setTimestamp();
 
@@ -281,7 +286,7 @@ async function createSetupWizardMessage(guild) {
 
   const embed = new EmbedBuilder()
     .setTitle("TempVoicePro Setup-Assistent")
-    .setColor(0x5865f2)
+    .setColor(UI_COLORS.brand)
     .setDescription(
       "Geführter Admin-Überblick für `" + guild.name + "`. " +
       "Der Assistent prüft nur und löscht oder baut nichts ungefragt um."
@@ -313,7 +318,7 @@ async function createSetupWizardMessage(guild) {
       }
     )
     .setFooter({
-      text: "Keine Secrets werden angezeigt."
+      text: UI_FOOTERS.noSecrets
     })
     .setTimestamp();
 

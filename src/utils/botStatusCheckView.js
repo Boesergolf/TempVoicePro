@@ -7,6 +7,11 @@ const { execFile } = require("child_process");
 
 const db = require("../database/mysql");
 const { PANEL_CHANNEL_NAME } = require("./panelChannel");
+const {
+  UI_COLORS,
+  UI_FOOTERS,
+  statusLine
+} = require("./ui");
 
 const TEMPVOICE_PANEL_CHANNEL_NAME =
   process.env.TEMPVOICE_PANEL_CHANNEL_NAME || "tempvoice-panels";
@@ -23,15 +28,15 @@ const IMPORTANT_TABLES = [
 ];
 
 function ok(text) {
-  return "✅ " + text;
+  return statusLine("ok", text);
 }
 
 function warn(text) {
-  return "⚠️ " + text;
+  return statusLine("warn", text);
 }
 
 function fail(text) {
-  return "❌ " + text;
+  return statusLine("fail", text);
 }
 
 function envStatus(name) {
@@ -311,7 +316,7 @@ async function createBotStatusEmbed(interaction) {
 
   return new EmbedBuilder()
     .setTitle("TempVoicePro Botstatus")
-    .setColor(0x5865f2)
+    .setColor(UI_COLORS.brand)
     .setDescription("Systemcheck für `" + guild.name + "`.")
     .addFields(
       {
@@ -336,7 +341,7 @@ async function createBotStatusEmbed(interaction) {
       }
     )
     .setFooter({
-      text: "Keine Secrets werden angezeigt."
+      text: UI_FOOTERS.noSecrets
     })
     .setTimestamp();
 }
