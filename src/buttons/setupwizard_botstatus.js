@@ -1,11 +1,14 @@
 const {
-  PermissionFlagsBits,
-  MessageFlags
+  PermissionFlagsBits
 } = require("discord.js");
 
 const {
   createBotStatusEmbed
 } = require("../utils/botStatusCheckView");
+const {
+  deferEphemeral,
+  replyEphemeral
+} = require("../utils/interactionReplies");
 
 function hasAdminAccess(interaction) {
   return interaction.memberPermissions &&
@@ -20,15 +23,13 @@ module.exports = {
 
   async execute(interaction) {
     if (!hasAdminAccess(interaction)) {
-      return interaction.reply({
-        content: "❌ Du brauchst **Server verwalten** oder **Administrator**.",
-        flags: MessageFlags.Ephemeral
-      });
+      return replyEphemeral(
+        interaction,
+        "❌ Du brauchst **Server verwalten** oder **Administrator**."
+      );
     }
 
-    await interaction.deferReply({
-      flags: MessageFlags.Ephemeral
-    });
+    await deferEphemeral(interaction);
 
     return interaction.editReply({
       embeds: [await createBotStatusEmbed(interaction)]

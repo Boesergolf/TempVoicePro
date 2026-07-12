@@ -1,11 +1,13 @@
 const {
-  PermissionFlagsBits,
-  MessageFlags
+  PermissionFlagsBits
 } = require("discord.js");
 
 const {
   createSetupWizardMessage
 } = require("../utils/setupWizardView");
+const {
+  replyEphemeral
+} = require("../utils/interactionReplies");
 
 function hasAdminAccess(interaction) {
   return interaction.memberPermissions &&
@@ -20,10 +22,10 @@ module.exports = {
 
   async execute(interaction) {
     if (!hasAdminAccess(interaction)) {
-      return interaction.reply({
-        content: "❌ Du brauchst **Server verwalten** oder **Administrator**.",
-        flags: MessageFlags.Ephemeral
-      });
+      return replyEphemeral(
+        interaction,
+        "❌ Du brauchst **Server verwalten** oder **Administrator**."
+      );
     }
 
     return interaction.update(

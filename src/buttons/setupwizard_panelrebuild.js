@@ -1,11 +1,13 @@
 const {
-  PermissionFlagsBits,
-  MessageFlags
+  PermissionFlagsBits
 } = require("discord.js");
 
 const {
   createPanelRebuildConfirmMessage
 } = require("../utils/setupWizardView");
+const {
+  replyEphemeral
+} = require("../utils/interactionReplies");
 
 const { PANEL_CHANNEL_NAME } = require("../utils/panelChannel");
 
@@ -22,10 +24,10 @@ module.exports = {
 
   async execute(interaction) {
     if (!hasAdminAccess(interaction)) {
-      return interaction.reply({
-        content: "❌ Du brauchst **Server verwalten** oder **Administrator**.",
-        flags: MessageFlags.Ephemeral
-      });
+      return replyEphemeral(
+        interaction,
+        "❌ Du brauchst **Server verwalten** oder **Administrator**."
+      );
     }
 
     const targetChannel = interaction.guild.channels.cache.find(channel =>
@@ -35,9 +37,9 @@ module.exports = {
       channel.isTextBased()
     ) || interaction.channel;
 
-    return interaction.reply({
-      ...createPanelRebuildConfirmMessage(targetChannel.name),
-      flags: MessageFlags.Ephemeral
-    });
+    return replyEphemeral(
+      interaction,
+      createPanelRebuildConfirmMessage(targetChannel.name)
+    );
   }
 };

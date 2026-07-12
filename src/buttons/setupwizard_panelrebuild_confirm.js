@@ -1,11 +1,13 @@
 const {
   ChannelType,
-  PermissionFlagsBits,
-  MessageFlags
+  PermissionFlagsBits
 } = require("discord.js");
 
 const { PANEL_CHANNEL_NAME } = require("../utils/panelChannel");
 const { rebuildPanelChannel } = require("../utils/panelRebuild");
+const {
+  replyEphemeral
+} = require("../utils/interactionReplies");
 
 function hasAdminAccess(interaction) {
   return interaction.memberPermissions &&
@@ -41,10 +43,10 @@ module.exports = {
 
   async execute(interaction, client) {
     if (!hasAdminAccess(interaction)) {
-      return interaction.reply({
-        content: "❌ Du brauchst **Server verwalten** oder **Administrator**.",
-        flags: MessageFlags.Ephemeral
-      });
+      return replyEphemeral(
+        interaction,
+        "❌ Du brauchst **Server verwalten** oder **Administrator**."
+      );
     }
 
     const targetChannel = findRebuildTargetChannel(interaction);
