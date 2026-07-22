@@ -172,6 +172,24 @@ async function main() {
 
 
   await connection.query(`
+    CREATE TABLE IF NOT EXISTS radio_presets (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      guildId VARCHAR(32) NOT NULL,
+      userId VARCHAR(32) NOT NULL,
+      name VARCHAR(200) NOT NULL,
+      streamUrl TEXT NOT NULL,
+      sourceUrl TEXT NULL,
+      createdAt BIGINT NOT NULL,
+      updatedAt BIGINT NOT NULL,
+      UNIQUE KEY uniq_radio_preset_user_name (guildId, userId, name),
+      INDEX idx_radio_presets_guild_name (guildId, name)
+    )
+  `);
+
+  console.log("✅ Tabelle radio_presets geprüft/erstellt.");
+
+
+  await connection.query(`
     CREATE TABLE IF NOT EXISTS guild_modules (
       guildId VARCHAR(32) NOT NULL,
       moduleName VARCHAR(64) NOT NULL,

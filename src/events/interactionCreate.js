@@ -14,8 +14,18 @@ const { addTracks, setVolume, removeTrack } = require("../utils/musicPlayer");
 const { detectSource, getMetadataForUrl } = require("../utils/musicMetadata");
 const { refreshLatestMusicPanel } = require("../utils/musicPanelView");
 const {
+  refreshCentralPanelInGuild
+} = require("../utils/centralPanelAutoRefresh");
+const {
   createMusicCentralMessage
 } = require("../utils/panelHubMusic");
+const {
+  getRadioPresetById,
+  searchLocalRadioPresets,
+  fetchRadioBrowserResults,
+  getCachedSearchResult,
+  createSearchResultSelectMessage
+} = require("../utils/radioPresets");
 const {
   installTemporaryInteractionReplyCleanup
 } = require("../utils/temporaryInteractionReply");
@@ -42,6 +52,20 @@ function isHttpUrl(value) {
     return parsed.protocol === "http:" || parsed.protocol === "https:";
   } catch {
     return false;
+  }
+}
+
+async function refreshMusicPanelsAfterRadioChange(interaction) {
+  if (typeof refreshLatestMusicPanel === "function") {
+    await refreshLatestMusicPanel(interaction).catch(error => {
+      console.warn("⚠️ Radio Music-Panel Refresh fehlgeschlagen:", error.message);
+    });
+  }
+
+  if (interaction.guild && interaction.client) {
+    await refreshCentralPanelInGuild(interaction.guild, interaction.client).catch(error => {
+      console.warn("⚠️ Radio Zentralpanel Refresh fehlgeschlagen:", error.message);
+    });
   }
 }
 
@@ -467,6 +491,71 @@ module.exports = {
      */
     
     if (interaction.isStringSelectMenu && interaction.isStringSelectMenu()) {
+      if (interaction.customId === "mp_radio_saved_select") {
+        await deferEphemeral(interaction);
+
+        try {
+          const presetId = Number(interaction.values[0]);
+          const preset = await getRadioPresetById(interaction.guild.id, presetId);
+
+          if (!preset) {
+            return interaction.editReply("❌ Gespeicherter Radiostream wurde nicht gefunden.");
+          }
+
+          const {
+            playRadioStream
+          } = require("../utils/radioPlayer");
+
+          const radio = await playRadioStream(interaction, preset.streamUrl, preset.name);
+
+          await refreshMusicPanelsAfterRadioChange(interaction);
+
+          return interaction.editReply(
+            "📻 Gespeicherter Radiostream gestartet: **" +
+            radio.title +
+            "**\n🔗 " +
+            radio.streamUrl
+          );
+        } catch (err) {
+          console.error("❌ Gespeicherten Radiostream starten Fehler:", err.message);
+          return interaction.editReply("❌ Radiostream konnte nicht gestartet werden: " + err.message);
+        }
+      }
+
+      if (
+        interaction.customId &&
+        interaction.customId.startsWith("mp_radio_search_select:")
+      ) {
+        await deferEphemeral(interaction);
+
+        const token = interaction.customId.split(":")[1];
+        const result = getCachedSearchResult(token, interaction.values[0]);
+
+        if (!result) {
+          return interaction.editReply("❌ Dieses Suchergebnis ist abgelaufen. Bitte suche erneut.");
+        }
+
+        try {
+          const {
+            playRadioStream
+          } = require("../utils/radioPlayer");
+
+          const radio = await playRadioStream(interaction, result.streamUrl, result.name);
+
+          await refreshMusicPanelsAfterRadioChange(interaction);
+
+          return interaction.editReply(
+            "📻 Suchergebnis gestartet: **" +
+            radio.title +
+            "**\n🔗 " +
+            radio.streamUrl
+          );
+        } catch (err) {
+          console.error("❌ Radio Suchergebnis Start Fehler:", err.message);
+          return interaction.editReply("❌ Radiostream konnte nicht gestartet werden: " + err.message);
+        }
+      }
+
       if (interaction.customId === "gr_select") {
         return luckWheel.handleWheelSelect(interaction);
       }
@@ -491,11 +580,7 @@ module.exports = {
 
           const radio = await playRadioStream(interaction, url, name);
 
-          if (typeof refreshLatestMusicPanel === "function") {
-            await refreshLatestMusicPanel(interaction).catch(error => {
-              console.warn("⚠️ Radio Panel Refresh fehlgeschlagen:", error.message);
-            });
-          }
+          await refreshMusicPanelsAfterRadioChange(interaction);
 
           return interaction.editReply(
             "📻 Radiostream gestartet: **" +
@@ -506,6 +591,45 @@ module.exports = {
         } catch (err) {
           console.error("❌ Radio Panel Start Fehler:", err);
           return interaction.editReply("❌ Radio konnte nicht gestartet werden: " + err.message);
+        }
+      }
+
+      if (interaction.customId === "mp_radio_search_modal") {
+        await deferEphemeral(interaction);
+
+        try {
+          const query = interaction.fields.getTextInputValue("query");
+          const localResults = await searchLocalRadioPresets(interaction.guild.id, query, 10);
+
+          if (localResults.length > 0) {
+            return interaction.editReply(
+              createSearchResultSelectMessage(
+                query,
+                localResults.map(row => ({
+                  source: "local",
+                  name: row.name,
+                  streamUrl: row.streamUrl,
+                  sourceUrl: row.sourceUrl
+                })),
+                "Gespeicherte Sender"
+              )
+            );
+          }
+
+          const externalResults = await fetchRadioBrowserResults(query, 10);
+
+          if (externalResults.length === 0) {
+            return interaction.editReply(
+              "📭 Keine Radiostreams gefunden. Speichere erst Sender oder suche nach einem anderen Namen."
+            );
+          }
+
+          return interaction.editReply(
+            createSearchResultSelectMessage(query, externalResults, "Radio Browser")
+          );
+        } catch (err) {
+          console.error("❌ Radio Suche Fehler:", err.message);
+          return interaction.editReply("❌ Radiosuche konnte nicht ausgeführt werden.");
         }
       }
 

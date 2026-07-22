@@ -294,7 +294,7 @@ function createMusicQueueCentralMessage(guildId) {
 
 
 function createMusicRadioRows() {
-  const row = new ActionRowBuilder().addComponents(
+  const row1 = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId("mp_radio_play")
       .setLabel("Radio starten")
@@ -307,6 +307,26 @@ function createMusicRadioRows() {
       .setEmoji("⏹️")
       .setStyle(ButtonStyle.Danger),
 
+    new ButtonBuilder()
+      .setCustomId("mp_radio_save")
+      .setLabel("Speichern")
+      .setEmoji("💾")
+      .setStyle(ButtonStyle.Primary),
+
+    new ButtonBuilder()
+      .setCustomId("mp_radio_saved")
+      .setLabel("Gespeicherte")
+      .setEmoji("📚")
+      .setStyle(ButtonStyle.Secondary),
+
+    new ButtonBuilder()
+      .setCustomId("mp_radio_search")
+      .setLabel("Suchen")
+      .setEmoji("🔎")
+      .setStyle(ButtonStyle.Secondary)
+  );
+
+  const row2 = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId("mp_radio_refresh")
       .setLabel("Aktualisieren")
@@ -326,7 +346,7 @@ function createMusicRadioRows() {
       .setStyle(ButtonStyle.Secondary)
   );
 
-  return [row];
+  return [row1, row2];
 }
 
 function createMusicRadioCentralMessage(guildId) {

@@ -162,11 +162,16 @@ Radio kann direkt im Musikpanel geoeffnet werden. Die Radio-Ansicht bietet:
 
 - Radio starten
 - Radio stoppen
+- Aktuellen Radiostream speichern
+- Gespeicherte Radiostreams anzeigen und abspielen
+- Radiostream nach Namen suchen
 - Aktualisieren
 - Zurueck zur Musik
 - Kontrollzentrum
 
 Radio unterstuetzt direkte Stream-URLs sowie `.m3u`- und `.pls`-Playlist-URLs. Beim Start eines Radiostreams wird laufende Musik gestoppt; beim Start normaler Musik wird laufendes Radio gestoppt.
+
+Gespeicherte Radiostreams werden pro Server mit Name, Stream-URL, Quelle und speicherndem Nutzer abgelegt. Die Suche prueft zuerst gespeicherte Sender und nutzt danach eine kleine externe Radio-Browser-Suche als Fallback.
 
 Wenn `/musicpanel` mehrfach ausgeführt wird, wird das vorhandene Panel aktualisiert und doppelte Panels werden entfernt.
 

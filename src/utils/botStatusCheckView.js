@@ -24,7 +24,8 @@ const IMPORTANT_TABLES = [
   "music_playlist_items",
   "music_settings",
   "spotify_user_tokens",
-  "guild_modules"
+  "guild_modules",
+  "radio_presets"
 ];
 
 function ok(text) {

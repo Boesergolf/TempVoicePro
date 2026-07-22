@@ -224,7 +224,7 @@ Im Musikpanel kannst du die wichtigsten Aktionen per Button ausfuehren:
 - `Remove`: Track aus der Queue entfernen.
 - `Volume`: Lautstaerke setzen.
 - `Favorite`: aktuellen Track in Favoriten speichern, wenn der Button verfuegbar ist.
-- `Radio`: Radiostreams ueber das Musikpanel starten, stoppen und aktualisieren.
+- `Radio`: Radiostreams ueber das Musikpanel starten, stoppen, speichern, suchen und aktualisieren.
 
 ### Radio nutzen
 
@@ -239,6 +239,16 @@ Beispiele:
 ```
 
 Unterstuetzt werden direkte Stream-URLs sowie `.m3u`- und `.pls`-Playlist-URLs. Wenn Radio gestartet wird, stoppt der Bot laufende Musik. Wenn normale Musik gestartet wird, stoppt der Bot laufendes Radio.
+
+Im Radio-Panel kannst du:
+
+- einen Stream per URL starten
+- den aktuell laufenden Stream speichern
+- gespeicherte Sender anzeigen und direkt abspielen
+- nach Sendernamen suchen
+- Radio stoppen oder die Ansicht aktualisieren
+
+Die Suche prueft zuerst lokal gespeicherte Sender auf dem Server. Wenn nichts gefunden wird, nutzt der Bot eine kleine externe Radio-Browser-Suche und zeigt die Treffer als Auswahl an.
 
 ### Musik per Slash-Command nutzen
 
