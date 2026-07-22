@@ -215,7 +215,7 @@ module.exports = {
 
         return interaction.reply({
           content: volume === false
-            ? "❌ Es läuft aktuell keine Musik."
+            ? "❌ Es läuft aktuell keine Musik oder Radio."
             : "🔊 Lautstärke gesetzt auf **" + volume + "%**.",
           flags: 64
         });

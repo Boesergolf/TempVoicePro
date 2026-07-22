@@ -666,7 +666,7 @@ module.exports = {
         const volume = setVolume(interaction.guild.id, percent);
 
         if (volume === false) {
-          return interaction.editReply("❌ Es läuft aktuell keine Musik.");
+          return interaction.editReply("❌ Es läuft aktuell keine Musik oder Radio.");
         }
 
         await refreshLatestMusicPanel(interaction);

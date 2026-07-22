@@ -17,8 +17,11 @@ const {
   clampVolumePercent,
   getSavedVolumePercent
 } = require("./musicSettings");
-
-const radios = new Map();
+const {
+  getRadioState,
+  setRadioState,
+  deleteRadioState
+} = require("./radioState");
 
 function isHttpUrl(value) {
   try {
@@ -152,7 +155,7 @@ async function resolveRadioUrl(url) {
 }
 
 function stopRadio(guildId) {
-  const radio = radios.get(guildId);
+  const radio = getRadioState(guildId);
 
   if (!radio) {
     return false;
@@ -176,7 +179,7 @@ function stopRadio(guildId) {
     }
   } catch {}
 
-  radios.delete(guildId);
+  deleteRadioState(guildId);
 
   return true;
 }
@@ -287,13 +290,13 @@ async function playRadioStream(interaction, inputUrl, name = null) {
     requestedBy: interaction.user.id
   };
 
-  radios.set(interaction.guild.id, radio);
+  setRadioState(interaction.guild.id, radio);
 
   player.on(AudioPlayerStatus.Idle, () => {
-    const current = radios.get(interaction.guild.id);
+    const current = getRadioState(interaction.guild.id);
 
     if (current && current.ffmpeg === ffmpeg) {
-      radios.delete(interaction.guild.id);
+      deleteRadioState(interaction.guild.id);
     }
   });
 
@@ -303,10 +306,10 @@ async function playRadioStream(interaction, inputUrl, name = null) {
   });
 
   ffmpeg.once("close", () => {
-    const current = radios.get(interaction.guild.id);
+    const current = getRadioState(interaction.guild.id);
 
     if (current && current.ffmpeg === ffmpeg) {
-      radios.delete(interaction.guild.id);
+      deleteRadioState(interaction.guild.id);
     }
   });
 
@@ -317,7 +320,7 @@ async function playRadioStream(interaction, inputUrl, name = null) {
 }
 
 function getRadio(guildId) {
-  return radios.get(guildId) || null;
+  return getRadioState(guildId);
 }
 
 function setRadioVolume(guildId, percent) {

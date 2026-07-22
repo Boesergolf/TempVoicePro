@@ -4,6 +4,7 @@ const {
   getSavedVolumePercent,
   saveVolumePercent
 } = require("./musicSettings");
+const { getRadioState } = require("./radioState");
 
 const fs = require("fs");
 const { spawn, execFile } = require("child_process");
@@ -883,15 +884,22 @@ function setVolume(guildId, percent) {
   const queue = getQueue(guildId);
   const volume = clampVolumePercent(percent);
   let radioVolume = false;
+  const radio = getRadioState(guildId);
 
-  try {
-    const { setRadioVolume } = require("./radioPlayer");
+  if (radio) {
+    radio.volume = volume;
 
-    if (typeof setRadioVolume === "function") {
-      radioVolume = setRadioVolume(guildId, volume);
+    const radioResource = radio.resource || (
+      radio.player && radio.player.state
+        ? radio.player.state.resource
+        : null
+    );
+
+    if (radioResource && radioResource.volume) {
+      radioResource.volume.setVolume(volume / 100);
     }
-  } catch (err) {
-    console.error("❌ Radio-Lautstärke konnte nicht gesetzt werden:", err.message);
+
+    radioVolume = volume;
   }
 
   if (!queue && radioVolume === false) return false;
@@ -923,14 +931,11 @@ function getVolume(guildId) {
     return queue.volume ?? DEFAULT_VOLUME_PERCENT;
   }
 
-  try {
-    const { getRadio } = require("./radioPlayer");
-    const radio = typeof getRadio === "function" ? getRadio(guildId) : null;
+  const radio = getRadioState(guildId);
 
-    if (radio && radio.volume) {
-      return radio.volume;
-    }
-  } catch {}
+  if (radio && radio.volume) {
+    return radio.volume;
+  }
 
   return DEFAULT_VOLUME_PERCENT;
 }
