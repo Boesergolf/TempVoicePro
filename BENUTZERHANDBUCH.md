@@ -222,7 +222,7 @@ Im Musikpanel kannst du die wichtigsten Aktionen per Button ausfuehren:
 - `Clear`: Queue leeren.
 - `Shuffle`: Queue mischen.
 - `Remove`: Track aus der Queue entfernen.
-- `Volume`: Lautstaerke setzen.
+- `Volume`: Lautstaerke fuer Musik und laufendes Radio setzen.
 - `Favorite`: aktuellen Track in Favoriten speichern, wenn der Button verfuegbar ist.
 - `Radio`: Radiostreams ueber das Musikpanel starten, stoppen, speichern, suchen und aktualisieren.
 

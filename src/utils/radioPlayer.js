@@ -12,6 +12,11 @@ const {
 
 const { spawn, execFile } = require("child_process");
 const { stopMusic } = require("./musicPlayer");
+const {
+  DEFAULT_VOLUME_PERCENT,
+  clampVolumePercent,
+  getSavedVolumePercent
+} = require("./musicSettings");
 
 const radios = new Map();
 
@@ -253,10 +258,16 @@ async function playRadioStream(interaction, inputUrl, name = null) {
     inlineVolume: true
   });
 
-  const volume = Number(process.env.RADIO_DEFAULT_VOLUME_PERCENT || process.env.MUSIC_DEFAULT_VOLUME_PERCENT || 20);
+  let volume = DEFAULT_VOLUME_PERCENT;
+
+  try {
+    volume = await getSavedVolumePercent(interaction.guild.id);
+  } catch (err) {
+    console.error("❌ Gespeicherte Radio-Lautstärke konnte nicht geladen werden:", err.message);
+  }
 
   if (resource.volume) {
-    resource.volume.setVolume(Math.max(1, Math.min(volume, 100)) / 100);
+    resource.volume.setVolume(clampVolumePercent(volume) / 100);
   }
 
   const title = cleanTitle(name) || getRadioTitleFromUrl(streamUrl);
@@ -270,6 +281,8 @@ async function playRadioStream(interaction, inputUrl, name = null) {
     player,
     connection,
     ffmpeg,
+    resource,
+    volume: clampVolumePercent(volume),
     startedAt: Date.now(),
     requestedBy: interaction.user.id
   };
@@ -307,6 +320,30 @@ function getRadio(guildId) {
   return radios.get(guildId) || null;
 }
 
+function setRadioVolume(guildId, percent) {
+  const radio = getRadio(guildId);
+
+  if (!radio) {
+    return false;
+  }
+
+  const volume = clampVolumePercent(percent);
+
+  radio.volume = volume;
+
+  const resource = radio.resource || (
+    radio.player && radio.player.state
+      ? radio.player.state.resource
+      : null
+  );
+
+  if (resource && resource.volume) {
+    resource.volume.setVolume(volume / 100);
+  }
+
+  return volume;
+}
+
 function getRadioText(guildId) {
   const radio = getRadio(guildId);
 
@@ -328,6 +365,7 @@ module.exports = {
   playRadioStream,
   stopRadio,
   getRadio,
+  setRadioVolume,
   getRadioText,
   resolveRadioUrl
 };

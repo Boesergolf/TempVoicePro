@@ -881,19 +881,31 @@ function shuffleQueue(guildId) {
 
 function setVolume(guildId, percent) {
   const queue = getQueue(guildId);
-
-  if (!queue) return false;
-
   const volume = clampVolumePercent(percent);
+  let radioVolume = false;
 
-  queue.volume = volume;
-  queue.volumeLoaded = true;
+  try {
+    const { setRadioVolume } = require("./radioPlayer");
+
+    if (typeof setRadioVolume === "function") {
+      radioVolume = setRadioVolume(guildId, volume);
+    }
+  } catch (err) {
+    console.error("❌ Radio-Lautstärke konnte nicht gesetzt werden:", err.message);
+  }
+
+  if (!queue && radioVolume === false) return false;
+
+  if (queue) {
+    queue.volume = volume;
+    queue.volumeLoaded = true;
+  }
 
   saveVolumePercent(guildId, volume).catch(err => {
     console.error("❌ Music-Lautstärke konnte nicht gespeichert werden:", err.message);
   });
 
-  const resource = queue.player && queue.player.state
+  const resource = queue && queue.player && queue.player.state
     ? queue.player.state.resource
     : null;
 
@@ -907,11 +919,20 @@ function setVolume(guildId, percent) {
 function getVolume(guildId) {
   const queue = getQueue(guildId);
 
-  if (!queue) {
-    return DEFAULT_VOLUME_PERCENT;
+  if (queue) {
+    return queue.volume ?? DEFAULT_VOLUME_PERCENT;
   }
 
-  return queue.volume ?? DEFAULT_VOLUME_PERCENT;
+  try {
+    const { getRadio } = require("./radioPlayer");
+    const radio = typeof getRadio === "function" ? getRadio(guildId) : null;
+
+    if (radio && radio.volume) {
+      return radio.volume;
+    }
+  } catch {}
+
+  return DEFAULT_VOLUME_PERCENT;
 }
 
 

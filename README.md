@@ -169,7 +169,7 @@ Radio kann direkt im Musikpanel geoeffnet werden. Die Radio-Ansicht bietet:
 - Zurueck zur Musik
 - Kontrollzentrum
 
-Radio unterstuetzt direkte Stream-URLs sowie `.m3u`- und `.pls`-Playlist-URLs. Beim Start eines Radiostreams wird laufende Musik gestoppt; beim Start normaler Musik wird laufendes Radio gestoppt.
+Radio unterstuetzt direkte Stream-URLs sowie `.m3u`- und `.pls`-Playlist-URLs. Beim Start eines Radiostreams wird laufende Musik gestoppt; beim Start normaler Musik wird laufendes Radio gestoppt. Der Volume-Regler im Musikpanel gilt auch fuer laufendes Radio.
 
 Gespeicherte Radiostreams werden pro Server mit Name, Stream-URL, Quelle und speicherndem Nutzer abgelegt. Die Suche prueft zuerst gespeicherte Sender und nutzt danach eine kleine externe Radio-Browser-Suche als Fallback.
 
@@ -968,7 +968,7 @@ Standardwert in `.env`:
 
 `MUSIC_DEFAULT_VOLUME_PERCENT=20`
 
-Wenn die Lautstärke über `/music volume` oder das Music Panel geändert wird, speichert der Bot die Lautstärke pro Server in MySQL.
+Wenn die Lautstärke über `/music volume` oder das Music Panel geändert wird, speichert der Bot die Lautstärke pro Server in MySQL. Die Einstellung gilt auch fuer laufendes Radio.
 
 Beim nächsten Abspielen wird die gespeicherte Lautstärke automatisch wieder geladen.
 
