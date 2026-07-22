@@ -474,6 +474,41 @@ module.exports = {
 
     if (interaction.isModalSubmit()) {
 
+      if (interaction.customId === "mp_radio_play_modal") {
+        console.log("📻 Radio Modal Submit:", interaction.user.tag, interaction.guild ? interaction.guild.id : "no-guild");
+
+        await deferEphemeral(interaction);
+
+        const url = interaction.fields.getTextInputValue("url");
+        const name = interaction.fields.getTextInputValue("name") || null;
+
+        await interaction.editReply("📻 Radiostream wird gestartet ...");
+
+        try {
+          const {
+            playRadioStream
+          } = require("../utils/radioPlayer");
+
+          const radio = await playRadioStream(interaction, url, name);
+
+          if (typeof refreshLatestMusicPanel === "function") {
+            await refreshLatestMusicPanel(interaction).catch(error => {
+              console.warn("⚠️ Radio Panel Refresh fehlgeschlagen:", error.message);
+            });
+          }
+
+          return interaction.editReply(
+            "📻 Radiostream gestartet: **" +
+            radio.title +
+            "**\n🔗 " +
+            radio.streamUrl
+          );
+        } catch (err) {
+          console.error("❌ Radio Panel Start Fehler:", err);
+          return interaction.editReply("❌ Radio konnte nicht gestartet werden: " + err.message);
+        }
+      }
+
       if (interaction.customId === "gr_list_modal") {
         return luckWheel.handleListModal(interaction);
       }

@@ -35,6 +35,18 @@ function getPanelChannelNameForMusic() {
   return process.env.PANEL_CHANNEL_NAME || "bot-panels";
 }
 
+function stopRadioIfActive(guildId) {
+  try {
+    const { stopRadio } = require("./radioPlayer");
+
+    if (typeof stopRadio === "function") {
+      stopRadio(guildId);
+    }
+  } catch (err) {
+    console.warn("⚠️ Radio konnte vor Musikstart nicht gestoppt werden:", err.message);
+  }
+}
+
 function isPanelChannelForMusicMessages(channel) {
   return Boolean(
     channel &&
@@ -737,6 +749,8 @@ async function playNext(guildId) {
 
 async function addTracks(interaction, tracks) {
   const queue = getOrCreateQueue(interaction.guild.id);
+
+  stopRadioIfActive(interaction.guild.id);
 
   await loadSavedVolumeForQueue(interaction.guild.id, queue);
 

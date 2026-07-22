@@ -251,7 +251,7 @@ async function importYouTubePlaylist(url, maxItems) {
   return items;
 }
 
-async function importPlaylistFromUrl(url, maxItems = 50) {
+async function importPlaylistFromUrl(url, maxItems = 300) {
   const lower = url.toLowerCase();
 
   if (lower.includes("spotify.com/playlist") || lower.startsWith("spotify:playlist:")) {

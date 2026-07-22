@@ -224,6 +224,21 @@ Im Musikpanel kannst du die wichtigsten Aktionen per Button ausfuehren:
 - `Remove`: Track aus der Queue entfernen.
 - `Volume`: Lautstaerke setzen.
 - `Favorite`: aktuellen Track in Favoriten speichern, wenn der Button verfuegbar ist.
+- `Radio`: Radiostreams ueber das Musikpanel starten, stoppen und aktualisieren.
+
+### Radio nutzen
+
+Radio kann per Slash-Command oder ueber das Musikpanel gestartet werden.
+
+Beispiele:
+
+```text
+/radio play url:https://streams.80s80s.de/web/mp3-192/streams.80s80s.de/play.m3u name:80s80s
+/radio now
+/radio stop
+```
+
+Unterstuetzt werden direkte Stream-URLs sowie `.m3u`- und `.pls`-Playlist-URLs. Wenn Radio gestartet wird, stoppt der Bot laufende Musik. Wenn normale Musik gestartet wird, stoppt der Bot laufendes Radio.
 
 ### Musik per Slash-Command nutzen
 
@@ -252,6 +267,7 @@ Es gibt:
 - globale Server-Playlists
 - YouTube- und Spotify-Links
 - YouTube- und Spotify-Playlist-Import
+- Playlist-Import bis zu 300 Eintraege
 
 Typischer Ablauf:
 
@@ -574,7 +590,7 @@ Hinweis: Der Generator aktualisiert die technische Befehlsreferenz. Fachliche Er
 
 _Dieser Abschnitt wird mit `npm run docs:update` aus `src/commands` generiert._
 
-Anzahl Slash-Commands: 35
+Anzahl Slash-Commands: 36
 
 ### `/addcoowner`
 
@@ -856,6 +872,19 @@ Subcommands:
 Schaltet das Zentralpanel auf Playlist-Verwaltung.
 
 Zugriff: Admins/Moderatoren mit Server verwalten
+
+### `/radio`
+
+Spielt öffentliche Radiostreams im Voice Channel ab.
+
+Zugriff: Normale Nutzer
+
+Subcommands:
+- `/radio play` - Startet einen Radiostream.
+  - `url` (Text, erforderlich) - Direkte Stream-URL oder .m3u/.pls Playlist-URL.
+  - `name` (Text, optional) - Optionaler Anzeigename für den Sender.
+- `/radio stop` - Stoppt den laufenden Radiostream.
+- `/radio now` - Zeigt den aktuell laufenden Radiostream.
 
 ### `/removecoowner`
 

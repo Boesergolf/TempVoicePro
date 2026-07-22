@@ -1,7 +1,8 @@
 const {
   createMusicCentralMessage,
   createMusicQueueCentralMessage,
-  createMusicNowCentralMessage
+  createMusicNowCentralMessage,
+  createMusicRadioCentralMessage
 } = require("./panelHubMusic");
 
 let refreshTimer = null;
@@ -108,6 +109,16 @@ function getCentralPanelView(message) {
     return "now";
   }
 
+  if (
+    footer.includes("TempVoicePro Musik Radio") ||
+    title.includes("Radio") ||
+    componentIds.includes("mp_radio_play") ||
+    componentIds.includes("mp_radio_stop") ||
+    componentIds.includes("mp_radio_refresh")
+  ) {
+    return "radio";
+  }
+
   return null;
 }
 
@@ -122,6 +133,10 @@ function createMessageForView(view, guildId) {
 
   if (view === "now") {
     return createMusicNowCentralMessage(guildId);
+  }
+
+  if (view === "radio") {
+    return createMusicRadioCentralMessage(guildId);
   }
 
   return null;

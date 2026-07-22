@@ -212,7 +212,7 @@ module.exports = {
             .setDescription("Maximale Anzahl Einträge")
             .setRequired(false)
             .setMinValue(1)
-            .setMaxValue(100)
+            .setMaxValue(300)
         )
     )
 
@@ -465,7 +465,7 @@ module.exports = {
         const name = normalizeName(interaction.options.getString("playlist"));
         const url = interaction.options.getString("url").trim();
         const scope = getScope(interaction);
-        const limit = interaction.options.getInteger("limit") || 50;
+        const limit = interaction.options.getInteger("limit") || 300;
 
         if (scope === "global" && !canManageGlobal(interaction)) {
           return interaction.editReply(

@@ -149,6 +149,7 @@ Dort gibt es Buttons für:
 - Shuffle
 - Remove
 - Volume
+- Radio
 - Refresh
 
 Das Panel zeigt außerdem:
@@ -156,6 +157,16 @@ Das Panel zeigt außerdem:
 - aktuellen Track
 - Queue
 - Spotify Hinweis
+
+Radio kann direkt im Musikpanel geoeffnet werden. Die Radio-Ansicht bietet:
+
+- Radio starten
+- Radio stoppen
+- Aktualisieren
+- Zurueck zur Musik
+- Kontrollzentrum
+
+Radio unterstuetzt direkte Stream-URLs sowie `.m3u`- und `.pls`-Playlist-URLs. Beim Start eines Radiostreams wird laufende Musik gestoppt; beim Start normaler Musik wird laufendes Radio gestoppt.
 
 Wenn `/musicpanel` mehrfach ausgeführt wird, wird das vorhandene Panel aktualisiert und doppelte Panels werden entfernt.
 
@@ -172,6 +183,8 @@ Unterstützt werden:
 - Spotify Playlist Import
 - YouTube Playlist Import
 
+Playlist-Importe laden standardmaessig bis zu 300 Eintraege. Das gilt auch fuer Import ueber das Playlistpanel.
+
 Playlist Commands:
 
 - `/playlist create`
@@ -181,6 +194,12 @@ Playlist Commands:
 - `/playlist import`
 - `/playlist remove`
 - `/playlist delete`
+
+Radio Commands:
+
+- `/radio play`
+- `/radio now`
+- `/radio stop`
 
 ## ChatGPT Integration
 

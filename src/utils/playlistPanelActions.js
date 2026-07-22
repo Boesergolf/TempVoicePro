@@ -418,7 +418,7 @@ async function showImportModal(interaction) {
 
   addTextInput(modal, "playlist", "Bot-Playlist-Name", TextInputStyle.Short, true, "z.B. Party", "");
   addTextInput(modal, "url", "Playlist-Link", TextInputStyle.Paragraph, true, "Spotify-Playlist oder YouTube-Playlist", "");
-  addTextInput(modal, "limit", "Limit 1-100", TextInputStyle.Short, false, "50", "50");
+  addTextInput(modal, "limit", "Limit 1-300", TextInputStyle.Short, false, "300", "300");
   addTextInput(modal, "scope", "Scope: user oder global", TextInputStyle.Short, false, "user", "user");
 
   return interaction.showModal(modal);
@@ -507,7 +507,7 @@ async function showImportSelectedModal(interaction, playlistId) {
   const modal = buildModal("playlist_panel_import_selected_modal:" + playlistId, "Playlist importieren");
 
   addTextInput(modal, "url", "Playlist-Link", TextInputStyle.Paragraph, true, "Spotify-Playlist oder YouTube-Playlist", "");
-  addTextInput(modal, "limit", "Limit 1-100", TextInputStyle.Short, false, "50", "50");
+  addTextInput(modal, "limit", "Limit 1-300", TextInputStyle.Short, false, "300", "300");
 
   return interaction.showModal(modal);
 }
@@ -635,13 +635,13 @@ function isSupportedPlaylistImportUrl(url) {
 }
 
 function getAddModalImportLimit() {
-  const value = Number(process.env.PLAYLIST_PANEL_ADD_IMPORT_LIMIT || 50);
+  const value = Number(process.env.PLAYLIST_PANEL_ADD_IMPORT_LIMIT || 300);
 
   if (!Number.isFinite(value)) {
-    return 50;
+    return 300;
   }
 
-  return Math.max(1, Math.min(value, 100));
+  return Math.max(1, Math.min(value, 300));
 }
 
 async function addUrlToPlaylist(interaction, playlist, url, customTitle) {
@@ -831,8 +831,8 @@ async function handleImportModal(interaction) {
 
   const name = normalizeName(interaction.fields.getTextInputValue("playlist"));
   const url = String(interaction.fields.getTextInputValue("url") || "").trim();
-  const limitRaw = Number(interaction.fields.getTextInputValue("limit") || 50);
-  const limit = Math.max(1, Math.min(Number.isFinite(limitRaw) ? limitRaw : 50, 100));
+  const limitRaw = Number(interaction.fields.getTextInputValue("limit") || 300);
+  const limit = Math.max(1, Math.min(Number.isFinite(limitRaw) ? limitRaw : 300, 300));
   const scope = normalizeScope(interaction.fields.getTextInputValue("scope"));
 
   if (!name) {
@@ -872,8 +872,8 @@ async function handleImportSelectedModal(interaction, playlistId) {
   }
 
   const url = String(interaction.fields.getTextInputValue("url") || "").trim();
-  const limitRaw = Number(interaction.fields.getTextInputValue("limit") || 50);
-  const limit = Math.max(1, Math.min(Number.isFinite(limitRaw) ? limitRaw : 50, 100));
+  const limitRaw = Number(interaction.fields.getTextInputValue("limit") || 300);
+  const limit = Math.max(1, Math.min(Number.isFinite(limitRaw) ? limitRaw : 300, 300));
 
   const result = await importIntoPlaylist(interaction, playlist, url, limit);
 
@@ -954,7 +954,7 @@ async function handlePlaySelected(interaction, playlistId) {
 }
 
 async function showPlaylistSongs(interaction, playlist) {
-  const items = await getPlaylistItems(playlist.id, 50);
+  const items = await getPlaylistItems(playlist.id, 300);
 
   if (items.length === 0) {
     return interaction.editReply("📭 Diese Playlist ist leer.");
@@ -969,7 +969,7 @@ async function showPlaylistSongs(interaction, playlist) {
     .setTitle("🧾 Songs in " + playlist.name)
     .setDescription(lines.join("\n").slice(0, 4000))
     .setColor(0x5865f2)
-    .setFooter({ text: "Scope: " + playlist.scope + " • Maximal 50 Einträge" })
+    .setFooter({ text: "Scope: " + playlist.scope + " • Maximal 300 Einträge" })
     .setTimestamp();
 
   return interaction.editReply({ embeds: [embed] });

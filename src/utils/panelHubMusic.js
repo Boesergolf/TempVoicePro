@@ -6,6 +6,7 @@ const {
 } = require("discord.js");
 
 const musicPlayer = require("./musicPlayer");
+const radioPlayer = require("./radioPlayer");
 
 function getQueueSafe(guildId) {
   if (typeof musicPlayer.getQueue !== "function") {
@@ -167,7 +168,13 @@ function createMusicCentralRows() {
       .setCustomId("mp_volume")
       .setLabel("Volume")
       .setEmoji("🔊")
-      .setStyle(ButtonStyle.Secondary)
+      .setStyle(ButtonStyle.Secondary),
+
+    new ButtonBuilder()
+      .setCustomId("mp_radio")
+      .setLabel("Radio")
+      .setEmoji("📻")
+      .setStyle(ButtonStyle.Primary)
   );
 
   const row3 = new ActionRowBuilder().addComponents(
@@ -286,6 +293,71 @@ function createMusicQueueCentralMessage(guildId) {
 }
 
 
+function createMusicRadioRows() {
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId("mp_radio_play")
+      .setLabel("Radio starten")
+      .setEmoji("▶️")
+      .setStyle(ButtonStyle.Success),
+
+    new ButtonBuilder()
+      .setCustomId("mp_radio_stop")
+      .setLabel("Radio stoppen")
+      .setEmoji("⏹️")
+      .setStyle(ButtonStyle.Danger),
+
+    new ButtonBuilder()
+      .setCustomId("mp_radio_refresh")
+      .setLabel("Aktualisieren")
+      .setEmoji("🔄")
+      .setStyle(ButtonStyle.Secondary),
+
+    new ButtonBuilder()
+      .setCustomId("panel_hub_music")
+      .setLabel("Zurück zur Musik")
+      .setEmoji("🎵")
+      .setStyle(ButtonStyle.Secondary),
+
+    new ButtonBuilder()
+      .setCustomId("panel_hub_home")
+      .setLabel("Kontrollzentrum")
+      .setEmoji("⬅️")
+      .setStyle(ButtonStyle.Secondary)
+  );
+
+  return [row];
+}
+
+function createMusicRadioCentralMessage(guildId) {
+  const radio = typeof radioPlayer.getRadio === "function"
+    ? radioPlayer.getRadio(guildId)
+    : null;
+
+  const description = typeof radioPlayer.getRadioText === "function"
+    ? radioPlayer.getRadioText(guildId)
+    : "📻 Radio-Modul nicht verfügbar.";
+
+  const embed = new EmbedBuilder()
+    .setTitle("📻 Radio")
+    .setDescription(
+      [
+        description,
+        "",
+        "**Unterstützt:** direkte Stream-URLs sowie `.m3u` und `.pls` Playlist-URLs.",
+        "**Beispiel:** `https://streams.80s80s.de/web/mp3-192/streams.80s80s.de/play.m3u`"
+      ].join("\n")
+    )
+    .setColor(radio ? 0x22c55e : 0x5865f2)
+    .setFooter({ text: "TempVoicePro Musik Radio" })
+    .setTimestamp();
+
+  return {
+    embeds: [embed],
+    components: createMusicRadioRows()
+  };
+}
+
 function createMusicHistoryCentralMessage(guildId) {
   const historyText = musicPlayer.getHistoryText
     ? musicPlayer.getHistoryText(guildId)
@@ -342,6 +414,7 @@ module.exports = {
   createMusicCentralEmbed,
   createMusicCentralRows,
   createMusicCentralMessage,
+  createMusicRadioCentralMessage,
   createMusicQueueCentralMessage,
   createMusicNowCentralMessage,
   createMusicHistoryCentralMessage,
